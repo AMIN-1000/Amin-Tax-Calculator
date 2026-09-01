@@ -22,18 +22,19 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Grant Executable Permission to Gradlew
+      - name: Grant Executable Permission
         run: |
           find . -name "gradlew" -exec chmod +x {} +
 
       - name: Install Dependencies
+        working-directory: ./Amin-Tax-Calculator
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+        working-directory: ./Amin-Tax-Calculator
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
