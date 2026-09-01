@@ -27,18 +27,11 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Clean Gradle Cache
-        run: |
-          cd android
-          ./gradlew clean
-
-      - name: Build via Native Gradle to Bypass Flavor Errors
-        run: |
-          cd android
-          ./gradlew assembleRelease
+      - name: Build APK
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: "Amin Tax Calculator APK"
-          path: "android/app/build/outputs/apk/release/app-release.apk"
+          path: build/app/outputs/flutter-apk/app-release.apk
