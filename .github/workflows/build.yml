@@ -29,15 +29,16 @@ jobs:
           find . -name "gradlew" -exec chmod +x {} +
 
       - name: Install Dependencies
-        working-directory: ./Amin-Tax-Calculator
         run: flutter pub get
 
+      - name: Clean Build Cache
+        run: flutter clean
+
       - name: Build APK
-        working-directory: ./Amin-Tax-Calculator
         run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: "Amin Tax Calculator APK"
-          path: "**/build/app/outputs/flutter-apk/app-release.apk"
+          path: build/app/outputs/flutter-apk/app-release.apk
