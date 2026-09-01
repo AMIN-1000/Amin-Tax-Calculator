@@ -351,7 +351,7 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 45, bottom: 40),
+      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 40, bottom: 35),
       build: (pw.Context context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -359,12 +359,12 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
             pw.Center(
                 child: pw.Text(headerTxt,
                     style: pw.TextStyle(
-                        fontSize: 12, fontWeight: pw.FontWeight.bold))),
+                        fontSize: 12.5, fontWeight: pw.FontWeight.bold))),
             pw.SizedBox(height: 12),
 
             pw.Container(
                 decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.black, width: 0.5)),
+                    border: pw.Border.all(color: PdfColors.black, width: 0.6)),
                 child: pw.Column(children: [
                   pw.Row(children: [
                     _pdfHeaderBox("EMPLOYEE NAME", nameCtrl.text),
@@ -385,11 +385,11 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
             pw.SizedBox(height: 8),
 
             pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
+              border: pw.TableBorder.all(color: PdfColors.black, width: 0.6),
               columnWidths: {
-                0: const pw.FixedColumnWidth(26),
+                0: const pw.FixedColumnWidth(28),
                 1: const pw.FlexColumnWidth(),
-                2: const pw.FixedColumnWidth(65),
+                2: const pw.FixedColumnWidth(70),
               },
               children: [
                 _buildPdfRow("Sl", "Description", "Amount", isHeader: true),
@@ -470,11 +470,11 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
               ],
             ),
 
-            // --- Signature Section ---
-            pw.SizedBox(height: 35),
+            // --- Signature Section with More Space ---
+            pw.Spacer(),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -484,7 +484,7 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
                       style: pw.TextStyle(
                           fontSize: 9.5, fontWeight: pw.FontWeight.bold),
                     ),
-                    pw.SizedBox(height: 4),
+                    pw.SizedBox(height: 5),
                     pw.Text(
                       "With Date & Seal.",
                       style: pw.TextStyle(
@@ -500,10 +500,12 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
                       style: pw.TextStyle(
                           fontSize: 9.5, fontWeight: pw.FontWeight.bold),
                     ),
+                    pw.SizedBox(height: 14),
                   ],
                 ),
               ],
             ),
+            pw.SizedBox(height: 10),
           ],
         );
       },
@@ -513,15 +515,15 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
   pw.Widget _pdfHeaderBox(String title, String value) {
     return pw.Expanded(
         child: pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 5),
             decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
             child: pw.RichText(
                 text: pw.TextSpan(children: [
               pw.TextSpan(
                   text: "$title: ",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
-              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 7.5)),
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
             ]))));
   }
 
@@ -533,30 +535,30 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
         children: [
           pw.Padding(
               padding:
-                  const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 4),
               child: pw.Text(sl,
                   textAlign: pw.TextAlign.center,
                   style: pw.TextStyle(
                       fontWeight:
                           isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8))),
+                      fontSize: 8.8))),
           pw.Padding(
               padding:
-                  const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
               child: pw.Text(desc,
                   style: pw.TextStyle(
                       fontWeight:
                           isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8))),
+                      fontSize: 8.8))),
           pw.Padding(
               padding:
-                  const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
               child: pw.Text(amt,
                   textAlign: pw.TextAlign.right,
                   style: pw.TextStyle(
                       fontWeight:
                           isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8))),
+                      fontSize: 8.8))),
         ]);
   }
 
