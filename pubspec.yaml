@@ -1,0 +1,22 @@
+name: amin_tax_calculator
+description: Amin Tax Calculator 2026 App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  pdf: ^3.11.0
+  printing: ^5.12.0
+
+flutter:
+  uses-material-design: true
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/app_icon.png"
