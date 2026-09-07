@@ -31,98 +31,95 @@ class ArrearCalculatorApp extends StatelessWidget {
   }
 }
 
-class MonthRecord {
+class MonthEntry {
   final String monthName;
   final String remarks;
+  final double daRate;
 
-  double admBasic = 0, admDp = 0, admSp = 0, admDa = 0, admHra = 0, admMa = 300;
-  double admCpf = 0, admPtax = 150, admGpf = 1500, admItax = 0;
+  TextEditingController admBasic = TextEditingController(text: "15280");
+  TextEditingController admDp = TextEditingController(text: "0");
+  TextEditingController admSp = TextEditingController(text: "0");
+  TextEditingController admCpf = TextEditingController(text: "0");
+  TextEditingController admGpf = TextEditingController(text: "1500");
+  TextEditingController admItax = TextEditingController(text: "0");
 
-  double drwBasic = 0, drwDp = 0, drwSp = 0, drwDa = 0, drwHra = 0, drwMa = 300;
-  double drwCpf = 0, drwPtax = 150, drwGpf = 1500, drwItax = 0;
+  TextEditingController drwBasic = TextEditingController(text: "15280");
+  TextEditingController drwDp = TextEditingController(text: "0");
+  TextEditingController drwSp = TextEditingController(text: "0");
+  TextEditingController drwCpf = TextEditingController(text: "0");
+  TextEditingController drwGpf = TextEditingController(text: "1500");
+  TextEditingController drwItax = TextEditingController(text: "0");
 
-  MonthRecord({required this.monthName, this.remarks = ''});
+  MonthEntry({required this.monthName, this.remarks = '', this.daRate = 0.52});
 
-  double get admGross => admBasic + admDp + admSp + admDa + admHra + admMa;
-  double get admDeductions => admCpf + admPtax + admGpf + admItax;
-  double get admNet => admGross - admDeductions;
+  double _val(TextEditingController c) => double.tryParse(c.text) ?? 0;
 
-  double get drwGross => drwBasic + drwDp + drwSp + drwDa + drwHra + drwMa;
-  double get drwDeductions => drwCpf + drwPtax + drwGpf + drwItax;
-  double get drwNet => drwGross - drwDeductions;
+  double get aBasic => _val(admBasic);
+  double get aDp => _val(admDp);
+  double get aSp => _val(admSp);
+  double get aDa => (aBasic + aDp) * daRate;
+  double get aHra => ((aBasic + aDp) * 0.15).clamp(0, 6000);
+  double get aMa => 300;
+  double get aGross => aBasic + aDp + aSp + aDa + aHra + aMa;
+  double get aCpf => _val(admCpf);
+  double get aPtax => aGross > 15000 ? 150 : 130;
+  double get aGpf => _val(admGpf);
+  double get aItax => _val(admItax);
+  double get aNet => aGross - (aCpf + aPtax + aGpf + aItax);
 
-  double get dueBasic => admBasic - drwBasic;
-  double get dueDp => admDp - drwDp;
-  double get dueSp => admSp - drwSp;
-  double get dueDa => admDa - drwDa;
-  double get dueHra => admHra - drwHra;
-  double get dueMa => admMa - drwMa;
-  double get dueGross => admGross - drwGross;
-  double get dueCpf => admCpf - drwCpf;
-  double get duePtax => admPtax - drwPtax;
-  double get dueGpf => admGpf - drwGpf;
-  double get dueItax => admItax - drwItax;
-  double get dueNet => admNet - drwNet;
+  double get dBasic => _val(drwBasic);
+  double get dDp => _val(drwDp);
+  double get dSp => _val(drwSp);
+  double get dDa => (dBasic + dDp) * daRate;
+  double get dHra => ((dBasic + dDp) * 0.15).clamp(0, 6000);
+  double get dMa => 300;
+  double get dGross => dBasic + dDp + dSp + dDa + dHra + dMa;
+  double get dCpf => _val(drwCpf);
+  double get dPtax => dGross > 15000 ? 150 : 130;
+  double get dGpf => _val(drwGpf);
+  double get dItax => _val(drwItax);
+  double get dNet => dGross - (dCpf + dPtax + dGpf + dItax);
+
+  double get dueBasic => aBasic - dBasic;
+  double get dueDp => aDp - dDp;
+  double get dueSp => aSp - dSp;
+  double get dueDa => aDa - dDa;
+  double get dueHra => aHra - dHra;
+  double get dueMa => aMa - dMa;
+  double get dueGross => aGross - dGross;
+  double get dueCpf => aCpf - dCpf;
+  double get duePtax => aPtax - dPtax;
+  double get dueGpf => aGpf - dGpf;
+  double get dueItax => aItax - dItax;
+  double get dueNet => aNet - dNet;
 }
 
-class ArrearHomePage extends StatefulWidget {
-  const ArrearHomePage({super.key});
+class YearSheet {
+  final int startYear;
+  final int endYear;
+  final String sheetTitle;
+  final String periodText;
+  final List<MonthEntry> records;
 
-  @override
-  State<ArrearHomePage> createState() => _ArrearHomePageState();
-}
+  final TextEditingController balBasicCtrl = TextEditingController(text: "0");
+  final TextEditingController balDaCtrl = TextEditingController(text: "0");
+  final TextEditingController balHraCtrl = TextEditingController(text: "0");
+  final TextEditingController balGrossCtrl = TextEditingController(text: "0");
+  final TextEditingController balNetCtrl = TextEditingController(text: "0");
 
-class _ArrearHomePageState extends State<ArrearHomePage> {
-  final instController = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final indexController = TextEditingController(text: "B3-083");
-  final hsCodeController = TextEditingController(text: "103280");
-  final empNameController = TextEditingController(text: "SANDEEP SARKAR");
-  final desigController = TextEditingController(text: "A.T.");
-  final fromDateController = TextEditingController(text: "01.07.2013");
-  final toDateController = TextEditingController(text: "30.06.2018");
-  final empIdController = TextEditingController(text: "EYM08650");
-  final orderNoController = TextEditingController(text: "118-SE/S/10M-29/16 Date: 06.02.2018.");
-  final scaleController = TextEditingController();
+  YearSheet({
+    required this.startYear,
+    required this.endYear,
+    required this.sheetTitle,
+    required this.periodText,
+    required this.records,
+  });
 
-  double balBasic = 0, balDa = 0, balHra = 0, balGross = 0, balNet = 0;
-  double adHoc1 = 0, adHoc2 = 0, adHoc3 = 0, adHoc4 = 0;
-  final passedForWordsController = TextEditingController(text: "ZERO ONLY");
-
-  List<MonthRecord> records = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _initRecords();
-  }
-
-  void _initRecords() {
-    List<String> months = [
-      "March,13", "April,13", "May,13", "June,13", "July,13", "August,13", "September,13",
-      "October,13", "November,13", "December,13", "January,14", "February,14",
-      "March,14", "April,14", "May,14", "June,14", "July,14", "August,14", "September,14",
-      "October,14", "November,14", "December,14", "January,15", "February,15"
-    ];
-
-    records = months.map((m) {
-      String rem = '';
-      if (m == "July,13") rem = "52%";
-      if (m == "January,14" || m == "July,14") rem = "58%";
-      if (m == "January,15" || m == "July,15") rem = "65%";
-      if (m == "January,16" || m == "July,16") rem = "75%";
-      if (m == "January,17" || m == "July,17") rem = "85%";
-      if (m == "January,18" || m == "July,18") rem = "100%";
-
-      var r = MonthRecord(monthName: m, remarks: rem);
-      r.admBasic = 15280;
-      r.drwBasic = 15280;
-      r.admDa = 8851;
-      r.drwDa = 8851;
-      r.admHra = 2289;
-      r.drwHra = 2289;
-      return r;
-    }).toList();
-  }
+  double get balBasic => double.tryParse(balBasicCtrl.text) ?? 0;
+  double get balDa => double.tryParse(balDaCtrl.text) ?? 0;
+  double get balHra => double.tryParse(balHraCtrl.text) ?? 0;
+  double get balGross => double.tryParse(balGrossCtrl.text) ?? 0;
+  double get balNet => double.tryParse(balNetCtrl.text) ?? 0;
 
   double get totBasic => records.fold(0, (sum, r) => sum + r.dueBasic);
   double get totDa => records.fold(0, (sum, r) => sum + r.dueDa);
@@ -135,22 +132,167 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
   double get grandHra => totHra - balHra;
   double get grandGross => totGross - balGross;
   double get grandNet => totNet - balNet;
+}
 
-  double get totalAdHoc => adHoc1 + adHoc2 + adHoc3 + adHoc4;
-  double get actualClaim => grandNet - totalAdHoc;
+class ArrearHomePage extends StatefulWidget {
+  const ArrearHomePage({super.key});
+
+  @override
+  State<ArrearHomePage> createState() => _ArrearHomePageState();
+}
+
+class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStateMixin {
+  final instController = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
+  final indexController = TextEditingController(text: "B3-083");
+  final hsCodeController = TextEditingController(text: "103280");
+  final empNameController = TextEditingController(text: "SANJOY SAHA");
+  final desigController = TextEditingController(text: "A.T.");
+  final fromDateController = TextEditingController(text: "01.03.2013");
+  final toDateController = TextEditingController(text: "28.02.2018");
+  final empIdController = TextEditingController(text: "EYM08650");
+  final orderNoController = TextEditingController(text: "118-SE/S/10M-29/16 Date: 06.02.2018.");
+  final scaleController = TextEditingController();
+
+  final adHoc1Ctrl = TextEditingController(text: "0");
+  final adHoc2Ctrl = TextEditingController(text: "0");
+  final adHoc3Ctrl = TextEditingController(text: "0");
+  final adHoc4Ctrl = TextEditingController(text: "0");
+  final wordsCtrl = TextEditingController(text: "ZERO ONLY");
+
+  late TabController _tabController;
+  List<YearSheet> sheets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // ডিফল্টভাবে ২০১৩ থেকে ২০১৮ (৫ বছর) দিয়ে শুরু হবে
+    for (int yr = 2013; yr <= 2017; yr++) {
+      sheets.add(_createYearSheet(yr, yr + 1));
+    }
+    _tabController = TabController(length: sheets.length, vsync: this);
+  }
+
+  YearSheet _createYearSheet(int startY, int endY) {
+    int s2 = startY % 100;
+    int e2 = endY % 100;
+    String s2Str = s2.toString().padLeft(2, '0');
+    String e2Str = e2.toString().padLeft(2, '0');
+
+    final mNames = ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"];
+    List<MonthEntry> mList = [];
+
+    for (int i = 0; i < 12; i++) {
+      int y = i < 10 ? s2 : e2;
+      String mStr = "${mNames[i]},$y";
+      String rem = '';
+      double da = 0.52;
+
+      if (y == 13) {
+        da = 0.52;
+        if (mStr == "July,13") rem = "52%";
+      } else if (y == 14) {
+        da = 0.58;
+        if (mStr == "January,14" || mStr == "July,14") rem = "58%";
+      } else if (y == 15) {
+        da = 0.65;
+        if (mStr == "January,15" || mStr == "July,15") rem = "65%";
+      } else if (y == 16) {
+        da = 0.75;
+        if (mStr == "January,16" || mStr == "July,16") rem = "75%";
+      } else if (y == 17) {
+        da = 0.85;
+        if (mStr == "January,17" || mStr == "July,17") rem = "85%";
+      } else if (y >= 18) {
+        da = 1.00;
+        if (mStr == "January,18" || mStr == "July,18") rem = "100%";
+      }
+
+      mList.add(MonthEntry(monthName: mStr, remarks: rem, daRate: da));
+    }
+
+    return YearSheet(
+      startYear: startY,
+      endYear: endY,
+      sheetTitle: "Sheet ($startY-$e2Str)",
+      periodText: "01.03.$startY TO 28.02.$endY",
+      records: mList,
+    );
+  }
+
+  // ডায়নামিকভাবে নতুন শিট যোগ করার মেথড
+  void _addNewSheet() {
+    int nextStart = sheets.isEmpty ? 2013 : sheets.last.endYear;
+    int nextEnd = nextStart + 1;
+    setState(() {
+      sheets.add(_createYearSheet(nextStart, nextEnd));
+      _tabController.dispose();
+      _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("New Sheet (${nextStart}-${nextEnd % 100}) added!")),
+    );
+  }
+
+  // শেষ শিট ডিলিট করার মেথড
+  void _removeLastSheet() {
+    if (sheets.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("At least one sheet is required!")),
+      );
+      return;
+    }
+    setState(() {
+      sheets.removeLast();
+      _tabController.dispose();
+      _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
+    });
+  }
+
+  // সবকটি শিটের সম্মিলিত Grand Total (Final Sheet-এর জন্য)
+  double get allGrandBasic => sheets.fold(0, (s, sh) => s + sh.grandBasic);
+  double get allGrandDa => sheets.fold(0, (s, sh) => s + sh.grandDa);
+  double get allGrandHra => sheets.fold(0, (s, sh) => s + sh.grandHra);
+  double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
+  double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
+
+  Future<void> _selectDate(TextEditingController controller) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2035),
+    );
+    if (picked != null) {
+      String day = picked.day.toString().padLeft(2, '0');
+      String month = picked.month.toString().padLeft(2, '0');
+      setState(() {
+        controller.text = "$day.$month.${picked.year}";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Amin Arrear Calculator', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Amin Arrear Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.add_chart),
+            tooltip: 'Add Next Year Sheet',
+            onPressed: _addNewSheet,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Remove Last Sheet',
+            onPressed: _removeLastSheet,
+          ),
+          IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Calculation Sheet (Portrait A4)',
-            onPressed: () => _printCalculationSheet(),
+            tooltip: 'Calculation Sheets (Portrait A4)',
+            onPressed: () => _printCalculationSheets(),
           ),
           IconButton(
             icon: const Icon(Icons.print),
@@ -158,21 +300,36 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
             onPressed: () => _printFinalSheet(),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            _buildHeaderTable(),
-            const SizedBox(height: 12),
-            _buildScaleRow(),
-            const SizedBox(height: 12),
-            _buildCalculationTable(),
-            const SizedBox(height: 20),
-            _buildFooterSignatures(),
-            const SizedBox(height: 30),
-          ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.amber,
+          tabs: sheets.map((s) => Tab(text: s.sheetTitle)).toList(),
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: sheets.map((sh) => _buildSheetBody(sh)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSheetBody(YearSheet sh) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          _buildHeaderTable(),
+          const SizedBox(height: 10),
+          _buildScaleRow(),
+          const SizedBox(height: 10),
+          _buildCalculationTable(sh),
+          const SizedBox(height: 20),
+          _buildFooterSignatures(),
+          const SizedBox(height: 30),
+        ],
       ),
     );
   }
@@ -181,10 +338,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1.2),
       columnWidths: const {
-        0: FlexColumnWidth(2.5),
-        1: FlexColumnWidth(3.5),
-        2: FlexColumnWidth(2.0),
-        3: FlexColumnWidth(2.0),
+        0: FlexColumnWidth(2.3),
+        1: FlexColumnWidth(3.7),
+        2: FlexColumnWidth(1.8),
+        3: FlexColumnWidth(2.2),
       },
       children: [
         _buildTableRow("NAME OF THE INSTITUTION:", instController, "INDEX NO :", indexController),
@@ -196,20 +353,24 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
-                  Expanded(child: _centerTextField(fromDateController)),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectDate(fromDateController),
+                      child: IgnorePointer(child: _leftTextField(fromDateController)),
+                    ),
                   ),
-                  Expanded(child: _centerTextField(toDateController)),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectDate(toDateController),
+                      child: IgnorePointer(child: _leftTextField(toDateController)),
+                    ),
+                  ),
                 ],
               ),
             ),
             _headerCell("EMPLOYEE ID:"),
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: _centerTextField(empIdController),
-            ),
+            Padding(padding: const EdgeInsets.all(4), child: _leftTextField(empIdController)),
           ],
         ),
         TableRow(
@@ -217,71 +378,67 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
             _headerCell("IN TERMS OF ORDER NO.:"),
             TableCell(
               verticalAlignment: TableCellVerticalAlignment.middle,
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: _centerTextField(orderNoController),
-              ),
+              child: Padding(padding: const EdgeInsets.all(4), child: _leftTextField(orderNoController)),
             ),
             _headerCell("H.S. CODE:"),
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: _centerTextField(hsCodeController),
-            ),
+            Padding(padding: const EdgeInsets.all(4), child: _leftTextField(hsCodeController)),
           ],
         ),
       ],
     );
   }
 
-  TableRow _buildTableRow(String label1, TextEditingController ctrl1, String label2, TextEditingController ctrl2) {
+  TableRow _buildTableRow(String l1, TextEditingController c1, String l2, TextEditingController c2) {
     return TableRow(
       children: [
-        _headerCell(label1),
-        Padding(padding: const EdgeInsets.all(4), child: _centerTextField(ctrl1)),
-        _headerCell(label2),
-        Padding(padding: const EdgeInsets.all(4), child: _centerTextField(ctrl2)),
+        _headerCell(l1),
+        Padding(padding: const EdgeInsets.all(4), child: _leftTextField(c1)),
+        _headerCell(l2),
+        Padding(padding: const EdgeInsets.all(4), child: _leftTextField(c2)),
       ],
     );
   }
 
-  Widget _headerCell(String text) {
-    return Container(
-      color: Colors.grey.shade300,
-      padding: const EdgeInsets.all(6),
-      alignment: Alignment.centerLeft,
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-    );
-  }
+  Widget _headerCell(String t) => Container(
+    color: Colors.grey.shade300,
+    padding: const EdgeInsets.all(6),
+    alignment: Alignment.centerLeft,
+    child: Text(t, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+  );
 
-  Widget _centerTextField(TextEditingController ctrl) {
-    return TextField(
-      controller: ctrl,
-      textAlign: TextAlign.center,
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-      decoration: const InputDecoration(
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
-      ),
-    );
-  }
+  Widget _leftTextField(TextEditingController ctrl) => TextField(
+    controller: ctrl,
+    textAlign: TextAlign.left,
+    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+    decoration: const InputDecoration(
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
+    ),
+  );
 
   Widget _buildScaleRow() {
     return Container(
       decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 1.2)),
-      child: Row(
+      child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 5),
             color: Colors.grey.shade300,
-            child: const Text("SCALE ADMISSIBLE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            alignment: Alignment.center,
+            child: const Text("SCALE ADMISSIBLE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.1)),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: TextField(
-                controller: scaleController,
-                decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            child: TextField(
+              controller: scaleController,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: "Enter Scale Here",
+                border: InputBorder.none,
               ),
             ),
           ),
@@ -290,16 +447,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
     );
   }
 
-  Widget _buildCalculationTable() {
+  Widget _buildCalculationTable(YearSheet sh) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Table(
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
         border: TableBorder.all(color: Colors.black, width: 1.2),
         columnWidths: const {
-          0: FixedColumnWidth(80),
-          1: FixedColumnWidth(80),
-          2: FixedColumnWidth(70),
+          0: FixedColumnWidth(85),
+          1: FixedColumnWidth(85),
+          2: FixedColumnWidth(75),
           3: FixedColumnWidth(55),
           4: FixedColumnWidth(50),
           5: FixedColumnWidth(65),
@@ -308,17 +465,17 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
           8: FixedColumnWidth(70),
           9: FixedColumnWidth(55),
           10: FixedColumnWidth(55),
-          11: FixedColumnWidth(55),
+          11: FixedColumnWidth(60),
           12: FixedColumnWidth(55),
           13: FixedColumnWidth(70),
-          14: FixedColumnWidth(75),
+          14: FixedColumnWidth(70),
         },
         children: [
           _buildColumnHeader(),
-          for (var r in records) ..._buildMonthRows(r),
-          _buildTotalRow("TOTAL:", totBasic, totDa, totHra, totGross, totNet),
-          _buildBalanceRow(),
-          _buildGrandTotalRow(),
+          for (var r in sh.records) ..._buildMonthRows(r),
+          _buildTotalRow("TOTAL:", sh.totBasic, sh.totDa, sh.totHra, sh.totGross, sh.totNet),
+          _buildBalanceRow(sh),
+          _buildGrandTotalRow(sh),
         ],
       ),
     );
@@ -332,182 +489,247 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade400),
       children: headers.map((h) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         alignment: Alignment.center,
-        child: Text(h, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+        child: Text(h, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
       )).toList(),
     );
   }
 
-  List<TableRow> _buildMonthRows(MonthRecord r) {
+  List<TableRow> _buildMonthRows(MonthEntry r) {
     return [
       TableRow(
         children: [
-          Container(alignment: Alignment.center, padding: const EdgeInsets.all(4), child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
-          _cell("Admissible"),
-          _numCell(r.admBasic), _numCell(r.admDp), _numCell(r.admSp), _numCell(r.admDa), _numCell(r.admHra), _numCell(r.admMa),
-          _numCell(r.admGross), _numCell(r.admCpf), _numCell(r.admPtax), _numCell(r.admGpf), _numCell(r.admItax), _numCell(r.admNet),
-          _cell(""),
+          Container(
+            padding: const EdgeInsets.only(left: 6),
+            alignment: Alignment.centerLeft,
+            child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+          _labelCell("Admissible"),
+          _unlockedCell(r.admBasic),
+          _unlockedCell(r.admDp),
+          _unlockedCell(r.admSp),
+          _lockedCalcCell(r.aDa),
+          _lockedCalcCell(r.aHra),
+          _lockedCalcCell(r.aMa),
+          _lockedCalcCell(r.aGross, isBold: true),
+          _unlockedCell(r.admCpf),
+          _lockedCalcCell(r.aPtax),
+          _unlockedCell(r.admGpf),
+          _unlockedCell(r.admItax),
+          _lockedCalcCell(r.aNet, isBold: true),
+          _labelCell(""),
         ],
       ),
       TableRow(
         children: [
-          _cell(""),
-          _cell("Drawn"),
-          _numCell(r.drwBasic), _numCell(r.drwDp), _numCell(r.drwSp), _numCell(r.drwDa), _numCell(r.drwHra), _numCell(r.drwMa),
-          _numCell(r.drwGross), _numCell(r.drwCpf), _numCell(r.drwPtax), _numCell(r.drwGpf), _numCell(r.drwItax), _numCell(r.drwNet),
-          _cell(r.remarks, isBold: true),
+          _labelCell(""),
+          _labelCell("Drawn"),
+          _unlockedCell(r.drwBasic),
+          _unlockedCell(r.drwDp),
+          _unlockedCell(r.drwSp),
+          _lockedCalcCell(r.dDa),
+          _lockedCalcCell(r.dHra),
+          _lockedCalcCell(r.dMa),
+          _lockedCalcCell(r.dGross, isBold: true),
+          _unlockedCell(r.drwCpf),
+          _lockedCalcCell(r.dPtax),
+          _unlockedCell(r.drwGpf),
+          _unlockedCell(r.drwItax),
+          _lockedCalcCell(r.dNet, isBold: true),
+          _labelCell(r.remarks, isBold: true),
         ],
       ),
       TableRow(
         decoration: BoxDecoration(color: Colors.grey.shade200),
         children: [
-          _cell(""),
-          _cell("Due", isBold: true),
-          _numCell(r.dueBasic, isBold: true), _numCell(r.dueDp, isBold: true), _numCell(r.dueSp, isBold: true), _numCell(r.dueDa, isBold: true), _numCell(r.dueHra, isBold: true), _numCell(r.dueMa, isBold: true),
-          _numCell(r.dueGross, isBold: true), _numCell(r.dueCpf, isBold: true), _numCell(r.duePtax, isBold: true), _numCell(r.dueGpf, isBold: true), _numCell(r.dueItax, isBold: true), _numCell(r.dueNet, isBold: true),
-          _cell(""),
+          _labelCell(""),
+          _labelCell("Due", isBold: true),
+          _lockedCalcCell(r.dueBasic, isBold: true),
+          _lockedCalcCell(r.dueDp, isBold: true),
+          _lockedCalcCell(r.dueSp, isBold: true),
+          _lockedCalcCell(r.dueDa, isBold: true),
+          _lockedCalcCell(r.dueHra, isBold: true),
+          _lockedCalcCell(r.dueMa, isBold: true),
+          _lockedCalcCell(r.dueGross, isBold: true),
+          _lockedCalcCell(r.dueCpf, isBold: true),
+          _lockedCalcCell(r.duePtax, isBold: true),
+          _lockedCalcCell(r.dueGpf, isBold: true),
+          _lockedCalcCell(r.dueItax, isBold: true),
+          _lockedCalcCell(r.dueNet, isBold: true),
+          _labelCell(""),
         ],
       ),
     ];
+  }
+
+  Widget _unlockedCell(TextEditingController ctrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: TextField(
+        controller: ctrl,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          border: InputBorder.none,
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
+  }
+
+  Widget _lockedCalcCell(double val, {bool isBold = false}) {
+    return Container(
+      color: isBold ? Colors.transparent : Colors.grey.shade50,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      alignment: Alignment.center,
+      child: Text(
+        val.round().toString(),
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      ),
+    );
+  }
+
+  Widget _labelCell(String t, {bool isBold = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      alignment: Alignment.center,
+      child: Text(t, textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+    );
+  }
+
+  Widget _leftLabelCell(String t, {bool isBold = false}) {
+    return Container(
+      padding: const EdgeInsets.only(left: 6, top: 5, bottom: 5),
+      alignment: Alignment.centerLeft,
+      child: Text(t, textAlign: TextAlign.left, style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+    );
   }
 
   TableRow _buildTotalRow(String title, double b, double da, double hra, double gross, double net) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade300),
       children: [
-        _cell(title, isBold: true),
-        _cell(""),
-        _numCell(b, isBold: true), _cell(""), _cell(""),
-        _numCell(da, isBold: true), _numCell(hra, isBold: true), _cell(""),
-        _numCell(gross, isBold: true), _cell(""), _cell(""), _cell(""), _cell(""),
-        _numCell(net, isBold: true), _cell(""),
+        _leftLabelCell(title, isBold: true),
+        _labelCell(""),
+        _lockedCalcCell(b, isBold: true), _labelCell(""), _labelCell(""),
+        _lockedCalcCell(da, isBold: true), _lockedCalcCell(hra, isBold: true), _labelCell(""),
+        _lockedCalcCell(gross, isBold: true), _labelCell(""), _labelCell(""), _labelCell(""), _labelCell(""),
+        _lockedCalcCell(net, isBold: true), _labelCell(""),
       ],
     );
   }
 
-  TableRow _buildBalanceRow() {
+  TableRow _buildBalanceRow(YearSheet sh) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade300),
       children: [
-        _cell("BALANCE:", isBold: true),
-        _cell(""),
-        _editableBalanceCell(balBasic, (v) => setState(() => balBasic = v)),
-        _cell(""), _cell(""),
-        _editableBalanceCell(balDa, (v) => setState(() => balDa = v)),
-        _editableBalanceCell(balHra, (v) => setState(() => balHra = v)),
-        _cell(""),
-        _editableBalanceCell(balGross, (v) => setState(() => balGross = v)),
-        _cell(""), _cell(""), _cell(""), _cell(""),
-        _editableBalanceCell(balNet, (v) => setState(() => balNet = v)),
-        _cell(""),
+        _leftLabelCell("BALANCE:", isBold: true),
+        _labelCell(""),
+        _unlockedCell(sh.balBasicCtrl), _labelCell(""), _labelCell(""),
+        _unlockedCell(sh.balDaCtrl), _unlockedCell(sh.balHraCtrl), _labelCell(""),
+        _unlockedCell(sh.balGrossCtrl), _labelCell(""), _labelCell(""), _labelCell(""), _labelCell(""),
+        _unlockedCell(sh.balNetCtrl), _labelCell(""),
       ],
     );
   }
 
-  TableRow _buildGrandTotalRow() {
+  TableRow _buildGrandTotalRow(YearSheet sh) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade400),
       children: [
-        _cell("GRAND TOTAL:", isBold: true),
-        _cell(""),
-        _numCell(grandBasic, isBold: true), _cell(""), _cell(""),
-        _numCell(grandDa, isBold: true), _numCell(grandHra, isBold: true), _cell(""),
-        _numCell(grandGross, isBold: true), _cell(""), _cell(""), _cell(""), _cell(""),
-        _numCell(grandNet, isBold: true), _cell(""),
+        _leftLabelCell("GRAND TOTAL:", isBold: true),
+        _labelCell(""),
+        _lockedCalcCell(sh.grandBasic, isBold: true), _labelCell(""), _labelCell(""),
+        _lockedCalcCell(sh.grandDa, isBold: true), _lockedCalcCell(sh.grandHra, isBold: true), _labelCell(""),
+        _lockedCalcCell(sh.grandGross, isBold: true), _labelCell(""), _labelCell(""), _labelCell(""), _labelCell(""),
+        _lockedCalcCell(sh.grandNet, isBold: true), _labelCell(""),
       ],
-    );
-  }
-
-  Widget _cell(String text, {bool isBold = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-      alignment: Alignment.center,
-      child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-    );
-  }
-
-  Widget _numCell(double val, {bool isBold = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-      alignment: Alignment.center,
-      child: Text(val.toInt().toString(), textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-    );
-  }
-
-  Widget _editableBalanceCell(double val, Function(double) onChanged) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: TextFormField(
-        initialValue: val.toInt().toString(),
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.zero, border: InputBorder.none),
-        onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-      ),
     );
   }
 
   Widget _buildFooterSignatures() {
     return Column(
       children: [
-        const SizedBox(height: 10),
-        const Center(
-          child: Text("Verified and found correct.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 25),
+        const SizedBox(height: 15),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text("Date: ....................", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-            Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 2),
+              child: Text("Date: ....................", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: const [
+                Text("Verified and found correct.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                SizedBox(height: 18),
+                Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              ],
+            ),
           ],
         ),
       ],
     );
   }
 
-  // PORTRAIT PDF (Calculation Sheet)
-  Future<void> _printCalculationSheet() async {
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF (যতগুলো শিট থাকবে সব পেজ আসবে) ----------------
+  Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
     final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
 
-    doc.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        theme: theme,
-        margin: const pw.EdgeInsets.all(12),
-        build: (pw.Context context) => [
-          pw.Center(
-            child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13)),
-          ),
-          pw.SizedBox(height: 5),
-          _buildPdfHeader(),
-          pw.SizedBox(height: 5),
-          _buildPdfScale(),
-          pw.SizedBox(height: 5),
-          _buildPdfTable(),
-          pw.SizedBox(height: 12),
-          pw.Center(
-            child: pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-          ),
-          pw.SizedBox(height: 20),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    for (var sh in sheets) {
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          theme: theme,
+          margin: const pw.EdgeInsets.all(14),
+          build: (pw.Context context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("Date: ....................", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-              pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+              pw.Center(child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13))),
+              pw.SizedBox(height: 5),
+              _buildPdfHeader(sh.periodText),
+              pw.SizedBox(height: 5),
+              _buildPdfScale(),
+              pw.SizedBox(height: 5),
+              _buildPdfTable(sh),
+              pw.Spacer(),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 2),
+                    child: pw.Text("Date: ....................", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                      pw.SizedBox(height: 16),
+                      pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 6),
             ],
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
+
     await Printing.layoutPdf(onLayout: (format) async => doc.save());
   }
 
-  pw.Widget _buildPdfHeader() {
+  pw.Widget _buildPdfHeader(String periodText) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 1.0),
       columnWidths: const {
@@ -518,24 +740,24 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
       },
       children: [
         pw.TableRow(children: [
-          _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValCell(instController.text),
-          _pdfHCell("INDEX NO:"), _pdfValCell(indexController.text),
+          _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValLeftCell(instController.text),
+          _pdfHCell("INDEX NO:"), _pdfValLeftCell(indexController.text),
         ]),
         pw.TableRow(children: [
-          _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValCell(empNameController.text),
-          _pdfHCell("DESIGNATION:"), _pdfValCell(desigController.text),
+          _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValLeftCell(empNameController.text),
+          _pdfHCell("DESIGNATION:"), _pdfValLeftCell(desigController.text),
         ]),
         pw.TableRow(children: [
           _pdfHCell("ARREAR FOR THE PERIOD:"),
           pw.Padding(
             padding: const pw.EdgeInsets.all(2),
-            child: pw.Center(child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
+            child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
           ),
-          _pdfHCell("EMPLOYEE ID:"), _pdfValCell(empIdController.text),
+          _pdfHCell("EMPLOYEE ID:"), _pdfValLeftCell(empIdController.text),
         ]),
         pw.TableRow(children: [
-          _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValCell(orderNoController.text),
-          _pdfHCell("H.S. CODE:"), _pdfValCell(hsCodeController.text),
+          _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValLeftCell(orderNoController.text),
+          _pdfHCell("H.S. CODE:"), _pdfValLeftCell(hsCodeController.text),
         ]),
       ],
     );
@@ -544,36 +766,40 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
   pw.Widget _pdfHCell(String t) => pw.Container(
     color: PdfColors.grey300,
     padding: const pw.EdgeInsets.all(3),
+    alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
   );
 
-  pw.Widget _pdfValCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.all(3),
-    child: pw.Center(child: pw.Text(t, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
+  pw.Widget _pdfValLeftCell(String t) => pw.Padding(
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+    child: pw.Align(
+      alignment: pw.Alignment.centerLeft,
+      child: pw.Text(t, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+    ),
   );
 
   pw.Widget _buildPdfScale() {
     return pw.Container(
       decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 1.0)),
-      child: pw.Row(
+      child: pw.Column(
         children: [
           pw.Container(
+            width: double.infinity,
             color: PdfColors.grey300,
-            padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            padding: const pw.EdgeInsets.symmetric(vertical: 3),
+            alignment: pw.Alignment.center,
             child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
           ),
-          pw.Expanded(
-            child: pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 5),
-              child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.5)),
-            ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            child: pw.Center(child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.5))),
           ),
         ],
       ),
     );
   }
 
-  pw.Widget _buildPdfTable() {
+  pw.Widget _buildPdfTable(YearSheet sh) {
     final headers = [
       "MONTH", "Admissible/\nDrawn & Due", "BASIC PAY", "D.P/IR", "S.P",
       "D.A", "H.R.A", "M.A", "GROSS", "C.P.F", "P.TAX", "G.P.F", "I.TAX", "NET", "REMARKS"
@@ -590,16 +816,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
             child: pw.Text(h, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: pw.FontWeight.bold)),
           )).toList(),
         ),
-        for (var r in records) ...[
+        for (var r in sh.records) ...[
           pw.TableRow(children: [
-            _pCell(r.monthName, isBold: true), _pCell("Admissible"),
-            _pNum(r.admBasic), _pNum(r.admDp), _pNum(r.admSp), _pNum(r.admDa), _pNum(r.admHra), _pNum(r.admMa),
-            _pNum(r.admGross), _pNum(r.admCpf), _pNum(r.admPtax), _pNum(r.admGpf), _pNum(r.admItax), _pNum(r.admNet), _pCell(""),
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(left: 3),
+              child: pw.Align(
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Text(r.monthName, style: pw.TextStyle(fontSize: 6.2, fontWeight: pw.FontWeight.bold)),
+              ),
+            ),
+            _pCell("Admissible"),
+            _pNum(r.aBasic), _pNum(r.aDp), _pNum(r.aSp), _pNum(r.aDa), _pNum(r.aHra), _pNum(r.aMa),
+            _pNum(r.aGross), _pNum(r.aCpf), _pNum(r.aPtax), _pNum(r.aGpf), _pNum(r.aItax), _pNum(r.aNet), _pCell(""),
           ]),
           pw.TableRow(children: [
             _pCell(""), _pCell("Drawn"),
-            _pNum(r.drwBasic), _pNum(r.drwDp), _pNum(r.drwSp), _pNum(r.drwDa), _pNum(r.drwHra), _pNum(r.drwMa),
-            _pNum(r.drwGross), _pNum(r.drwCpf), _pNum(r.drwPtax), _pNum(r.drwGpf), _pNum(r.drwItax), _pNum(r.drwNet), _pCell(r.remarks, isBold: true),
+            _pNum(r.dBasic), _pNum(r.dDp), _pNum(r.dSp), _pNum(r.dDa), _pNum(r.dHra), _pNum(r.dMa),
+            _pNum(r.dGross), _pNum(r.dCpf), _pNum(r.dPtax), _pNum(r.dGpf), _pNum(r.dItax), _pNum(r.dNet), _pCell(r.remarks, isBold: true),
           ]),
           pw.TableRow(
             decoration: const pw.BoxDecoration(color: PdfColors.grey200),
@@ -613,25 +846,25 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
-            _pCell("TOTAL:", isBold: true), _pCell(""),
-            _pNum(totBasic, isBold: true), _pCell(""), _pCell(""), _pNum(totDa, isBold: true), _pNum(totHra, isBold: true), _pCell(""),
-            _pNum(totGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(totNet, isBold: true), _pCell(""),
+            _pLeftCell("TOTAL:", isBold: true), _pCell(""),
+            _pNum(sh.totBasic, isBold: true), _pCell(""), _pCell(""), _pNum(sh.totDa, isBold: true), _pNum(sh.totHra, isBold: true), _pCell(""),
+            _pNum(sh.totGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(sh.totNet, isBold: true), _pCell(""),
           ],
         ),
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
-            _pCell("BALANCE:", isBold: true), _pCell(""),
-            _pNum(balBasic, isBold: true), _pCell(""), _pCell(""), _pNum(balDa, isBold: true), _pNum(balHra, isBold: true), _pCell(""),
-            _pNum(balGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(balNet, isBold: true), _pCell(""),
+            _pLeftCell("BALANCE:", isBold: true), _pCell(""),
+            _pNum(sh.balBasic, isBold: true), _pCell(""), _pCell(""), _pNum(sh.balDa, isBold: true), _pNum(sh.balHra, isBold: true), _pCell(""),
+            _pNum(sh.balGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(sh.balNet, isBold: true), _pCell(""),
           ],
         ),
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: [
-            _pCell("GRAND TOTAL:", isBold: true), _pCell(""),
-            _pNum(grandBasic, isBold: true), _pCell(""), _pCell(""), _pNum(grandDa, isBold: true), _pNum(grandHra, isBold: true), _pCell(""),
-            _pNum(grandGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(grandNet, isBold: true), _pCell(""),
+            _pLeftCell("GRAND TOTAL:", isBold: true), _pCell(""),
+            _pNum(sh.grandBasic, isBold: true), _pCell(""), _pCell(""), _pNum(sh.grandDa, isBold: true), _pNum(sh.grandHra, isBold: true), _pCell(""),
+            _pNum(sh.grandGross, isBold: true), _pCell(""), _pCell(""), _pCell(""), _pCell(""), _pNum(sh.grandNet, isBold: true), _pCell(""),
           ],
         ),
       ],
@@ -644,17 +877,26 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
     child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
+  pw.Widget _pLeftCell(String t, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.only(left: 3, top: 1.5, bottom: 1.5),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
   pw.Widget _pNum(double val, {bool isBold = false}) => pw.Container(
     padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
     alignment: pw.Alignment.center,
-    child: pw.Text(val.toInt().toString(), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+    child: pw.Text(val.round().toString(), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // LANDSCAPE PDF (Final Sheet: ANNEXURE - 1 CONTINUED)
+  // ---------------- LANDSCAPE FINAL SHEET PDF (সমস্ত শিটের সমষ্টিগত GRAND TOTAL) ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
     final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+
+    final adHocTotal = (double.tryParse(adHoc1Ctrl.text) ?? 0) + (double.tryParse(adHoc2Ctrl.text) ?? 0) + (double.tryParse(adHoc3Ctrl.text) ?? 0) + (double.tryParse(adHoc4Ctrl.text) ?? 0);
+    final actClaim = allGrandNet - adHocTotal;
 
     doc.addPage(
       pw.Page(
@@ -687,30 +929,34 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                 },
                 children: [
                   pw.TableRow(children: [
-                    _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValCell(instController.text),
-                    _pdfHCell("INDEX NO :"), _pdfValCell(indexController.text),
-                    _pdfHCell("H.S. CODE :"), _pdfValCell(hsCodeController.text),
+                    _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValLeftCell(instController.text),
+                    _pdfHCell("INDEX NO :"), _pdfValLeftCell(indexController.text),
+                    _pdfHCell("H.S. CODE :"), _pdfValLeftCell(hsCodeController.text),
                   ]),
                   pw.TableRow(children: [
-                    _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValCell(empNameController.text),
-                    _pdfHCell("DESIGNATION:"), _pdfValCell(desigController.text),
-                    _pdfHCell("EMPLOYEE ID:"), _pdfValCell(empIdController.text),
+                    _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValLeftCell(empNameController.text),
+                    _pdfHCell("DESIGNATION:"), _pdfValLeftCell(desigController.text),
+                    _pdfHCell("EMPLOYEE ID:"), _pdfValLeftCell(empIdController.text),
                   ]),
                   pw.TableRow(children: [
                     _pdfHCell("ARREAR FOR THE PERIOD:"),
-                    pw.Center(child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
-                    _pdfHCell(""), _pdfValCell(""),
-                    _pdfHCell(""), _pdfValCell(""),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                      child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                    ),
+                    _pdfHCell(""), _pdfValLeftCell(""),
+                    _pdfHCell(""), _pdfValLeftCell(""),
                   ]),
                   pw.TableRow(children: [
-                    _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValCell(orderNoController.text),
-                    _pdfHCell(""), _pdfValCell(""),
-                    _pdfHCell(""), _pdfValCell(""),
+                    _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValLeftCell(orderNoController.text),
+                    _pdfHCell(""), _pdfValLeftCell(""),
+                    _pdfHCell(""), _pdfValLeftCell(""),
                   ]),
                 ],
               ),
               pw.SizedBox(height: 6),
 
+              // Due & Credit Table - ALL SHEETS COMBINED GRAND TOTAL
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 1.0),
                 columnWidths: const {
@@ -746,12 +992,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                           ),
                           pw.TableRow(
                             children: [
-                              _pNum(grandBasic),
+                              _pNum(allGrandBasic),
                               _pNum(0),
-                              _pNum(grandDa),
-                              _pNum(grandHra),
+                              _pNum(allGrandDa),
+                              _pNum(allGrandHra),
                               _pNum(0),
-                              _pNum(grandGross),
+                              _pNum(allGrandGross),
                               _pNum(0),
                             ],
                           ),
@@ -775,7 +1021,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                               _pNum(0),
                               _pNum(0),
                               _pNum(0),
-                              _pNum(grandNet),
+                              _pNum(allGrandNet),
                             ],
                           ),
                         ],
@@ -832,10 +1078,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                             pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Center(child: pw.Text("LESS ANY AD-HOC PAYMENT MADE:", style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold)))),
                           ],
                         ),
-                        pw.TableRow(children: [_adHocRow("1", adHoc1)]),
-                        pw.TableRow(children: [_adHocRow("2", adHoc2)]),
-                        pw.TableRow(children: [_adHocRow("3", adHoc3)]),
-                        pw.TableRow(children: [_adHocRow("4", adHoc4)]),
+                        pw.TableRow(children: [_adHocRow("1", double.tryParse(adHoc1Ctrl.text) ?? 0)]),
+                        pw.TableRow(children: [_adHocRow("2", double.tryParse(adHoc2Ctrl.text) ?? 0)]),
+                        pw.TableRow(children: [_adHocRow("3", double.tryParse(adHoc3Ctrl.text) ?? 0)]),
+                        pw.TableRow(children: [_adHocRow("4", double.tryParse(adHoc4Ctrl.text) ?? 0)]),
                         pw.TableRow(
                           children: [
                             pw.Padding(
@@ -844,7 +1090,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Text(actualClaim.toInt().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
                                 ],
                               ),
                             ),
@@ -857,7 +1103,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                               child: pw.Row(
                                 children: [
                                   pw.Text("PASSED FOR RS.: ", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Text(actualClaim.toInt().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
                                 ],
                               ),
                             ),
@@ -871,7 +1117,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   pw.Text("IN WORDS: ", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Expanded(child: pw.Text(passedForWordsController.text, style: const pw.TextStyle(fontSize: 6.5))),
+                                  pw.Expanded(child: pw.Text(wordsCtrl.text, style: const pw.TextStyle(fontSize: 6.5))),
                                 ],
                               ),
                             ),
@@ -910,7 +1156,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(no, style: const pw.TextStyle(fontSize: 7)),
-          pw.Text(val == 0 ? "" : val.toInt().toString(), style: const pw.TextStyle(fontSize: 7)),
+          pw.Text(val == 0 ? "" : val.round().toString(), style: const pw.TextStyle(fontSize: 7)),
         ],
       ),
     );
