@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="Arrear Calculator"
+        android:label="Amin Arrear Calculator"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
