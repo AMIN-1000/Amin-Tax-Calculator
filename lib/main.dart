@@ -1,825 +1,386 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'dart:math';
 
 void main() {
-  runApp(const TaxCalculatorApp());
+  runApp(const ArrearSalaryApp());
 }
 
-class TaxCalculatorApp extends StatelessWidget {
-  const TaxCalculatorApp({super.key});
+class ArrearSalaryApp extends StatelessWidget {
+  const ArrearSalaryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Amin Tax Calculator",
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A237E),
-          foregroundColor: Colors.white,
-        ),
-      ),
-      home: const TaxHomeScreen(),
+      title: 'Arrear Calculator',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      home: const ArrearMainScreen(),
     );
   }
 }
 
-class TaxHomeScreen extends StatefulWidget {
-  const TaxHomeScreen({super.key});
+// মাসের হিসাবের ক্লাস (সব ফর্মুলা সহ)
+class MonthRecord {
+  final String monthName; // e.g. "March"
+  final int year;         // e.g. 2015
 
-  @override
-  State<TaxHomeScreen> createState() => _TaxHomeScreenState();
+  double basicAdm = 0;
+  double basicDrn = 0;
+  double dpIrRate = 0.0;
+  double spRate = 0.0;
+
+  // অতিরিক্ত কর্তন (Optional)
+  double itaxAmount = 0;
+  double gpfAmount = 0;
+
+  MonthRecord({required this.monthName, required this.year});
+
+  String get fullLabel => "$monthName,${year.toString().substring(2)}";
+
+  // --- FORMULA 1: D.A. Rate ---
+  double get daPercentage {
+    if (year <= 2014) return 0.58;
+    if (year == 2015) return 0.65;
+    if (year == 2016) return 0.75;
+    if (year == 2017) return 0.85;
+    if (year >= 2018) return 1.00;
+    return 0.58;
+  }
+
+  // --- FORMULA 2: H.R.A. Rate ---
+  double get hraPercentage {
+    if (year >= 2020) return 0.12; // ROPA 2019
+    return 0.15;                  // ROPA 2009
+  }
+
+  // --- FORMULA 3: Medical Allowance (M.A.) ---
+  double get maAdm => basicAdm > 0 ? (year >= 2020 ? 500 : 300) : 0;
+  double get maDrn => basicDrn > 0 ? (year >= 2020 ? 500 : 300) : 0;
+
+  // D.A. Amount (ROUND to nearest integer)
+  double get daAdm => (basicAdm * daPercentage).roundToDouble();
+  double get daDrn => (basicDrn * daPercentage).roundToDouble();
+
+  // H.R.A. Amount (ROUND to nearest integer)
+  double get hraAdm => (basicAdm * hraPercentage).roundToDouble();
+  double get hraDrn => (basicDrn * hraPercentage).roundToDouble();
+
+  // Gross Pay
+  double get grossAdm => basicAdm + (basicAdm * dpIrRate).round() + (basicAdm * spRate).round() + daAdm + hraAdm + maAdm;
+  double get grossDrn => basicDrn + (basicDrn * dpIrRate).round() + (basicDrn * spRate).round() + daDrn + hraDrn + maDrn;
+
+  // --- FORMULA 4: P.TAX Slab ---
+  double calculatePTax(double gross) {
+    if (gross > 40000) return 200;
+    if (gross > 25000) return 150;
+    if (gross > 15000) return 130;
+    if (gross > 10000) return 110;
+    return 0;
+  }
+
+  double get ptaxAdm => calculatePTax(grossAdm);
+  double get ptaxDrn => calculatePTax(grossDrn);
+
+  // Net Pay
+  double get netAdm => grossAdm > 0 ? (grossAdm - ptaxAdm - itaxAmount - gpfAmount) : 0;
+  double get netDrn => grossDrn > 0 ? (grossDrn - ptaxDrn - itaxAmount - gpfAmount) : 0;
+
+  // --- DUE ROW (Admissible - Drawn) ---
+  double get basicDue => basicAdm - basicDrn;
+  double get daDue => daAdm - daDrn;
+  double get hraDue => hraAdm - hraDrn;
+  double get maDue => maAdm - maDrn;
+  double get grossDue => grossAdm - grossDrn;
+  double get ptaxDue => ptaxAdm - ptaxDrn;
+  double get netDue => netAdm - netDrn;
 }
 
-class _TaxHomeScreenState extends State<TaxHomeScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _prevTabIndex = 0;
+// প্রতি শিটের মডেল (March to Feb)
+class ArrearAnnexure1Sheet {
+  final String title;
+  final int startYear;
+  final List<MonthRecord> months;
 
-  // Header Details
-  final nameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
-  final designationCtrl = TextEditingController(text: "A.T.");
-  final institutionCtrl =
-      TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final empCodeCtrl = TextEditingController(text: "BDFF2107");
-  final panCtrl = TextEditingController(text: "AWUPM0023B");
-  final finYearCtrl = TextEditingController(text: "2025-26");
-  final assessYearCtrl = TextEditingController(text: "2026-27");
+  ArrearAnnexure1Sheet({
+    required this.title,
+    required this.startYear,
+    required this.months,
+  });
 
-  // Inputs
-  final i7GrossSalary = TextEditingController();
-  final i8Arrear = TextEditingController();
-  final i10HRA = TextEditingController();
+  // কলাম অনুযায়ী মোট যোগফল (Total Row)
+  double get totalBasicDue => months.fold(0, (s, m) => s + m.basicDue);
+  double get totalDaDue => months.fold(0, (s, m) => s + m.daDue);
+  double get totalHraDue => months.fold(0, (s, m) => s + m.hraDue);
+  double get totalMaDue => months.fold(0, (s, m) => s + m.maDue);
+  double get totalGrossDue => months.fold(0, (s, m) => s + m.grossDue);
+  double get totalPtaxDue => months.fold(0, (s, m) => s + m.ptaxDue);
+  double get totalNetDue => months.fold(0, (s, m) => s + m.netDue);
+}
 
-  final i18GrossRent = TextEditingController();
-  final i19TaxLocalAuth = TextEditingController();
-  final i22HomeLoanInt = TextEditingController();
+class ArrearMainScreen extends StatefulWidget {
+  const ArrearMainScreen({super.key});
 
-  final i25BankInt = TextEditingController();
-  final i26FDInt = TextEditingController();
-  final i27OtherSource = TextEditingController();
+  @override
+  State<ArrearMainScreen> createState() => _ArrearMainScreenState();
+}
 
-  final i32_43Total80C = TextEditingController();
-  final i45_56TotalOtherDed = TextEditingController();
-
-  final i68STCG = TextEditingController();
-  final i69LTCG = TextEditingController();
-  final i71TaxPaidJan = TextEditingController();
-  final i72TaxPaidFeb = TextEditingController();
-
-  // ReadOnly Output
-  final totalSalCtrl = TextEditingController();
-  final stdDedCtrl = TextEditingController();
-  final pTaxCtrl = TextEditingController();
-  final netSalCtrl = TextEditingController();
-  final totalHousePropCtrl = TextEditingController();
-  final totalOtherSrcCtrl = TextEditingController();
-  final grossTotalCtrl = TextEditingController();
-
-  final serial10Ctrl = TextEditingController();
-  final totalDedCtrl = TextEditingController();
-
-  final taxableIncomeCtrl = TextEditingController();
-  final taxOnIncomeCtrl = TextEditingController();
-  final rebateCtrl = TextEditingController();
-  final cessCtrl = TextEditingController();
-  final totalTaxCessCtrl = TextEditingController();
-  final finalTaxPayableCtrl = TextEditingController();
-  final statusCtrl = TextEditingController();
+class _ArrearMainScreenState extends State<ArrearMainScreen> {
+  int startYear = 2015;
+  List<ArrearAnnexure1Sheet> sheets = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-
-    _tabController.addListener(() {
-      if (_tabController.index != _prevTabIndex) {
-        _prevTabIndex = _tabController.index;
-
-        if (_tabController.index == 1) {
-          i32_43Total80C.clear();
-          i45_56TotalOtherDed.clear();
-        }
-        i72TaxPaidFeb.clear();
-        calculateTax();
-      }
-    });
+    _generateSheetForYear(startYear);
   }
 
-  double getVal(TextEditingController ctrl) {
-    return double.tryParse(ctrl.text) ?? 0.0;
+  void _generateSheetForYear(int yr) {
+    List<MonthRecord> monthList = [];
+    const monthsOrder = [
+      "March", "April", "May", "June", "July", "August",
+      "September", "October", "November", "December", "January", "February"
+    ];
+
+    for (int i = 0; i < 12; i++) {
+      int y = (i >= 10) ? yr + 1 : yr; // Jan & Feb পরের বছর হয়
+      monthList.add(MonthRecord(monthName: monthsOrder[i], year: y));
+    }
+
+    sheets.add(ArrearAnnexure1Sheet(
+      title: "ANNEXURE - 1 (Sheet ${sheets.length + 1})",
+      startYear: yr,
+      months: monthList,
+    ));
   }
 
-  void calculateTax() {
+  void _addNewYearSheet() {
     setState(() {
-      bool isOld = _tabController.index == 0;
-
-      double i7 = getVal(i7GrossSalary);
-      double i8 = getVal(i8Arrear);
-      double i10 = getVal(i10HRA);
-      double i18 = getVal(i18GrossRent);
-      double i19 = getVal(i19TaxLocalAuth);
-      double i22 = getVal(i22HomeLoanInt);
-      double i25 = getVal(i25BankInt);
-      double i26 = getVal(i26FDInt);
-      double i27 = getVal(i27OtherSource);
-      double total80C = getVal(i32_43Total80C);
-      double totalOtherDed = getVal(i45_56TotalOtherDed);
-      double i68 = getVal(i68STCG);
-      double i69 = getVal(i69LTCG);
-      double i71 = getVal(i71TaxPaidJan);
-      double i72 = getVal(i72TaxPaidFeb);
-
-      double grossSal = i7 + i8;
-      totalSalCtrl.text = grossSal.toStringAsFixed(0);
-
-      double stdDed = isOld
-          ? (grossSal > 50000 ? 50000 : grossSal)
-          : (grossSal > 75000 ? 75000 : grossSal);
-      stdDedCtrl.text = stdDed.toStringAsFixed(0);
-
-      double pTax = 0;
-      if (isOld) {
-        if (grossSal <= 120000)
-          pTax = 0;
-        else if (grossSal <= 180000)
-          pTax = 1320;
-        else if (grossSal <= 300000)
-          pTax = 1560;
-        else if (grossSal <= 480000)
-          pTax = 1800;
-        else
-          pTax = 2400;
-      }
-      pTaxCtrl.text = pTax.toStringAsFixed(0);
-
-      double salIncome = grossSal - stdDed - pTax - i10;
-      netSalCtrl.text = salIncome.toStringAsFixed(0);
-
-      double houseIncome = (i18 - i19) - ((i18 - i19) * 0.3) - i22;
-      totalHousePropCtrl.text = houseIncome.toStringAsFixed(0);
-
-      double otherIncome = i25 + i26 + i27;
-      totalOtherSrcCtrl.text = otherIncome.toStringAsFixed(0);
-
-      double gross = salIncome + houseIncome + otherIncome;
-      grossTotalCtrl.text = gross.toStringAsFixed(0);
-
-      double ded80C = total80C > 150000 ? 150000 : total80C;
-      double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-
-      double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-      serial10Ctrl.text = totalOther.toStringAsFixed(0);
-
-      double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-      totalDedCtrl.text = totalDed.toStringAsFixed(0);
-
-      double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-      if (taxable < 0) taxable = 0;
-      taxableIncomeCtrl.text = taxable.toStringAsFixed(0);
-
-      double tax = 0;
-      if (isOld) {
-        if (taxable > 1000000)
-          tax = (taxable - 1000000) * 0.3 + 112500;
-        else if (taxable > 500000)
-          tax = (taxable - 500000) * 0.2 + 12500;
-        else if (taxable > 250000)
-          tax = (taxable - 250000) * 0.05;
-      } else {
-        if (taxable > 2400000)
-          tax = (taxable - 2000000) * 0.3 + 200000;
-        else if (taxable > 2000000)
-          tax = (taxable - 2000000) * 0.25 + 200000;
-        else if (taxable > 1600000)
-          tax = (taxable - 1600000) * 0.2 + 120000;
-        else if (taxable > 1200000)
-          tax = (taxable - 1200000) * 0.15 + 60000;
-        else if (taxable > 800000)
-          tax = (taxable - 800000) * 0.1 + 20000;
-        else if (taxable > 400000)
-          tax = (taxable - 400000) * 0.05;
-      }
-      taxOnIncomeCtrl.text = tax.toStringAsFixed(0);
-
-      double rebate = isOld
-          ? (taxable <= 500000 ? min(tax, 12500) : 0)
-          : (taxable <= 1200000 ? tax : 0);
-      rebateCtrl.text = rebate.toStringAsFixed(0);
-
-      double afterRebate = tax - rebate;
-      double cess = (afterRebate * 0.04).roundToDouble();
-      cessCtrl.text = cess.toStringAsFixed(0);
-
-      double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-      totalTaxCessCtrl.text = totalTax.toStringAsFixed(0);
-
-      double finalTax = totalTax +
-          (i68 * 0.2) +
-          (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-      finalTaxPayableCtrl.text = finalTax.toStringAsFixed(0);
-
-      double totalPaid = i71 + i72;
-      if (totalPaid > finalTax)
-        statusCtrl.text = "REFUNDABLE: ${totalPaid - finalTax}";
-      else if (totalPaid < finalTax)
-        statusCtrl.text = "PAYABLE: ${finalTax - totalPaid}";
-      else
-        statusCtrl.text = "NIL";
+      int nextYear = startYear + sheets.length;
+      _generateSheetForYear(nextYear);
     });
-  }
-
-  Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-    pdf.addPage(_buildRegimePdfPage(true));
-    pdf.addPage(_buildRegimePdfPage(false));
-    await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
-  }
-
-  pw.Page _buildRegimePdfPage(bool isOld) {
-    bool isActiveRegime = isOld == (_tabController.index == 0);
-
-    double i7 = getVal(i7GrossSalary);
-    double i8 = getVal(i8Arrear);
-    double i10 = getVal(i10HRA);
-    double i18 = getVal(i18GrossRent);
-    double i19 = getVal(i19TaxLocalAuth);
-    double i22 = getVal(i22HomeLoanInt);
-    double i25 = getVal(i25BankInt);
-    double i26 = getVal(i26FDInt);
-    double i27 = getVal(i27OtherSource);
-    double total80C = isOld ? getVal(i32_43Total80C) : 0.0;
-    double totalOtherDed = isOld ? getVal(i45_56TotalOtherDed) : 0.0;
-    double i68 = getVal(i68STCG);
-    double i69 = getVal(i69LTCG);
-    double i71 = getVal(i71TaxPaidJan);
-
-    double grossSal = i7 + i8;
-    double stdDed = isOld
-        ? (grossSal > 50000 ? 50000 : grossSal)
-        : (grossSal > 75000 ? 75000 : grossSal);
-
-    double pTax = 0;
-    if (isOld) {
-      if (grossSal <= 120000)
-        pTax = 0;
-      else if (grossSal <= 180000)
-        pTax = 1320;
-      else if (grossSal <= 300000)
-        pTax = 1560;
-      else if (grossSal <= 480000)
-        pTax = 1800;
-      else
-        pTax = 2400;
-    }
-
-    double salIncome = grossSal - stdDed - pTax - i10;
-
-    double houseIncome30 = (i18 - i19) * 0.3;
-    double houseIncome = (i18 - i19) - houseIncome30 - i22;
-    double otherIncome = i25 + i26 + i27;
-    double gross = salIncome + houseIncome + otherIncome;
-
-    double ded80C = total80C > 150000 ? 150000 : total80C;
-    double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-    double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-    double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-
-    double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-    if (taxable < 0) taxable = 0;
-
-    double tax = 0;
-    if (isOld) {
-      if (taxable > 1000000)
-        tax = (taxable - 1000000) * 0.3 + 112500;
-      else if (taxable > 500000)
-        tax = (taxable - 500000) * 0.2 + 12500;
-      else if (taxable > 250000)
-        tax = (taxable - 250000) * 0.05;
-    } else {
-      if (taxable > 2400000)
-        tax = (taxable - 2000000) * 0.3 + 200000;
-      else if (taxable > 2000000)
-        tax = (taxable - 2000000) * 0.25 + 200000;
-      else if (taxable > 1600000)
-        tax = (taxable - 1600000) * 0.2 + 120000;
-      else if (taxable > 1200000)
-        tax = (taxable - 1200000) * 0.15 + 60000;
-      else if (taxable > 800000)
-        tax = (taxable - 800000) * 0.1 + 20000;
-      else if (taxable > 400000)
-        tax = (taxable - 400000) * 0.05;
-    }
-
-    double rebate = isOld
-        ? (taxable <= 500000 ? min(tax, 12500) : 0)
-        : (taxable <= 1200000 ? tax : 0);
-    double afterRebate = tax - rebate;
-    double cess = (afterRebate * 0.04).roundToDouble();
-    double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-
-    double capitalGainTax =
-        (i68 * 0.2) + (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-    double finalTax = totalTax + capitalGainTax;
-
-    double i72 = 0;
-    if (isActiveRegime) {
-      i72 = getVal(i72TaxPaidFeb);
-    } else {
-      i72 = finalTax - i71;
-      if (i72 < 0) i72 = 0;
-    }
-
-    double totalPaid = i71 + i72;
-    String status = "";
-    if (totalPaid > finalTax)
-      status = "REFUNDABLE: ${totalPaid - finalTax}";
-    else if (totalPaid < finalTax)
-      status = "PAYABLE: ${finalTax - totalPaid}";
-    else
-      status = "NIL";
-
-    String headerTxt = isOld
-        ? ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER OLD REGIME ]'
-        : ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER NEW REGIME ]';
-
-    return pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 40, bottom: 35),
-      build: (pw.Context context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Center(
-                child: pw.Text(headerTxt,
-                    style: pw.TextStyle(
-                        fontSize: 12.5, fontWeight: pw.FontWeight.bold))),
-            pw.SizedBox(height: 12),
-
-            pw.Container(
-                decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.black, width: 0.6)),
-                child: pw.Column(children: [
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE NAME", nameCtrl.text),
-                    _pdfHeaderBox("DESIGNATION", designationCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("INSTITUTION NAME", institutionCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE CODE", empCodeCtrl.text),
-                    _pdfHeaderBox("PAN", panCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("FINANCIAL YEAR", finYearCtrl.text),
-                    _pdfHeaderBox("ASSESSMENT YEAR", assessYearCtrl.text)
-                  ]),
-                ])),
-            pw.SizedBox(height: 8),
-
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.black, width: 0.6),
-              columnWidths: {
-                0: const pw.FixedColumnWidth(28),
-                1: const pw.FlexColumnWidth(),
-                2: const pw.FixedColumnWidth(70),
-              },
-              children: [
-                _buildPdfRow("Sl", "Description", "Amount", isHeader: true),
-                _buildPdfRow("1", "Gross Salary (a)", i7.toStringAsFixed(0)),
-                _buildPdfRow("", "Arrear (b)", i8.toStringAsFixed(0)),
-                _buildPdfRow("", "Total (a+b)", grossSal.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow("2", "Less: Standard Deduction u/s 16(1a)",
-                    stdDed.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "", "Less: Professional Tax", pTax.toStringAsFixed(0)),
-                _buildPdfRow("", "Less: House Rent Allowance u/s 10(13A)",
-                    i10.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "3",
-                    "Income chargeable under 'Salary'",
-                    salIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow(
-                    "4", "Gross Rent Received (a)", i18.toStringAsFixed(0)),
-                _buildPdfRow("", "Tax paid to local authorities (b)",
-                    i19.toStringAsFixed(0)),
-                _buildPdfRow("", "30% Standard Deduction on Net Rent",
-                    houseIncome30.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "",
-                    "Interest Payable on Borrowed Cap u/s 24(b)",
-                    i22.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "5",
-                    "Income Chargeable Under House Property",
-                    houseIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("6", "Interest on Saving Bank / FD / Others",
-                    otherIncome.toStringAsFixed(0)),
-                _buildPdfRow("7", "Gross total income (3+5+6)",
-                    gross.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("8", "Total Deduction u/s 80C",
-                    ded80C.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "9",
-                    "Total Other Deductions (80D/80G/80TTA Etc.)",
-                    totalOther.toStringAsFixed(0)),
-                _buildPdfRow("10", "Total deduction allowed",
-                    totalDed.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("11", "Total taxable income (Rounded off)",
-                    taxable.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow(
-                    "12", "Tax on Taxable Income", tax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "13", "Tax Rebate u/s 87A", rebate.toStringAsFixed(0)),
-                _buildPdfRow("14", "Health & Education Cess @ 4%",
-                    cess.toStringAsFixed(0)),
-                _buildPdfRow("15", "Tax payable (Rounded off)",
-                    totalTax.toStringAsFixed(0)),
-                _buildPdfRow("16", "Capital Gain Tax (Short/Long term)",
-                    capitalGainTax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "17",
-                    "Total Tax payable (incl. Capital Gain)",
-                    finalTax.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("18", "Tax paid upto January",
-                    i71.toStringAsFixed(0)),
-                _buildPdfRow("19", "Tax to be paid in February",
-                    i72.toStringAsFixed(0)),
-                _buildPdfRow("20", "Balance Tax Payable/Refundable",
-                    status,
-                    isBold: true),
-              ],
-            ),
-
-            // --- Signature Section with More Space ---
-            pw.Spacer(),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of Head of the Institution",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 5),
-                    pw.Text(
-                      "With Date & Seal.",
-                      style: pw.TextStyle(
-                          fontSize: 9, fontWeight: pw.FontWeight.bold),
-                    ),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of the Employee",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 14),
-                  ],
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 10),
-          ],
-        );
-      },
-    );
-  }
-
-  pw.Widget _pdfHeaderBox(String title, String value) {
-    return pw.Expanded(
-        child: pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 5),
-            decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
-            child: pw.RichText(
-                text: pw.TextSpan(children: [
-              pw.TextSpan(
-                  text: "$title: ",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
-            ]))));
-  }
-
-  pw.TableRow _buildPdfRow(String sl, String desc, String amt,
-      {bool isHeader = false, bool isBold = false}) {
-    return pw.TableRow(
-        decoration:
-            isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
-        children: [
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 4),
-              child: pw.Text(sl,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(desc,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(amt,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-        ]);
-  }
-
-  Widget _buildExcelRow(
-      String slNo, String title, TextEditingController controller,
-      {bool isReadOnly = false}) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: Colors.grey.shade400),
-              left: BorderSide(color: Colors.grey.shade400),
-              right: BorderSide(color: Colors.grey.shade400))),
-      child: Row(
-        children: [
-          Container(
-              width: 35,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                  border: Border(right: BorderSide(color: Colors.grey.shade400))),
-              child: Text(slNo,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 11))),
-          Expanded(
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(title,
-                      style: TextStyle(
-                          fontWeight:
-                              isReadOnly ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12)))),
-          Container(
-            width: 100,
-            decoration: BoxDecoration(
-                color: isReadOnly
-                    ? Colors.grey.shade200
-                    : Colors.amber.shade100,
-                border: Border(
-                    left: BorderSide(color: Colors.grey.shade400))),
-            child: TextField(
-              controller: controller,
-              readOnly: isReadOnly,
-              keyboardType: TextInputType.text,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                  fontWeight: isReadOnly ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                  isDense: true),
-              onChanged: (val) => calculateTax(),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isOld = _tabController.index == 0;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Amin Tax Calculator"),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.amberAccent,
-          unselectedLabelColor: Colors.white,
-          indicatorColor: Colors.amberAccent,
-          indicatorWeight: 4,
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          onTap: (index) {
-            FocusScope.of(context).unfocus();
-          },
-          tabs: const [Tab(text: 'OLD REGIME'), Tab(text: 'NEW REGIME')],
+    // ANNEXURE CONTINUED (Grand Total from all sheets)
+    double grandBasicDue = sheets.fold(0, (s, sh) => s + sh.totalBasicDue);
+    double grandDaDue = sheets.fold(0, (s, sh) => s + sh.totalDaDue);
+    double grandHraDue = sheets.fold(0, (s, sh) => s + sh.totalHraDue);
+    double grandMaDue = sheets.fold(0, (s, sh) => s + sh.totalMaDue);
+    double grandGrossDue = sheets.fold(0, (s, sh) => s + sh.totalGrossDue);
+    double grandPtaxDue = sheets.fold(0, (s, sh) => s + sh.totalPtaxDue);
+    double grandNetClaim = sheets.fold(0, (s, sh) => s + sh.totalNetDue);
+
+    return DefaultTabController(
+      length: sheets.length + 1,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Arrear Salary Calculator', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.teal.shade700,
+          foregroundColor: Colors.white,
+          actions: [
+            TextButton.icon(
+              onPressed: _addNewYearSheet,
+              icon: const Icon(Icons.add_circle, color: Colors.white),
+              label: const Text("Next Year", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+          bottom: TabBar(
+            isScrollable: true,
+            indicatorColor: Colors.amberAccent,
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            tabs: [
+              ...sheets.map((s) => Tab(text: s.title)),
+              const Tab(text: "ANNEXURE (CONTINUED)"),
+            ],
+          ),
         ),
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-              onPressed: _generatePdf,
-              tooltip: "Download PDF")
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(5.0),
-        child: Column(
+        body: TabBarView(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Column(
-                children: [
-                  Row(children: [
-                    Expanded(
-                        flex: 2,
-                        child: _headerTextField('EMPLOYEE NAME:', nameCtrl)),
-                    Expanded(
-                        flex: 1,
-                        child: _headerTextField('DESIGNATION:', designationCtrl))
-                  ]),
-                  _headerTextField('INSTITUTION NAME:', institutionCtrl),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('EMPLOYEE CODE:', empCodeCtrl)),
-                    Expanded(child: _headerTextField('PAN:', panCtrl))
-                  ]),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('FINANCIAL YEAR:', finYearCtrl)),
-                    Expanded(
-                        child: _headerTextField(
-                            'ASSESSMENT YEAR:', assessYearCtrl))
-                  ]),
-                ],
-              ),
+            ...sheets.map((sheet) => buildAnnexure1TableView(sheet)),
+            buildAnnexureContinuedView(
+              grandBasicDue, grandDaDue, grandHraDue, grandMaDue,
+              grandGrossDue, grandPtaxDue, grandNetClaim,
             ),
-            const SizedBox(height: 10),
-
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Row(
-                children: [
-                  Container(
-                      width: 35,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              right: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Sl",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
-                  const Expanded(
-                      child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: Text("Description",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12)))),
-                  Container(
-                      width: 100,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              left: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Amount",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
-                ],
-              ),
-            ),
-
-            _buildExcelRow("1", "Gross Salary (a)", i7GrossSalary),
-            _buildExcelRow("", "Arrear (b)", i8Arrear),
-            _buildExcelRow("", "Total (a+b)", totalSalCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "2", "Less: Standard Deduction", stdDedCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "", "Less: Professional Tax", pTaxCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "3", "Income chargeable under 'Salary'", netSalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow("4", "Gross Rent Received (a)", i18GrossRent),
-            _buildExcelRow(
-                "", "Tax paid to local authorities (b)", i19TaxLocalAuth),
-            _buildExcelRow(
-                "", "Interest Payable on Borrowed Cap (c)", i22HomeLoanInt),
-            _buildExcelRow("5", "Income Chargeable Under House Property",
-                totalHousePropCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "6", "Interest on Saving Bank (a)", i25BankInt),
-            _buildExcelRow(
-                "", "Interest on Fixed Deposit (b)", i26FDInt),
-            _buildExcelRow("", "Others (c)", i27OtherSource),
-            _buildExcelRow("7", "Income Chargeable Under Head Other Sources",
-                totalOtherSrcCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "8", "Gross total income (3+5+7)", grossTotalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "9", "Total Deduction u/s 80C", i32_43Total80C,
-                isReadOnly: !isOld),
-            _buildExcelRow(
-                "", "Add: 80D/80G etc. (Manual Input)", i45_56TotalOtherDed,
-                isReadOnly: !isOld),
-
-            _buildExcelRow("10",
-                "Total Other Deductions (80D/80G/80TTA Etc.)", serial10Ctrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "11", "Total deduction", totalDedCtrl, isReadOnly: true),
-
-            _buildExcelRow("12", "Total taxable income (Rounded off)",
-                taxableIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "13", "Tax on Taxable Income", taxOnIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "14", "Tax Rebate u/s 87A", rebateCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "15", "Health & Education Cess @ 4%", cessCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "16", "Tax payable (Rounded off)", totalTaxCessCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "17", "Short Term Capital Gain", i68STCG),
-            _buildExcelRow(
-                "18", "Long Term Capital Gain", i69LTCG),
-            _buildExcelRow(
-                "19", "Total Tax payable (incl. Capital Gain)",
-                finalTaxPayableCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "20", "Tax paid upto January", i71TaxPaidJan),
-            _buildExcelRow(
-                "21", "Tax to be paid in February", i72TaxPaidFeb),
-            _buildExcelRow(
-                "22", "Balance Tax Payable/Refundable", statusCtrl,
-                isReadOnly: true),
-
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
 
-  Widget _headerTextField(String label, TextEditingController controller) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400, width: 0.5)),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+  // --- ANNEXURE-1 VIEW ---
+  Widget buildAnnexure1TableView(ArrearAnnexure1Sheet sheet) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: MaterialStateProperty.all(Colors.teal.shade100),
+          dataRowMinHeight: 38,
+          dataRowMaxHeight: 48,
+          columnSpacing: 16,
+          columns: const [
+            DataColumn(label: Text('MONTH', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('SCALE', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('BASIC PAY', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('D.A.', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('H.R.A.', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('M.A.', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('GROSS', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('P.TAX', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('NET', style: TextStyle(fontWeight: FontWeight.bold))),
+          ],
+          rows: [
+            ...sheet.months.expand((m) => [
+              // 1. Admissible Row
+              DataRow(cells: [
+                DataCell(Text(m.fullLabel, style: const TextStyle(fontWeight: FontWeight.bold))),
+                const DataCell(Text('Admissible', style: TextStyle(fontSize: 12))),
+                DataCell(buildNumberInput((val) => setState(() => m.basicAdm = val))),
+                DataCell(Text(m.daAdm > 0 ? m.daAdm.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.hraAdm > 0 ? m.hraAdm.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.maAdm > 0 ? m.maAdm.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.grossAdm > 0 ? m.grossAdm.toStringAsFixed(0) : '-', style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(Text(m.ptaxAdm > 0 ? m.ptaxAdm.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.netAdm > 0 ? m.netAdm.toStringAsFixed(0) : '-', style: const TextStyle(fontWeight: FontWeight.w600))),
+              ]),
+              // 2. Drawn Row
+              DataRow(cells: [
+                const DataCell(Text('')),
+                const DataCell(Text('Drawn', style: TextStyle(fontSize: 12))),
+                DataCell(buildNumberInput((val) => setState(() => m.basicDrn = val))),
+                DataCell(Text(m.daDrn > 0 ? m.daDrn.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.hraDrn > 0 ? m.hraDrn.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.maDrn > 0 ? m.maDrn.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.grossDrn > 0 ? m.grossDrn.toStringAsFixed(0) : '-', style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(Text(m.ptaxDrn > 0 ? m.ptaxDrn.toStringAsFixed(0) : '-')),
+                DataCell(Text(m.netDrn > 0 ? m.netDrn.toStringAsFixed(0) : '-', style: const TextStyle(fontWeight: FontWeight.w600))),
+              ]),
+              // 3. Due Row
+              DataRow(
+                color: MaterialStateProperty.all(Colors.amber.shade50),
+                cells: [
+                  const DataCell(Text('')),
+                  const DataCell(Text('Due', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo))),
+                  DataCell(Text(m.basicDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                  DataCell(Text(m.daDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                  DataCell(Text(m.hraDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                  DataCell(Text(m.maDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                  DataCell(Text(m.grossDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo))),
+                  DataCell(Text(m.ptaxDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                  DataCell(Text(m.netDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
+                ],
+              ),
+            ]),
+            // TOTAL ROW
+            DataRow(
+              color: MaterialStateProperty.all(Colors.teal.shade200),
+              cells: [
+                const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold))),
+                const DataCell(Text('')),
+                DataCell(Text(sheet.totalBasicDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalDaDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalHraDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalMaDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalGrossDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalPtaxDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(sheet.totalNetDue.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildNumberInput(Function(double) onChanged) {
+    return SizedBox(
+      width: 75,
+      child: TextFormField(
+        keyboardType: TextInputType.number,
+        style: const TextStyle(fontSize: 13),
+        decoration: const InputDecoration(
+          hintText: '0',
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
+      ),
+    );
+  }
+
+  // --- ANNEXURE (CONTINUED) VIEW (স্বয়ংক্রিয় ফাইনাল সামারি) ---
+  Widget buildAnnexureContinuedView(
+    double basic, double da, double hra, double ma,
+    double gross, double ptax, double net,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'ANNEXURE - 1 (CONTINUED)\n(Final Page Claim Summary)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text("ARREAR DUE ON ACCOUNT OF:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, decoration: TextDecoration.underline)),
+              const SizedBox(height: 12),
+              buildSummaryLine('1. Total Basic Pay Due:', basic),
+              buildSummaryLine('2. Total D.A. Due:', da),
+              buildSummaryLine('3. Total H.R.A. Due:', hra),
+              buildSummaryLine('4. Total M.A. Due:', ma),
+              const Divider(thickness: 1.5, height: 24),
+              buildSummaryLine('TOTAL GROSS CLAIM:', gross, isBold: true),
+              const SizedBox(height: 12),
+              const Text("DEDUCTIONS / ADJUSTMENTS:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 8),
+              buildSummaryLine('Professional Tax (P.Tax) Due:', ptax),
+              const Divider(thickness: 2, height: 24),
+              buildSummaryLine('FINAL NET CLAIM (Passed for Rs.):', net, isBold: true, highlightColor: Colors.teal.shade900),
+              const SizedBox(height: 30),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Signature of D.D.O.", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                  Text("Signature of D.I. of Schools", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSummaryLine(String title, double amount, {bool isBold = false, Color? highlightColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 5),
-          Expanded(
-              child: TextField(
-                  controller: controller,
-                  style: const TextStyle(fontSize: 11),
-                  decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero))),
+          Text(title, style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            "₹ ${amount.toStringAsFixed(0)}",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              color: highlightColor ?? (isBold ? Colors.indigo : Colors.black87),
+            ),
+          ),
         ],
       ),
     );
