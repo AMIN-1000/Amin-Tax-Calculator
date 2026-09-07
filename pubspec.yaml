@@ -12,7 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   printing: ^5.13.2
   pdf: ^3.10.8
-
+  google_fontd: ^6.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
