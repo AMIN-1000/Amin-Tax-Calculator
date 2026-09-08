@@ -1,18 +1,3 @@
-আপনার দেওয়া দুটি নতুন স্ক্রিনশট খুব নিখুঁতভাবে বিশ্লেষণ করেছি।
-যে যে গুরুত্বপূর্ণ বিষয়গুলো সমাধান করা হয়েছে:
- * MONTH কলামের সেল মার্জ (Merge Cells):
-   * এক্সেল শিটের মতো প্রতি মাসের ৩টি রো (Admissible, Drawn, Due)-এর বিপরীতে MONTH কলামের সেলটি ৩টি রো মিলে একটি সিঙ্গেল মার্জ করা সেলে (Merged Cell) থাকবে। এতে প্রতিটি মাস (যেমন March,13) পুরো ৩টি লাইনের মাঝামাঝি একবারে সুন্দরভাবে দেখাবে।
- * REMARKS কলামের সেল মার্জ:
-   * যে মাসে DA % (যেমন July-তে 52% বা Jan-এ 58%) আছে, সেই মাসে % উপরে রেখে নিচের দুটি ফাঁকা সেল মার্জ হয়ে যাবে।
-   * আর অন্যান্য সাধারণ মাসে ৩টি সেল একসাথে মার্জ হয়ে একটি বড় ফাঁকা মার্জড সেল থাকবে, যাতে এক্সেল শিটের মতো কোনো অহেতুক দাগ না থাকে।
- * GRAND TOTAL ও Verified-এর মাঝের দূরত্ব একদম কম (Excel-এর মতো):
-   * এক্সেলের স্ক্রিনশট ৫০ ও ৫১ নম্বর রো লক্ষ্য করুন—গ্র্যান্ড টোটাল শেষ হতেই ঠিক তার লাগোয়া নিচে খুব সামান্য দূরত্বে (height: 1.5mm) Verified and found correct. বসেছে।
- * Verified ও Signature-এর মাঝে পর্যাপ্ত জায়গা (Stamp & Seal Space):
-   * সীলমোহর (Seal) ও সহি করার জন্য মাঝের জায়গাটি যথেষ্ট বড় ও ফাঁকা রাখা হয়েছে।
- * PDF-এ লাইন কেটে যাওয়া সমাধান (No Clipping):
-   * আগের কোডে ভার্টিক্যাল প্যাডিং অতিরিক্ত বাড়িয়ে দেওয়ার কারণে পেজের নিচে সাইন লাইনটি মার্জিন পার হয়ে কেটে যাচ্ছিল। টেবিলের প্রতিটি রো-এর প্যাডিং সুষম করে (vertical: 2.2pt) পুরো টেবিল ও সিগনেচার ব্লকটিকে A4 পেজের একদম ভেতরে সুন্দরভাবে ফিট করে দেওয়া হয়েছে, ফলে আর কোনো অংশই কাটবে না।
-সম্পূর্ণ আপডেট কোড (lib/main.dart):
-GitHub-এর Arrear-Calculator ব্রাঞ্চে গিয়ে lib/main.dart ফাইলের আগের কোড সম্পূর্ণ মুছে নিচের কোডটি পেস্ট করে Commit changes... করে দিন:
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -51,7 +36,6 @@ class MonthEntry {
   final String fixedRemarks;
   final double daRate;
 
-  // Unlocked inputs (Admissible) - completely blank
   TextEditingController admBasic = TextEditingController();
   TextEditingController admDp = TextEditingController();
   TextEditingController admSp = TextEditingController();
@@ -59,7 +43,6 @@ class MonthEntry {
   TextEditingController admGpf = TextEditingController();
   TextEditingController admItax = TextEditingController();
 
-  // Unlocked inputs (Drawn) - completely blank
   TextEditingController drwBasic = TextEditingController();
   TextEditingController drwDp = TextEditingController();
   TextEditingController drwSp = TextEditingController();
@@ -89,7 +72,7 @@ class MonthEntry {
   double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
   double get aCpf => _val(admCpf);
   double get aPtax => hasAdm ? (aGross > 15000 ? 150 : 130) : 0;
-  double get aGpf => hasAdm ? (_hasInput(admGpf) ? _val(admGpf) : 1500) : 0;
+  double get aGpf => _val(admGpf);
   double get aItax => _val(admItax);
   double get aNet => hasAdm ? (aGross - (aCpf + aPtax + aGpf + aItax)) : 0;
 
@@ -102,7 +85,7 @@ class MonthEntry {
   double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
   double get dCpf => _val(drwCpf);
   double get dPtax => hasDrw ? (dGross > 15000 ? 150 : 130) : 0;
-  double get dGpf => hasDrw ? (_hasInput(drwGpf) ? _val(drwGpf) : 1500) : 0;
+  double get dGpf => _val(drwGpf);
   double get dItax => _val(drwItax);
   double get dNet => hasDrw ? (dGross - (dCpf + dPtax + dGpf + dItax)) : 0;
 
@@ -795,7 +778,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF (Merged Month & Remarks, Perfect Fitting) ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -824,10 +806,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               _buildPdfScale(),
               pw.SizedBox(height: 2.5),
               _buildPdfTable(sh),
-              
-              // GRAND TOTAL থেকে Verified-এর ফাঁক এক্সেলের মতো খুব কম (১.৫ মিমি)
               pw.SizedBox(height: 1.5 * PdfPageFormat.mm),
-              
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -840,7 +819,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      // সীলমোহর ও স্ট্যাম্পের জন্য পর্যাপ্ত জায়গা (১৫ মিমি)
                       pw.SizedBox(height: 15 * PdfPageFormat.mm),
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                     ],
@@ -933,7 +911,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Calculation Sheet with Merged Month & Remarks Columns
   pw.Widget _buildPdfTable(YearSheet sh) {
     final headers = [
       "MONTH", "Admissible/\nDrawn & Due", "BASIC PAY", "D.P/IR", "S.P",
@@ -960,7 +937,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         14: pw.FixedColumnWidth(46),
       },
       children: [
-        // Column Header
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: headers.map((h) => pw.Container(
@@ -970,18 +946,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           )).toList(),
         ),
 
-        // 12 Months with Merged Month & Remarks
         for (var r in sh.records)
           pw.TableRow(
             children: [
-              // Merged Month Cell (spans entire 3-row height)
               pw.Container(
                 alignment: pw.Alignment.centerLeft,
                 padding: const pw.EdgeInsets.only(left: 3),
                 child: pw.Text(r.monthName, style: pw.TextStyle(fontSize: 6.2, fontWeight: pw.FontWeight.bold)),
               ),
-
-              // Middle 13 Columns Sub-Table
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: const {
@@ -1000,7 +972,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   12: pw.FixedColumnWidth(40),
                 },
                 children: [
-                  // Admissible
                   pw.TableRow(
                     children: [
                       _pCell("Admissible"),
@@ -1010,7 +981,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
                     ],
                   ),
-                  // Drawn
                   pw.TableRow(
                     children: [
                       _pCell("Drawn"),
@@ -1020,7 +990,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
                     ],
                   ),
-                  // Due
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                     children: [
@@ -1033,8 +1002,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   ),
                 ],
               ),
-
-              // Merged Remarks Cell (spans entire 3-row height)
               pw.Container(
                 alignment: pw.Alignment.center,
                 child: pw.Text(r.effectiveRemarks, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: pw.FontWeight.bold)),
@@ -1042,7 +1009,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             ],
           ),
 
-        // TOTAL
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
@@ -1064,7 +1030,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           ],
         ),
 
-        // BALANCE
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
@@ -1086,7 +1051,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           ],
         ),
 
-        // GRAND TOTAL
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: [
@@ -1135,7 +1099,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.8, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1418,4 +1381,3 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 }
-
