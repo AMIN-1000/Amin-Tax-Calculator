@@ -33,9 +33,10 @@ class ArrearCalculatorApp extends StatelessWidget {
 
 class MonthEntry {
   final String monthName;
-  final String remarks;
+  final String fixedRemarks;
   final double daRate;
 
+  // Unlocked inputs (Admissible)
   TextEditingController admBasic = TextEditingController();
   TextEditingController admDp = TextEditingController();
   TextEditingController admSp = TextEditingController();
@@ -43,6 +44,7 @@ class MonthEntry {
   TextEditingController admGpf = TextEditingController();
   TextEditingController admItax = TextEditingController();
 
+  // Unlocked inputs (Drawn)
   TextEditingController drwBasic = TextEditingController();
   TextEditingController drwDp = TextEditingController();
   TextEditingController drwSp = TextEditingController();
@@ -50,7 +52,12 @@ class MonthEntry {
   TextEditingController drwGpf = TextEditingController();
   TextEditingController drwItax = TextEditingController();
 
-  MonthEntry({required this.monthName, this.remarks = '', this.daRate = 0.52});
+  // Unlocked custom remarks (if not a fixed DA month)
+  TextEditingController customRemarks = TextEditingController();
+
+  MonthEntry({required this.monthName, this.fixedRemarks = '', this.daRate = 0.52});
+
+  String get effectiveRemarks => fixedRemarks.isNotEmpty ? fixedRemarks : customRemarks.text.trim();
 
   double _val(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
   bool _hasInput(TextEditingController c) => c.text.trim().isNotEmpty && double.tryParse(c.text.trim()) != null;
@@ -126,6 +133,8 @@ class YearSheet {
     required this.periodText,
     required this.records,
   });
+
+  bool get hasAnyInput => records.any((r) => r.hasAny);
 
   double _bVal(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
 
@@ -241,7 +250,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         if (mStr == "January,18" || mStr == "July,18") rem = "100%";
       }
 
-      mList.add(MonthEntry(monthName: mStr, remarks: rem, daRate: da));
+      mList.add(MonthEntry(monthName: mStr, fixedRemarks: rem, daRate: da));
     }
 
     return YearSheet(
@@ -504,7 +513,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           11: FixedColumnWidth(60),
           12: FixedColumnWidth(55),
           13: FixedColumnWidth(70),
-          14: FixedColumnWidth(70),
+          14: FixedColumnWidth(75),
         },
         children: [
           _buildColumnHeader(),
@@ -534,6 +543,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   List<TableRow> _buildMonthRows(MonthEntry r) {
     return [
+      // 1. Admissible Row (Percentage shows here in Admissible row)
       TableRow(
         children: [
           Container(
@@ -554,9 +564,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _unlockedCell(r.admGpf, hint: r.hasAdm ? "1500" : ""),
           _unlockedCell(r.admItax),
           _conditionalCalcCell(r.hasAdm, r.aNet, isBold: true),
-          _labelCell(""),
+          // REMARKS in Admissible Row: Shows DA % if fixed, otherwise Unlocked TextField
+          r.fixedRemarks.isNotEmpty
+              ? _labelCell(r.fixedRemarks, isBold: true)
+              : _unlockedTextCell(r.customRemarks),
         ],
       ),
+      // 2. Drawn Row
       TableRow(
         children: [
           _labelCell(""),
@@ -573,9 +587,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _unlockedCell(r.drwGpf, hint: r.hasDrw ? "1500" : ""),
           _unlockedCell(r.drwItax),
           _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
-          _labelCell(r.remarks, isBold: true),
+          _labelCell(""),
         ],
       ),
+      // 3. Due Row
       TableRow(
         decoration: BoxDecoration(color: Colors.grey.shade200),
         children: [
@@ -619,6 +634,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
+  Widget _unlockedTextCell(TextEditingController ctrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: TextField(
+        controller: ctrl,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          border: InputBorder.none,
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
+  }
+
   Widget _conditionalCalcCell(bool condition, double val, {bool isBold = false}) {
     return Container(
       color: isBold ? Colors.transparent : Colors.grey.shade50,
@@ -648,41 +680,44 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  Widget _calcCell(double val, {bool isBold = false}) {
+  // Blank if no data input entered
+  Widget _condSummaryCell(bool hasInput, double val, {bool isBold = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5),
       alignment: Alignment.center,
       child: Text(
-        val == 0 ? "0" : val.round().toString(),
+        hasInput ? val.round().toString() : "",
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
       ),
     );
   }
 
+  // TOTAL ROW
   TableRow _buildTotalRow(YearSheet sh) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade300),
       children: [
         _leftLabelCell("TOTAL:", isBold: true),
         _labelCell(""),
-        _calcCell(sh.totBasic, isBold: true),
-        _calcCell(sh.totDp, isBold: true),
-        _calcCell(sh.totSp, isBold: true),
-        _calcCell(sh.totDa, isBold: true),
-        _calcCell(sh.totHra, isBold: true),
-        _calcCell(sh.totMa, isBold: true),
-        _calcCell(sh.totGross, isBold: true),
-        _calcCell(sh.totCpf, isBold: true),
-        _calcCell(sh.totPtax, isBold: true),
-        _calcCell(sh.totGpf, isBold: true),
-        _calcCell(sh.totItax, isBold: true),
-        _calcCell(sh.totNet, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totBasic, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totDp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totSp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totDa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totHra, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totMa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totGross, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totCpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totPtax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totGpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totItax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totNet, isBold: true),
         _labelCell(""),
       ],
     );
   }
 
+  // BALANCE ROW
   TableRow _buildBalanceRow(YearSheet sh) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade300),
@@ -706,24 +741,25 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
+  // GRAND TOTAL ROW = (TOTAL - BALANCE)
   TableRow _buildGrandTotalRow(YearSheet sh) {
     return TableRow(
       decoration: BoxDecoration(color: Colors.grey.shade400),
       children: [
         _leftLabelCell("GRAND TOTAL:", isBold: true),
         _labelCell(""),
-        _calcCell(sh.grandBasic, isBold: true),
-        _calcCell(sh.grandDp, isBold: true),
-        _calcCell(sh.grandSp, isBold: true),
-        _calcCell(sh.grandDa, isBold: true),
-        _calcCell(sh.grandHra, isBold: true),
-        _calcCell(sh.grandMa, isBold: true),
-        _calcCell(sh.grandGross, isBold: true),
-        _calcCell(sh.grandCpf, isBold: true),
-        _calcCell(sh.grandPtax, isBold: true),
-        _calcCell(sh.grandGpf, isBold: true),
-        _calcCell(sh.grandItax, isBold: true),
-        _calcCell(sh.grandNet, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandBasic, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandDp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandSp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandDa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandHra, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandMa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandCpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandPtax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandGpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandItax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandNet, isBold: true),
         _labelCell(""),
       ],
     );
@@ -898,7 +934,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: headers.map((h) => pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 3.5),
+            padding: const pw.EdgeInsets.symmetric(vertical: 4.6),
             alignment: pw.Alignment.center,
             child: pw.Text(h, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: pw.FontWeight.bold)),
           )).toList(),
@@ -917,7 +953,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
             _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
-            _pCell(""),
+            // Remarks in PDF Admissible Row
+            _pCell(r.effectiveRemarks, isBold: true),
           ]),
           pw.TableRow(children: [
             _pCell(""), _pCell("Drawn"),
@@ -925,7 +962,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
             _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf), _pCondNum(r.hasDrw, r.dPtax),
             _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
-            _pCell(r.remarks, isBold: true),
+            _pCell(""),
           ]),
           pw.TableRow(
             decoration: const pw.BoxDecoration(color: PdfColors.grey200),
@@ -939,36 +976,63 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             ],
           ),
         ],
+        // TOTAL (Basic to Net)
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
             _pLeftCell("TOTAL:", isBold: true), _pCell(""),
-            _pNum(sh.totBasic, isBold: true), _pNum(sh.totDp, isBold: true), _pNum(sh.totSp, isBold: true),
-            _pNum(sh.totDa, isBold: true), _pNum(sh.totHra, isBold: true), _pNum(sh.totMa, isBold: true),
-            _pNum(sh.totGross, isBold: true), _pNum(sh.totCpf, isBold: true), _pNum(sh.totPtax, isBold: true),
-            _pNum(sh.totGpf, isBold: true), _pNum(sh.totItax, isBold: true), _pNum(sh.totNet, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totBasic, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totDp, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totSp, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totDa, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totHra, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totMa, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totGross, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totCpf, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totPtax, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totGpf, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totItax, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.totNet, isBold: true),
             _pCell(""),
           ],
         ),
+        // BALANCE
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
             _pLeftCell("BALANCE:", isBold: true), _pCell(""),
-            _pNum(sh.balBasic, isBold: true), _pNum(sh.balDp, isBold: true), _pNum(sh.balSp, isBold: true),
-            _pNum(sh.balDa, isBold: true), _pNum(sh.balHra, isBold: true), _pNum(sh.balMa, isBold: true),
-            _pNum(sh.balGross, isBold: true), _pNum(sh.balCpf, isBold: true), _pNum(sh.balPtax, isBold: true),
-            _pNum(sh.balGpf, isBold: true), _pNum(sh.balItax, isBold: true), _pNum(sh.balNet, isBold: true),
+            _pCondSummary(sh.balBasic != 0, sh.balBasic, isBold: true),
+            _pCondSummary(sh.balDp != 0, sh.balDp, isBold: true),
+            _pCondSummary(sh.balSp != 0, sh.balSp, isBold: true),
+            _pCondSummary(sh.balDa != 0, sh.balDa, isBold: true),
+            _pCondSummary(sh.balHra != 0, sh.balHra, isBold: true),
+            _pCondSummary(sh.balMa != 0, sh.balMa, isBold: true),
+            _pCondSummary(sh.balGross != 0, sh.balGross, isBold: true),
+            _pCondSummary(sh.balCpf != 0, sh.balCpf, isBold: true),
+            _pCondSummary(sh.balPtax != 0, sh.balPtax, isBold: true),
+            _pCondSummary(sh.balGpf != 0, sh.balGpf, isBold: true),
+            _pCondSummary(sh.balItax != 0, sh.balItax, isBold: true),
+            _pCondSummary(sh.balNet != 0, sh.balNet, isBold: true),
             _pCell(""),
           ],
         ),
+        // GRAND TOTAL = TOTAL - BALANCE
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: [
             _pLeftCell("GRAND TOTAL:", isBold: true), _pCell(""),
-            _pNum(sh.grandBasic, isBold: true), _pNum(sh.grandDp, isBold: true), _pNum(sh.grandSp, isBold: true),
-            _pNum(sh.grandDa, isBold: true), _pNum(sh.grandHra, isBold: true), _pNum(sh.grandMa, isBold: true),
-            _pNum(sh.grandGross, isBold: true), _pNum(sh.grandCpf, isBold: true), _pNum(sh.grandPtax, isBold: true),
-            _pNum(sh.grandGpf, isBold: true), _pNum(sh.grandItax, isBold: true), _pNum(sh.grandNet, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandBasic, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandDp, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandSp, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandDa, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandHra, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandMa, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandGross, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandCpf, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandPtax, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandGpf, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandItax, isBold: true),
+            _pCondSummary(sh.hasAnyInput, sh.grandNet, isBold: true),
             _pCell(""),
           ],
         ),
@@ -977,25 +1041,25 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   }
 
   pw.Widget _pCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.6),
+    padding: const pw.EdgeInsets.symmetric(vertical: 4.6),
     alignment: pw.Alignment.center,
     child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pLeftCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.only(left: 3, top: 2.6, bottom: 2.6),
+    padding: const pw.EdgeInsets.only(left: 3, top: 4.6, bottom: 4.6),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  pw.Widget _pNum(double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.6),
+  pw.Widget _pCondNum(bool condition, double val, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 4.6),
     alignment: pw.Alignment.center,
-    child: pw.Text(val == 0 ? "0" : val.round().toString(), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+    child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  pw.Widget _pCondNum(bool condition, double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.6),
+  pw.Widget _pCondSummary(bool condition, double val, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 4.6),
     alignment: pw.Alignment.center,
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
@@ -1258,6 +1322,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     await Printing.layoutPdf(onLayout: (format) async => doc.save());
   }
+
+  pw.Widget _pNum(double val, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 2.6),
+    alignment: pw.Alignment.center,
+    child: pw.Text(val == 0 ? "0" : val.round().toString(), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
 
   pw.Widget _adHocRow(String no, double val) {
     return pw.Padding(
