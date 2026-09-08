@@ -790,29 +790,26 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           theme: theme,
-          // ১. নং সমাধান: একদম Top Margin বাড়িয়ে 15mm (42.5pt) করা হলো
           margin: const pw.EdgeInsets.only(
-            top: 42.5,    // 15mm Top Margin
-            left: 22.7,   // 8mm Left
-            right: 22.7,  // 8mm Right
-            bottom: 28.3, // 10mm Bottom
+            top: 45.4,    // 16mm Top Margin
+            left: 22.7,   // 8mm Left Margin
+            right: 22.7,  // 8mm Right Margin
+            bottom: 28.3, // 10mm Bottom Margin
           ),
           build: (pw.Context context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12.0)),
               ),
               pw.SizedBox(height: 4),
-              // ২. নং সমাধান: INSTITUTION ও Employee সংক্রান্ত রো-গুলোর উচ্চতা বৃদ্ধি
               _buildPdfHeader(sh.periodText),
               pw.SizedBox(height: 3),
-              // ৩. নং সমাধান: SCALE ADMISSIBLE রো-টির Height বৃদ্ধি
               _buildPdfScale(),
               pw.SizedBox(height: 3),
               _buildPdfTable(sh),
               
-              pw.SizedBox(height: 4.5),
+              pw.SizedBox(height: 5.0),
               
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -820,14 +817,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 children: [
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(bottom: 2),
-                    child: pw.Text("Date: ....................", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                    child: pw.Text("Date: ....................", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      pw.SizedBox(height: 32),
-                      pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                      pw.SizedBox(height: 34),
+                      pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                     ],
                   ),
                 ],
@@ -838,10 +835,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       );
     }
 
-    await Printing.layoutPdf(onLayout: (format) async => doc.save());
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: 'Calculation_Sheet.pdf',
+    );
   }
 
-  // ২. নং সমাধান: বর্ধিত উচ্চতার হেডার
   pw.Widget _buildPdfHeader(String periodText) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -863,7 +862,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(children: [
           _pdfHCell("ARREAR FOR THE PERIOD:"),
           pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 4.2),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3.5),
             child: pw.Center(child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold))),
           ),
           _pdfHCell("EMPLOYEE ID:"), _pdfValCenterCell(empIdController.text),
@@ -878,49 +877,55 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _pdfHCell(String t) => pw.Container(
     color: PdfColors.grey300,
-    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
     alignment: pw.Alignment.centerLeft,
-    child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _pdfValLeftCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
     child: pw.Align(
       alignment: pw.Alignment.centerLeft,
-      child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+      child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
     ),
   );
 
   pw.Widget _pdfValCenterCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 4.2),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 3.5),
     child: pw.Center(
-      child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+      child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
     ),
   );
 
-  // ৩. নং সমাধান: বর্ধিত উচ্চতার SCALE ADMISSIBLE রো
+  // ১. নং সমাধান: SCALE ADMISSIBLE রো-তে TableBorder ব্যবহার করে Left ও Right বর্ডার ১০০% নিশ্চিত করা হলো
   pw.Widget _buildPdfScale() {
-    return pw.Container(
-      decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
-      child: pw.Column(
-        children: [
-          pw.Container(
-            width: double.infinity,
-            color: PdfColors.grey300,
-            padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
-            alignment: pw.Alignment.center,
-            child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 8.0, fontWeight: pw.FontWeight.bold)),
-          ),
-          pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
-            child: pw.Center(child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2))),
-          ),
-        ],
-      ),
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+      children: [
+        pw.TableRow(
+          children: [
+            pw.Container(
+              color: PdfColors.grey300,
+              padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
+              alignment: pw.Alignment.center,
+              child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 8.0, fontWeight: pw.FontWeight.bold)),
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 2.5),
+              alignment: pw.Alignment.center,
+              child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2)),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  // একক মূল গ্রিড (কোনো ডাবল বর্ডার নেই, বর্ধিত সুষম উচ্চতা)
+  // Calculation Table
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
       0: pw.FlexColumnWidth(2.3),  // MONTH
@@ -947,21 +952,18 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     List<pw.TableRow> rows = [];
 
-    // Header Row
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey400),
         children: headers.map((h) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 4.2),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.5),
           alignment: pw.Alignment.center,
           child: pw.Text(h, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: pw.FontWeight.bold)),
         )).toList(),
       ),
     );
 
-    // 12 Months * 3 Rows = 36 Rows
     for (var r in sh.records) {
-      // 1. Admissible Row (Top-Left month name, Top-Center remarks)
       rows.add(
         pw.TableRow(
           children: [
@@ -976,7 +978,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         ),
       );
 
-      // 2. Drawn Row
       rows.add(
         pw.TableRow(
           children: [
@@ -991,7 +992,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         ),
       );
 
-      // 3. Due Row
       rows.add(
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
@@ -1008,7 +1008,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       );
     }
 
-    // TOTAL ROW
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -1032,7 +1031,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       ),
     );
 
-    // BALANCE ROW
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -1056,7 +1054,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       ),
     );
 
-    // GRAND TOTAL ROW
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey400),
@@ -1096,7 +1093,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _pCleanCell(String text, {bool alignLeft = false}) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.8),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.4),
       alignment: alignLeft ? pw.Alignment.topLeft : pw.Alignment.topCenter,
       child: pw.Text(
         text,
@@ -1111,30 +1108,31 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   }
 
   pw.Widget _pCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
     alignment: pw.Alignment.center,
     child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pLeftSummaryCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.only(left: 3, top: 3.8, bottom: 3.8),
+    padding: const pw.EdgeInsets.only(left: 3, top: 3.4, bottom: 3.4),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pCondNum(bool condition, double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
     alignment: pw.Alignment.center,
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pCondSummary(bool condition, double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
     alignment: pw.Alignment.center,
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
+  // ২. নং সমাধান: Final Sheet Landscape এবং Margin: Top 15mm, Left/Right 8mm, Bottom 12mm
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1147,11 +1145,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
+        // নির্দিষ্ট মার্জিন: Top 15mm, Left/Right 8mm, Bottom 12mm
         margin: const pw.EdgeInsets.only(
-          top: 34.0,  // 12mm
-          left: 22.7, // 8mm
+          top: 42.5,   // 15mm
+          left: 22.7,  // 8mm
           right: 22.7, // 8mm
-          bottom: 25.0, // ~9mm
+          bottom: 34.0 // 12mm
         ),
         build: (pw.Context context) {
           return pw.Column(
@@ -1191,7 +1190,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   pw.TableRow(children: [
                     _pdfHCell("ARREAR FOR THE PERIOD:"),
                     pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.5),
                       child: pw.Center(child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
                     ),
                     _pdfHCell(""), _pdfValCenterCell(""),
@@ -1395,7 +1394,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => doc.save());
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: 'Final_Sheet.pdf',
+      format: PdfPageFormat.a4.landscape, // অ্যান্ড্রয়েড প্রিন্টারকে সরাসরি Landscape করার নির্দেশ
+    );
   }
 
   pw.Widget _adHocRow(String no, double val) {
