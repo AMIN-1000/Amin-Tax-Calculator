@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),  // MONTH
-      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
-      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
-      3: pw.FlexColumnWidth(1.4),  // D.P/IR
-      4: pw.FlexColumnWidth(1.3),  // S.P
-      5: pw.FlexColumnWidth(1.8),  // D.A
-      6: pw.FlexColumnWidth(1.7),  // H.R.A
-      7: pw.FlexColumnWidth(1.3),  // M.A
-      8: pw.FlexColumnWidth(2.0),  // GROSS
-      9: pw.FlexColumnWidth(1.4),  // C.P.F
-      10: pw.FlexColumnWidth(1.4), // P.TAX
-      11: pw.FlexColumnWidth(1.6), // G.P.F
-      12: pw.FlexColumnWidth(1.4), // I.TAX
-      13: pw.FlexColumnWidth(2.0), // NET
-      14: pw.FlexColumnWidth(2.5), // REMARKS
+      0: pw.FlexColumnWidth(2.3),
+      1: pw.FlexColumnWidth(2.4),
+      2: pw.FlexColumnWidth(2.0),
+      3: pw.FlexColumnWidth(1.4),
+      4: pw.FlexColumnWidth(1.3),
+      5: pw.FlexColumnWidth(1.8),
+      6: pw.FlexColumnWidth(1.7),
+      7: pw.FlexColumnWidth(1.3),
+      8: pw.FlexColumnWidth(2.0),
+      9: pw.FlexColumnWidth(1.4),
+      10: pw.FlexColumnWidth(1.4),
+      11: pw.FlexColumnWidth(1.6),
+      12: pw.FlexColumnWidth(1.4),
+      13: pw.FlexColumnWidth(2.0),
+      14: pw.FlexColumnWidth(2.5),
     };
 
     final headers = [
@@ -1180,7 +1180,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF (হুবহু স্ক্রিনশট 3650, 3654, 3656, 3657 অনুযায়ী) ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1194,10 +1194,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double rowH = 14.25; 
     const double reasonH = 28.50; 
 
-    // মাস্টার গ্রিড অনুপাত (Master Columns in points)
-    // 0..6: 7 columns of ARREAR DUE ON ACCOUNT OF (12.0)
-    // 7: IN RS. (1.0)
-    // 8..11: 4 columns of TO BE CREDITED TO (5.8)
+    // মাস্টার গ্রিড অনুপাত (Master Columns):
+    // 0: BASIC PAY (1.8) -> Table 1-এর Col 0 (NAME OF THE INSTITUTION:) এর সাথে ১০০% সমান!
+    // 1..6: D.P/IR/S.P, D.A, H.R.A, M.A, Gross, C.P.F/G.P.F (sum = 10.2)
+    // 7: IN RS. (1.0) -> Table 1-এর মাঝের ব্লকটি ঠিক এই দাগ পর্যন্ত মার্জ হয়ে শেষ হবে!
+    // 8: P.TAX (1.3) -> Table 1-এর INDEX NO: / DESIGNATION: কলামের সাথে ১০০% সমান!
+    // 9: G.P.F/C.P.F (1.4) -> Table 1-এর B3-083 / A.T. কলামের সাথে ১০০% সমান!
+    // 10: OTHERS (1.4) -> Table 1-এর H.S. CODE: / EMPLOYEE ID: কলামের সাথে ১০০% সমান!
+    // 11: NET CLAIM (1.7) -> Table 1-এর 103280 / EYMG6650 কলামের সাথে ১০০% সমান!
     const masterColWidths = {
       0: pw.FlexColumnWidth(1.8), // BASIC PAY
       1: pw.FlexColumnWidth(1.4), // D.P/IR/S.P
@@ -1213,7 +1217,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       11: pw.FlexColumnWidth(1.7), // NET CLAIM
     };
 
-    // Right 4 columns
+    // Table 1 এর কলাম অনুপাত যা Table 2 এর দাগের সাথে নিখুঁতভাবে লক করা
+    const headerTableColWidths = {
+      0: pw.FlexColumnWidth(1.8),  // Col 0: aligns with BASIC PAY
+      1: pw.FlexColumnWidth(11.2), // Cols 1..7: aligns through IN RS. right border
+      2: pw.FlexColumnWidth(1.3),  // Col 8: aligns with P.TAX
+      3: pw.FlexColumnWidth(1.4),  // Col 9: aligns with G.P.F/C.P.F
+      4: pw.FlexColumnWidth(1.4),  // Col 10: aligns with OTHERS
+      5: pw.FlexColumnWidth(1.7),  // Col 11: aligns with NET CLAIM
+    };
+
     const right4ColWidths = {
       0: pw.FlexColumnWidth(1.3),
       1: pw.FlexColumnWidth(1.4),
@@ -1245,38 +1258,42 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table
+              // 1. Header Table (Vertical borders mathematically aligned with Table 2)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                columnWidths: const {
-                  0: pw.FlexColumnWidth(2.0),
-                  1: pw.FlexColumnWidth(3.5),
-                  2: pw.FlexColumnWidth(1.2),
-                  3: pw.FlexColumnWidth(1.2),
-                  4: pw.FlexColumnWidth(1.2),
-                  5: pw.FlexColumnWidth(1.5),
-                },
+                columnWidths: headerTableColWidths,
                 children: [
                   pw.TableRow(children: [
-                    _finalHCell("NAME OF THE INSTITUTION:", height: rowH), _finalValCell(instController.text, height: rowH, alignLeft: true),
-                    _finalHCell("INDEX NO :", height: rowH), _finalValCell(indexController.text, height: rowH),
-                    _finalHCell("H.S. CODE :", height: rowH), _finalValCell(hsCodeController.text, height: rowH),
+                    _finalHCell("NAME OF THE INSTITUTION:", height: rowH),
+                    _finalValCell(instController.text, height: rowH, alignLeft: true),
+                    _finalHCell("INDEX NO.:", height: rowH),
+                    _finalValCell(indexController.text, height: rowH),
+                    _finalHCell("H.S. CODE:", height: rowH),
+                    _finalValCell(hsCodeController.text, height: rowH),
                   ]),
                   pw.TableRow(children: [
-                    _finalHCell("NAME OF THE EMPLOYEE:", height: rowH), _finalValCell(empNameController.text, height: rowH, alignLeft: true),
-                    _finalHCell("DESIGNATION:", height: rowH), _finalValCell(desigController.text, height: rowH),
-                    _finalHCell("EMPLOYEE ID:", height: rowH), _finalValCell(empIdController.text, height: rowH),
+                    _finalHCell("NAME OF THE EMPLOYEE:", height: rowH),
+                    _finalValCell(empNameController.text, height: rowH, alignLeft: true),
+                    _finalHCell("DESIGNATION:", height: rowH),
+                    _finalValCell(desigController.text, height: rowH),
+                    _finalHCell("EMPLOYEE ID:", height: rowH),
+                    _finalValCell(empIdController.text, height: rowH),
                   ]),
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                     _finalValCell("${fromDateController.text}   TO   ${toDateController.text}", height: rowH, isBold: true),
-                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
-                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
+                    _finalHCell("", height: rowH),
+                    _finalValCell("", height: rowH),
+                    _finalHCell("", height: rowH),
+                    _finalValCell("", height: rowH),
                   ]),
                   pw.TableRow(children: [
-                    _finalHCell("IN TERMS OF ORDER NO.:", height: rowH), _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
-                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
-                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
+                    _finalHCell("IN TERMS OF ORDER NO.:", height: rowH),
+                    _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
+                    _finalHCell("", height: rowH),
+                    _finalValCell("", height: rowH),
+                    _finalHCell("", height: rowH),
+                    _finalValCell("", height: rowH),
                   ]),
                 ],
               ),
@@ -1324,7 +1341,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       _finalValCell("M.A", height: rowH, isBold: true),
                       _finalValCell("Gross", height: rowH, isBold: true),
                       _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
-                      // Col 7 under IN RS. (Empty header cell)
+                      // Col 7 under IN RS.
                       pw.Container(height: rowH),
                       _finalValCell("P.TAX", height: rowH, isBold: true),
                       _finalValCell("G.P.F/C.P.F", height: rowH, isBold: true),
@@ -1342,7 +1359,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       _finalValCell(allGrandMa.round().toString(), height: rowH),
                       _finalValCell(allGrandGross.round().toString(), height: rowH),
                       _finalValCell("0", height: rowH),
-                      // Col 7 under IN RS. (Empty value cell)
+                      // Col 7 under IN RS.
                       pw.Container(height: rowH),
                       _finalValCell("0", height: rowH),
                       _finalValCell("0", height: rowH),
@@ -1353,14 +1370,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // 3. Lower Section: হুবহু স্ক্রিনশট 3650.jpg অনুযায়ী ৩টি অংশ
-              // Part A (Left): cols 0..6 (flex = 120)
-              // Part B (Middle): col 7 (flex = 10) -> চারিদিকে বর্ডারসহ একটি লম্বা ফাঁকা মার্জড বক্স!
-              // Part C (Right): cols 8..11 (flex = 58) -> ৪-কলাম বিশিষ্ট Ad-hoc ও Claim Table
+              // 3. Lower Section: স্ক্রিনশট 3650.jpg, 3654.jpg, 3656.jpg অনুযায়ী নিখুঁত বিন্যাস
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Part A: Left Box (cols 0..6)
+                  // Part A: Left Box (cols 0..6, flex = 120)
                   pw.Expanded(
                     flex: 120,
                     child: pw.Container(
@@ -1418,18 +1432,17 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Part B: Middle Box under "IN RS." (col 7)
-                  // স্ক্রিনশট 3650.jpg অনুযায়ী: চারিদিকে বর্ডারসহ একটি লম্বা ফাঁকা মার্জড বক্স!
+                  // Part B: Middle Box under "IN RS." (col 7, flex = 10)
+                  // চারিদিকে বর্ডারসহ একটি লম্বা ফাঁকা মার্জড বক্স
                   pw.Expanded(
                     flex: 10,
                     child: pw.Container(
-                      height: (rowH * 6) + 4.8, // Exactly spans down to ACTUAL CLAIM
+                      height: (rowH * 6) + 4.8,
                       decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                     ),
                   ),
 
-                  // Part C: Right 4 Columns (cols 8..11)
-                  // স্ক্রিনশট 3650.jpg ও 3657.jpg অনুযায়ী Ad-hoc ও Claim Table
+                  // Part C: Right 4 Columns (cols 8..11, flex = 58)
                   pw.Expanded(
                     flex: 58,
                     child: pw.Column(
@@ -1497,7 +1510,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.SizedBox(height: 5),
 
                         // PASSED FOR RS.: (Cols 0, 1, 2 merged | Col 3 holds Amount)
-                        // টাকার ঘরটি ঠিক উপরের NET CLAIM-এর সোজা উল্লম্ব দাগে বসেছে
+                        // টাকার ঘরটি ঠিক উপরের NET CLAIM-এর সাথে নিখুঁত সমান্তরালে
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1519,7 +1532,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
                         pw.SizedBox(height: 5),
 
-                        // IN WORDS ROW: (Words box stretches across rest of the table)
+                        // IN WORDS ROW
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1553,7 +1566,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // স্ক্রিনশট অনুযায়ী "8. All relevant records..." এবং সহির মাঝের ফাঁকা স্থান (20mm)
+              // "8. All relevant records..." এবং সহির মাঝের ফাঁকা স্থান (20mm)
               pw.SizedBox(height: 20.0 * PdfPageFormat.mm),
 
               // Signature Line
