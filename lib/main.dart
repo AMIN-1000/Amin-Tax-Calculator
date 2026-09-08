@@ -36,7 +36,7 @@ class MonthEntry {
   final String fixedRemarks;
   final double daRate;
 
-  // Unlocked inputs (Admissible)
+  // Unlocked inputs (Admissible) - completely blank
   TextEditingController admBasic = TextEditingController();
   TextEditingController admDp = TextEditingController();
   TextEditingController admSp = TextEditingController();
@@ -44,7 +44,7 @@ class MonthEntry {
   TextEditingController admGpf = TextEditingController();
   TextEditingController admItax = TextEditingController();
 
-  // Unlocked inputs (Drawn)
+  // Unlocked inputs (Drawn) - completely blank
   TextEditingController drwBasic = TextEditingController();
   TextEditingController drwDp = TextEditingController();
   TextEditingController drwSp = TextEditingController();
@@ -52,7 +52,6 @@ class MonthEntry {
   TextEditingController drwGpf = TextEditingController();
   TextEditingController drwItax = TextEditingController();
 
-  // Unlocked custom remarks (if not a fixed DA month)
   TextEditingController customRemarks = TextEditingController();
 
   MonthEntry({required this.monthName, this.fixedRemarks = '', this.daRate = 0.52});
@@ -75,7 +74,7 @@ class MonthEntry {
   double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
   double get aCpf => _val(admCpf);
   double get aPtax => hasAdm ? (aGross > 15000 ? 150 : 130) : 0;
-  double get aGpf => hasAdm ? (_hasInput(admGpf) ? _val(admGpf) : 1500) : 0;
+  double get aGpf => _val(admGpf);
   double get aItax => _val(admItax);
   double get aNet => hasAdm ? (aGross - (aCpf + aPtax + aGpf + aItax)) : 0;
 
@@ -88,7 +87,7 @@ class MonthEntry {
   double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
   double get dCpf => _val(drwCpf);
   double get dPtax => hasDrw ? (dGross > 15000 ? 150 : 130) : 0;
-  double get dGpf => hasDrw ? (_hasInput(drwGpf) ? _val(drwGpf) : 1500) : 0;
+  double get dGpf => _val(drwGpf);
   double get dItax => _val(drwItax);
   double get dNet => hasDrw ? (dGross - (dCpf + dPtax + dGpf + dItax)) : 0;
 
@@ -543,7 +542,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   List<TableRow> _buildMonthRows(MonthEntry r) {
     return [
-      // 1. Admissible Row (Percentage shows here in Admissible row)
+      // 1. Admissible Row (Remarks/DA% shows in Admissible)
       TableRow(
         children: [
           Container(
@@ -561,10 +560,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasAdm, r.aGross, isBold: true),
           _unlockedCell(r.admCpf),
           _conditionalCalcCell(r.hasAdm, r.aPtax),
-          _unlockedCell(r.admGpf, hint: r.hasAdm ? "1500" : ""),
+          _unlockedCell(r.admGpf), // Completely blank, no default hint
           _unlockedCell(r.admItax),
           _conditionalCalcCell(r.hasAdm, r.aNet, isBold: true),
-          // REMARKS in Admissible Row: Shows DA % if fixed, otherwise Unlocked TextField
           r.fixedRemarks.isNotEmpty
               ? _labelCell(r.fixedRemarks, isBold: true)
               : _unlockedTextCell(r.customRemarks),
@@ -584,7 +582,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasDrw, r.dGross, isBold: true),
           _unlockedCell(r.drwCpf),
           _conditionalCalcCell(r.hasDrw, r.dPtax),
-          _unlockedCell(r.drwGpf, hint: r.hasDrw ? "1500" : ""),
+          _unlockedCell(r.drwGpf), // Completely blank, no default hint
           _unlockedCell(r.drwItax),
           _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
           _labelCell(""),
@@ -614,7 +612,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ];
   }
 
-  Widget _unlockedCell(TextEditingController ctrl, {String hint = ""}) {
+  Widget _unlockedCell(TextEditingController ctrl) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
       child: TextField(
@@ -622,11 +620,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           isDense: true,
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 10),
-          contentPadding: const EdgeInsets.symmetric(vertical: 5),
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
           border: InputBorder.none,
         ),
         onChanged: (_) => setState(() {}),
@@ -680,7 +676,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Blank if no data input entered
   Widget _condSummaryCell(bool hasInput, double val, {bool isBold = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -791,7 +786,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF (Full-height balanced layout) ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -802,7 +797,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           theme: theme,
-          margin: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          // ১. নং সমাধান: top 12mm, left/right 8mm, bottom 10mm
+          margin: pw.EdgeInsets.only(
+            top: 12 * PdfPageFormat.mm,
+            left: 8 * PdfPageFormat.mm,
+            right: 8 * PdfPageFormat.mm,
+            bottom: 10 * PdfPageFormat.mm,
+          ),
           build: (pw.Context context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
@@ -811,12 +812,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 4),
               _buildPdfHeader(sh.periodText),
-              pw.SizedBox(height: 4),
+              pw.SizedBox(height: 3),
               _buildPdfScale(),
-              pw.SizedBox(height: 4),
+              pw.SizedBox(height: 3),
               _buildPdfTable(sh),
-              pw.Spacer(),
-              // Verified and found correct right above Secretary Signature
+              
+              // ২. নং সমাধান: GRAND TOTAL ও Verified and found correct-এর ব্যবধান 5mm
+              pw.SizedBox(height: 5 * PdfPageFormat.mm),
+              
+              // ৩. নং সমাধান: Verified ও Signature-এর ব্যবধান 16mm
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -829,13 +833,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                      pw.SizedBox(height: 14),
+                      pw.SizedBox(height: 16 * PdfPageFormat.mm), // 16mm exact space
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                     ],
                   ),
                 ],
               ),
-              pw.SizedBox(height: 4),
             ],
           ),
         ),
@@ -953,7 +956,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
             _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
-            // Remarks in PDF Admissible Row
             _pCell(r.effectiveRemarks, isBold: true),
           ]),
           pw.TableRow(children: [
@@ -976,7 +978,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             ],
           ),
         ],
-        // TOTAL (Basic to Net)
+        // TOTAL
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
@@ -1016,7 +1018,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCell(""),
           ],
         ),
-        // GRAND TOTAL = TOTAL - BALANCE
+        // GRAND TOTAL
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey400),
           children: [
@@ -1077,7 +1079,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
-        margin: const pw.EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+        margin: pw.EdgeInsets.only(
+          top: 12 * PdfPageFormat.mm,
+          left: 8 * PdfPageFormat.mm,
+          right: 8 * PdfPageFormat.mm,
+          bottom: 10 * PdfPageFormat.mm,
+        ),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
