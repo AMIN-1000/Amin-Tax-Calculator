@@ -779,7 +779,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF (No Double Borders, Perfectly Balanced Height) ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -790,26 +790,28 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           theme: theme,
+          // ১. নং সমাধান: একদম Top Margin বাড়িয়ে 15mm (42.5pt) করা হলো
           margin: const pw.EdgeInsets.only(
-            top: 34.0,    // 12mm
-            left: 22.7,   // 8mm
-            right: 22.7,  // 8mm
-            bottom: 28.3, // 10mm
+            top: 42.5,    // 15mm Top Margin
+            left: 22.7,   // 8mm Left
+            right: 22.7,  // 8mm Right
+            bottom: 28.3, // 10mm Bottom
           ),
           build: (pw.Context context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11.5)),
+                child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
               ),
-              pw.SizedBox(height: 3),
+              pw.SizedBox(height: 4),
+              // ২. নং সমাধান: INSTITUTION ও Employee সংক্রান্ত রো-গুলোর উচ্চতা বৃদ্ধি
               _buildPdfHeader(sh.periodText),
-              pw.SizedBox(height: 2),
+              pw.SizedBox(height: 3),
+              // ৩. নং সমাধান: SCALE ADMISSIBLE রো-টির Height বৃদ্ধি
               _buildPdfScale(),
-              pw.SizedBox(height: 2),
+              pw.SizedBox(height: 3),
               _buildPdfTable(sh),
               
-              // Spacing matching Excel sheet
               pw.SizedBox(height: 4.5),
               
               pw.Row(
@@ -824,7 +826,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      pw.SizedBox(height: 36),
+                      pw.SizedBox(height: 32),
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
                     ],
                   ),
@@ -839,6 +841,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     await Printing.layoutPdf(onLayout: (format) async => doc.save());
   }
 
+  // ২. নং সমাধান: বর্ধিত উচ্চতার হেডার
   pw.Widget _buildPdfHeader(String periodText) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -860,8 +863,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(children: [
           _pdfHCell("ARREAR FOR THE PERIOD:"),
           pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
-            child: pw.Center(child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold))),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 4.2),
+            child: pw.Center(child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold))),
           ),
           _pdfHCell("EMPLOYEE ID:"), _pdfValCenterCell(empIdController.text),
         ]),
@@ -875,13 +878,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _pdfHCell(String t) => pw.Container(
     color: PdfColors.grey300,
-    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1.8),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _pdfValLeftCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1.8),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
     child: pw.Align(
       alignment: pw.Alignment.centerLeft,
       child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
@@ -889,12 +892,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   );
 
   pw.Widget _pdfValCenterCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 1.8),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 4.2),
     child: pw.Center(
       child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
     ),
   );
 
+  // ৩. নং সমাধান: বর্ধিত উচ্চতার SCALE ADMISSIBLE রো
   pw.Widget _buildPdfScale() {
     return pw.Container(
       decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
@@ -903,20 +907,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           pw.Container(
             width: double.infinity,
             color: PdfColors.grey300,
-            padding: const pw.EdgeInsets.symmetric(vertical: 2.2),
+            padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
             alignment: pw.Alignment.center,
-            child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 8.0, fontWeight: pw.FontWeight.bold)),
           ),
           pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            child: pw.Center(child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7))),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
+            child: pw.Center(child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2))),
           ),
         ],
       ),
     );
   }
 
-  // 100% Guaranteed Calculation Table with No Double Borders and Increased Row Height
+  // একক মূল গ্রিড (কোনো ডাবল বর্ডার নেই, বর্ধিত সুষম উচ্চতা)
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
       0: pw.FlexColumnWidth(2.3),  // MONTH
@@ -1090,7 +1094,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Clean Single-Border cell with increased row height
   pw.Widget _pCleanCell(String text, {bool alignLeft = false}) {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.8),
@@ -1145,10 +1148,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 28.3, // 10mm
+          top: 34.0,  // 12mm
           left: 22.7, // 8mm
           right: 22.7, // 8mm
-          bottom: 22.7, // 8mm
+          bottom: 25.0, // ~9mm
         ),
         build: (pw.Context context) {
           return pw.Column(
@@ -1188,7 +1191,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   pw.TableRow(children: [
                     _pdfHCell("ARREAR FOR THE PERIOD:"),
                     pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.5),
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.2),
                       child: pw.Center(child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
                     ),
                     _pdfHCell(""), _pdfValCenterCell(""),
