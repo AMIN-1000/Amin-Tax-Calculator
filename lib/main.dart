@@ -202,7 +202,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   final adHoc2Ctrl = TextEditingController();
   final adHoc3Ctrl = TextEditingController();
   final adHoc4Ctrl = TextEditingController();
-  final wordsCtrl = TextEditingController(text: "ZERO ONLY");
 
   late TabController _tabController;
   List<YearSheet> sheets = [];
@@ -305,6 +304,59 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         controller.text = "$day.$month.${picked.year}";
       });
     }
+  }
+
+  // ভারতীয় নাম্বারিং ফরম্যাটে Number to Words ফাংশন
+  static String numberToWordsIndian(int number) {
+    if (number <= 0) return "";
+
+    final units = [
+      "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+      "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+      "Seventeen", "Eighteen", "Nineteen"
+    ];
+    final tens = [
+      "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+    ];
+
+    String convertLessThanThousand(int n) {
+      List<String> res = [];
+      if (n >= 100) {
+        res.add("${units[n ~/ 100]} Hundred");
+        n %= 100;
+      }
+      if (n >= 20) {
+        res.add(tens[n ~/ 10]);
+        n %= 10;
+      }
+      if (n > 0) {
+        res.add(units[n]);
+      }
+      return res.join(" ");
+    }
+
+    List<String> result = [];
+    int crores = number ~/ 10000000;
+    number %= 10000000;
+    int lakhs = number ~/ 100000;
+    number %= 100000;
+    int thousands = number ~/ 1000;
+    number %= 1000;
+
+    if (crores > 0) {
+      result.add("${convertLessThanThousand(crores)} Crore");
+    }
+    if (lakhs > 0) {
+      result.add("${convertLessThanThousand(lakhs)} Lakh");
+    }
+    if (thousands > 0) {
+      result.add("${convertLessThanThousand(thousands)} Thousand");
+    }
+    if (number > 0) {
+      result.add(convertLessThanThousand(number));
+    }
+
+    return "Rupees ${result.join(" ")} Only.";
   }
 
   @override
@@ -823,7 +875,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      pw.SizedBox(height: 34),
+                      // Gap of 48pt (~17mm)
+                      pw.SizedBox(height: 48.0),
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                     ],
                   ),
@@ -897,7 +950,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ),
   );
 
-  // ১. নং সমাধান: SCALE ADMISSIBLE রো-তে TableBorder ব্যবহার করে Left ও Right বর্ডার ১০০% নিশ্চিত করা হলো
+  // SCALE ADMISSIBLE row height increased & blank below (no default numbers)
   pw.Widget _buildPdfScale() {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -915,7 +968,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(
           children: [
             pw.Container(
-              padding: const pw.EdgeInsets.symmetric(vertical: 2.5),
+              height: 22.0, // Increased height & completely blank
               alignment: pw.Alignment.center,
               child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2)),
             ),
@@ -1132,7 +1185,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   );
 
   // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
-  // ২. নং সমাধান: Final Sheet Landscape এবং Margin: Top 15mm, Left/Right 8mm, Bottom 12mm
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1141,16 +1193,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     final adHocTotal = (double.tryParse(adHoc1Ctrl.text) ?? 0) + (double.tryParse(adHoc2Ctrl.text) ?? 0) + (double.tryParse(adHoc3Ctrl.text) ?? 0) + (double.tryParse(adHoc4Ctrl.text) ?? 0);
     final actClaim = allGrandNet - adHocTotal;
 
+    // NET CLAIM থেকে স্বয়ংক্রিয়ভাবে ইন ওয়ার্ডস তৈরি
+    final inWordsText = actClaim > 0 ? numberToWordsIndian(actClaim.round()) : "";
+
+    const rowH = 14.25 * PdfPageFormat.mm; // Exact 14.25mm
+    const reasonH = 28.50 * PdfPageFormat.mm; // Exact 28.50mm
+
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
-        // নির্দিষ্ট মার্জিন: Top 15mm, Left/Right 8mm, Bottom 12mm
         margin: const pw.EdgeInsets.only(
-          top: 42.5,   // 15mm
-          left: 22.7,  // 8mm
-          right: 22.7, // 8mm
-          bottom: 34.0 // 12mm
+          top: 15.0 * PdfPageFormat.mm,   // 15mm Top
+          left: 8.0 * PdfPageFormat.mm,   // 8mm Left
+          right: 8.0 * PdfPageFormat.mm,  // 8mm Right
+          bottom: 12.0 * PdfPageFormat.mm // 12mm Bottom
         ),
         build: (pw.Context context) {
           return pw.Column(
@@ -1166,6 +1223,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
+              // Header Table (Row Height = 14.25mm)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: const {
@@ -1178,33 +1236,31 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 },
                 children: [
                   pw.TableRow(children: [
-                    _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValLeftCell(instController.text),
-                    _pdfHCell("INDEX NO :"), _pdfValCenterCell(indexController.text),
-                    _pdfHCell("H.S. CODE :"), _pdfValCenterCell(hsCodeController.text),
+                    _finalHCell("NAME OF THE INSTITUTION:", height: rowH), _finalValCell(instController.text, height: rowH, alignLeft: true),
+                    _finalHCell("INDEX NO :", height: rowH), _finalValCell(indexController.text, height: rowH),
+                    _finalHCell("H.S. CODE :", height: rowH), _finalValCell(hsCodeController.text, height: rowH),
                   ]),
                   pw.TableRow(children: [
-                    _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValLeftCell(empNameController.text),
-                    _pdfHCell("DESIGNATION:"), _pdfValCenterCell(desigController.text),
-                    _pdfHCell("EMPLOYEE ID:"), _pdfValCenterCell(empIdController.text),
+                    _finalHCell("NAME OF THE EMPLOYEE:", height: rowH), _finalValCell(empNameController.text, height: rowH, alignLeft: true),
+                    _finalHCell("DESIGNATION:", height: rowH), _finalValCell(desigController.text, height: rowH),
+                    _finalHCell("EMPLOYEE ID:", height: rowH), _finalValCell(empIdController.text, height: rowH),
                   ]),
                   pw.TableRow(children: [
-                    _pdfHCell("ARREAR FOR THE PERIOD:"),
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.5),
-                      child: pw.Center(child: pw.Text("${fromDateController.text}   TO   ${toDateController.text}", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
-                    ),
-                    _pdfHCell(""), _pdfValCenterCell(""),
-                    _pdfHCell(""), _pdfValCenterCell(""),
+                    _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
+                    _finalValCell("${fromDateController.text}   TO   ${toDateController.text}", height: rowH, isBold: true),
+                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
+                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
                   ]),
                   pw.TableRow(children: [
-                    _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValLeftCell(orderNoController.text),
-                    _pdfHCell(""), _pdfValCenterCell(""),
-                    _pdfHCell(""), _pdfValCenterCell(""),
+                    _finalHCell("IN TERMS OF ORDER NO.:", height: rowH), _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
+                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
+                    _finalHCell("", height: rowH), _finalValCell("", height: rowH),
                   ]),
                 ],
               ),
               pw.SizedBox(height: 5),
 
+              // Table 2: ARREAR DUE ON ACCOUNT OF (Row Height = 14.25mm)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: const {
@@ -1216,9 +1272,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: PdfColors.grey300),
                     children: [
-                      pw.Center(child: pw.Text("ARREAR DUE ON ACCOUNT OF:", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
-                      pw.Center(child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
-                      pw.Center(child: pw.Text("TO BE CREDITED TO:", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold))),
+                      _finalValCell("ARREAR DUE ON ACCOUNT OF:", height: rowH, isBold: true),
+                      _finalValCell("IN RS.", height: rowH, isBold: true),
+                      _finalValCell("TO BE CREDITED TO:", height: rowH, isBold: true),
                     ],
                   ),
                   pw.TableRow(
@@ -1229,47 +1285,47 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           pw.TableRow(
                             decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                             children: [
-                              _pCell("BASIC PAY", isBold: true),
-                              _pCell("D.P/IR/S.P", isBold: true),
-                              _pCell("D.A", isBold: true),
-                              _pCell("H.R.A", isBold: true),
-                              _pCell("M.A", isBold: true),
-                              _pCell("Gross", isBold: true),
-                              _pCell("C.P.F/G.P.F", isBold: true),
+                              _finalValCell("BASIC PAY", height: rowH, isBold: true),
+                              _finalValCell("D.P/IR/S.P", height: rowH, isBold: true),
+                              _finalValCell("D.A", height: rowH, isBold: true),
+                              _finalValCell("H.R.A", height: rowH, isBold: true),
+                              _finalValCell("M.A", height: rowH, isBold: true),
+                              _finalValCell("Gross", height: rowH, isBold: true),
+                              _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
                             ],
                           ),
                           pw.TableRow(
                             children: [
-                              _pCell(allGrandBasic.round().toString()),
-                              _pCell((allGrandDp + allGrandSp).round().toString()),
-                              _pCell(allGrandDa.round().toString()),
-                              _pCell(allGrandHra.round().toString()),
-                              _pCell(allGrandMa.round().toString()),
-                              _pCell(allGrandGross.round().toString()),
-                              _pCell("0"),
+                              _finalValCell(allGrandBasic.round().toString(), height: rowH),
+                              _finalValCell((allGrandDp + allGrandSp).round().toString(), height: rowH),
+                              _finalValCell(allGrandDa.round().toString(), height: rowH),
+                              _finalValCell(allGrandHra.round().toString(), height: rowH),
+                              _finalValCell(allGrandMa.round().toString(), height: rowH),
+                              _finalValCell(allGrandGross.round().toString(), height: rowH),
+                              _finalValCell("0", height: rowH),
                             ],
                           ),
                         ],
                       ),
-                      pw.Container(),
+                      pw.Container(height: rowH * 2),
                       pw.Table(
                         border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                         children: [
                           pw.TableRow(
                             decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                             children: [
-                              _pCell("P.TAX", isBold: true),
-                              _pCell("G.P.F/C.P.F", isBold: true),
-                              _pCell("OTHERS", isBold: true),
-                              _pCell("NET CLAIM", isBold: true),
+                              _finalValCell("P.TAX", height: rowH, isBold: true),
+                              _finalValCell("G.P.F/C.P.F", height: rowH, isBold: true),
+                              _finalValCell("OTHERS", height: rowH, isBold: true),
+                              _finalValCell("NET CLAIM", height: rowH, isBold: true),
                             ],
                           ),
                           pw.TableRow(
                             children: [
-                              _pCell("0"),
-                              _pCell("0"),
-                              _pCell("0"),
-                              _pCell(allGrandNet.round().toString()),
+                              _finalValCell("0", height: rowH),
+                              _finalValCell("0", height: rowH),
+                              _finalValCell("0", height: rowH),
+                              _finalValCell(allGrandNet.round().toString(), height: rowH),
                             ],
                           ),
                         ],
@@ -1279,6 +1335,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
+              // Bottom Sections
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -1286,30 +1343,54 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     flex: 8,
                     child: pw.Container(
                       decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
-                      padding: const pw.EdgeInsets.all(5),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text("Date of receipt of 1st Grant-in-Aid by the School:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                          pw.Text("Lump Grant w.e.f under salary deficit Scheme.", style: const pw.TextStyle(fontSize: 6.8)),
-                          pw.SizedBox(height: 3),
-                          pw.Row(
-                            children: [
-                              pw.Text("REASON OF ARREAR :", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                              pw.SizedBox(width: 30),
-                              pw.Text("FOR LATE APPROVAL", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                            ],
+                          pw.Container(
+                            height: rowH,
+                            padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              mainAxisAlignment: pw.MainAxisAlignment.center,
+                              children: [
+                                pw.Text("Date of receipt of 1st Grant-in-Aid by the School:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                pw.Text("Lump Grant w.e.f under salary deficit Scheme.", style: const pw.TextStyle(fontSize: 6.8)),
+                              ],
+                            ),
                           ),
-                          pw.SizedBox(height: 3),
-                          pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                          pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.5)),
-                          pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.5)),
+                          pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                          // REASON OF ARREAR (Exact 28.50mm)
+                          pw.Container(
+                            height: reasonH,
+                            padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Row(
+                              children: [
+                                pw.Text("REASON OF ARREAR :", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                pw.SizedBox(width: 30),
+                                pw.Text("FOR LATE APPROVAL", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.5)),
+                                pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.5)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1323,22 +1404,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.TableRow(
                           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                           children: [
-                            pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Center(child: pw.Text("LESS ANY AD-HOC PAYMENT MADE:", style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold)))),
+                            _finalValCell("LESS ANY AD-HOC PAYMENT MADE:", height: rowH, isBold: true),
                           ],
                         ),
-                        pw.TableRow(children: [_adHocRow("1", double.tryParse(adHoc1Ctrl.text) ?? 0)]),
-                        pw.TableRow(children: [_adHocRow("2", double.tryParse(adHoc2Ctrl.text) ?? 0)]),
-                        pw.TableRow(children: [_adHocRow("3", double.tryParse(adHoc3Ctrl.text) ?? 0)]),
-                        pw.TableRow(children: [_adHocRow("4", double.tryParse(adHoc4Ctrl.text) ?? 0)]),
+                        pw.TableRow(children: [_adHocFinalRow("1", double.tryParse(adHoc1Ctrl.text) ?? 0, height: rowH)]),
+                        pw.TableRow(children: [_adHocFinalRow("2", double.tryParse(adHoc2Ctrl.text) ?? 0, height: rowH)]),
+                        pw.TableRow(children: [_adHocFinalRow("3", double.tryParse(adHoc3Ctrl.text) ?? 0, height: rowH)]),
+                        pw.TableRow(children: [_adHocFinalRow("4", double.tryParse(adHoc4Ctrl.text) ?? 0, height: rowH)]),
                         pw.TableRow(
                           children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            pw.Container(
+                              height: rowH,
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                                 children: [
-                                  pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
                                 ],
                               ),
                             ),
@@ -1346,26 +1428,34 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ),
                         pw.TableRow(
                           children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            pw.Container(
+                              height: rowH,
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
                                 children: [
-                                  pw.Text("PASSED FOR RS.: ", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text("PASSED FOR RS.: ", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                  pw.Text(actClaim.round().toString(), style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
                                 ],
                               ),
                             ),
                           ],
                         ),
+                        // IN WORDS ROW: NET CLAIM / ACTUAL CLAIM স্বয়ংক্রিয়ভাবে কথায় পরিবর্তিত হবে
                         pw.TableRow(
                           children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            pw.Container(
+                              height: rowH,
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
-                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                crossAxisAlignment: pw.CrossAxisAlignment.center,
                                 children: [
                                   pw.Text("IN WORDS: ", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                  pw.Expanded(child: pw.Text(wordsCtrl.text, style: const pw.TextStyle(fontSize: 6.5))),
+                                  pw.Expanded(
+                                    child: pw.Text(
+                                      inWordsText,
+                                      style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.normal),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1377,7 +1467,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              pw.Spacer(),
+              // Exactly 20mm height between "8. All relevant records..." and Secretary Signature
+              pw.SizedBox(height: 20.0 * PdfPageFormat.mm),
 
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -1387,7 +1478,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   pw.Text("A.D./D.O.(Accounts)", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
-              pw.SizedBox(height: 6),
             ],
           );
         },
@@ -1397,13 +1487,29 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     await Printing.layoutPdf(
       onLayout: (format) async => doc.save(),
       name: 'Final_Sheet.pdf',
-      format: PdfPageFormat.a4.landscape, // অ্যান্ড্রয়েড প্রিন্টারকে সরাসরি Landscape করার নির্দেশ
+      format: PdfPageFormat.a4.landscape,
     );
   }
 
-  pw.Widget _adHocRow(String no, double val) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+  static pw.Widget _finalHCell(String t, {required double height}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+  );
+
+  static pw.Widget _finalValCell(String t, {required double height, bool isBold = false, bool alignLeft = false}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: alignLeft ? pw.Alignment.centerLeft : pw.Alignment.center,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 7.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
+  static pw.Widget _adHocFinalRow(String no, double val, {required double height}) {
+    return pw.Container(
+      height: height,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 5),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
