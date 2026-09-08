@@ -306,7 +306,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
-  // ভারতীয় নাম্বারিং ফরম্যাটে Number to Words ফাংশন
   static String numberToWordsIndian(int number) {
     if (number <= 0) return "";
 
@@ -831,7 +830,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF (100% অপরিবর্তিত) ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -875,7 +874,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      // Gap of 48pt (~17mm)
                       pw.SizedBox(height: 48.0),
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                     ],
@@ -950,7 +948,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ),
   );
 
-  // SCALE ADMISSIBLE row height increased & blank below (no default numbers)
   pw.Widget _buildPdfScale() {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -968,7 +965,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(
           children: [
             pw.Container(
-              height: 22.0, // Increased height & completely blank
+              height: 22.0,
               alignment: pw.Alignment.center,
               child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2)),
             ),
@@ -978,24 +975,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Calculation Table
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),  // MONTH
-      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
-      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
-      3: pw.FlexColumnWidth(1.4),  // D.P/IR
-      4: pw.FlexColumnWidth(1.3),  // S.P
-      5: pw.FlexColumnWidth(1.8),  // D.A
-      6: pw.FlexColumnWidth(1.7),  // H.R.A
-      7: pw.FlexColumnWidth(1.3),  // M.A
-      8: pw.FlexColumnWidth(2.0),  // GROSS
-      9: pw.FlexColumnWidth(1.4),  // C.P.F
-      10: pw.FlexColumnWidth(1.4), // P.TAX
-      11: pw.FlexColumnWidth(1.6), // G.P.F
-      12: pw.FlexColumnWidth(1.4), // I.TAX
-      13: pw.FlexColumnWidth(2.0), // NET
-      14: pw.FlexColumnWidth(2.5), // REMARKS
+      0: pw.FlexColumnWidth(2.3),
+      1: pw.FlexColumnWidth(2.4),
+      2: pw.FlexColumnWidth(2.0),
+      3: pw.FlexColumnWidth(1.4),
+      4: pw.FlexColumnWidth(1.3),
+      5: pw.FlexColumnWidth(1.8),
+      6: pw.FlexColumnWidth(1.7),
+      7: pw.FlexColumnWidth(1.3),
+      8: pw.FlexColumnWidth(2.0),
+      9: pw.FlexColumnWidth(1.4),
+      10: pw.FlexColumnWidth(1.4),
+      11: pw.FlexColumnWidth(1.6),
+      12: pw.FlexColumnWidth(1.4),
+      13: pw.FlexColumnWidth(2.0),
+      14: pw.FlexColumnWidth(2.5),
     };
 
     final headers = [
@@ -1184,7 +1180,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF (হুবহু স্ক্রিনশট 3565.jpg অনুযায়ী) ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1196,18 +1192,19 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     // NET CLAIM থেকে স্বয়ংক্রিয়ভাবে ইন ওয়ার্ডস তৈরি
     final inWordsText = actClaim > 0 ? numberToWordsIndian(actClaim.round()) : "";
 
-    const rowH = 14.25 * PdfPageFormat.mm; // Exact 14.25mm
-    const reasonH = 28.50 * PdfPageFormat.mm; // Exact 28.50mm
+    // এক্সেলের আসল পয়েন্ট অনুযায়ী Row Height: 14.25 pt এবং 28.50 pt
+    const double rowH = 14.25; 
+    const double reasonH = 28.50; 
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 15.0 * PdfPageFormat.mm,   // 15mm Top
-          left: 8.0 * PdfPageFormat.mm,   // 8mm Left
-          right: 8.0 * PdfPageFormat.mm,  // 8mm Right
-          bottom: 12.0 * PdfPageFormat.mm // 12mm Bottom
+          top: 42.5,   // 15mm Top
+          left: 22.7,  // 8mm Left
+          right: 22.7, // 8mm Right
+          bottom: 34.0 // 12mm Bottom
         ),
         build: (pw.Context context) {
           return pw.Column(
@@ -1221,9 +1218,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   pw.Text("Final Page", style: const pw.TextStyle(fontSize: 9)),
                 ],
               ),
-              pw.SizedBox(height: 5),
+              pw.SizedBox(height: 6),
 
-              // Header Table (Row Height = 14.25mm)
+              // Header Table (Row Height = 14.25 pt)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: const {
@@ -1258,9 +1255,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   ]),
                 ],
               ),
-              pw.SizedBox(height: 5),
+              pw.SizedBox(height: 6),
 
-              // Table 2: ARREAR DUE ON ACCOUNT OF (Row Height = 14.25mm)
+              // Table 2: ARREAR DUE ON ACCOUNT OF (Row Height = 14.25 pt)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: const {
@@ -1347,7 +1344,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Container(
-                            height: rowH,
+                            height: rowH + 4,
                             padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                             alignment: pw.Alignment.centerLeft,
                             child: pw.Column(
@@ -1360,7 +1357,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             ),
                           ),
                           pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                          // REASON OF ARREAR (Exact 28.50mm)
+                          // REASON OF ARREAR (Row Height = 28.50 pt)
                           pw.Container(
                             height: reasonH,
                             padding: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -1414,7 +1411,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.TableRow(
                           children: [
                             pw.Container(
-                              height: rowH,
+                              height: rowH + 2,
                               padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -1429,7 +1426,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.TableRow(
                           children: [
                             pw.Container(
-                              height: rowH,
+                              height: rowH + 2,
                               padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
                                 children: [
@@ -1440,11 +1437,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             ),
                           ],
                         ),
-                        // IN WORDS ROW: NET CLAIM / ACTUAL CLAIM স্বয়ংক্রিয়ভাবে কথায় পরিবর্তিত হবে
+                        // IN WORDS ROW
                         pw.TableRow(
                           children: [
                             pw.Container(
-                              height: rowH,
+                              height: rowH + 2,
                               padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                               child: pw.Row(
                                 crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -1467,15 +1464,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // Exactly 20mm height between "8. All relevant records..." and Secretary Signature
+              // স্ক্রিনশট 3565.jpg অনুযায়ী "8. All relevant records..." এবং সহির মাঝের ফাঁকা স্থান (20mm)
               pw.SizedBox(height: 20.0 * PdfPageFormat.mm),
 
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("Signature of Secretary/Administrator/D.D.O.", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Signature of D.I./A.D.I. of Schools (S.E.)", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-                  pw.Text("A.D./D.O.(Accounts)", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Signature of Secretary/Administrator/D.D.O.", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Signature of D.I./A.D.I. of Schools (S.E.)", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("A.D./D.O.(Accounts)", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
             ],
