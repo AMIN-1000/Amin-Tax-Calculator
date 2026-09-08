@@ -50,7 +50,6 @@ class MonthEntry {
   TextEditingController drwGpf = TextEditingController();
   TextEditingController drwItax = TextEditingController();
 
-  // Remarks controllers
   TextEditingController admRemarks = TextEditingController();
   TextEditingController drwRemarks = TextEditingController();
   TextEditingController dueRemarks = TextEditingController();
@@ -578,7 +577,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _unlockedCell(r.drwGpf),
           _unlockedCell(r.drwItax),
           _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
-          _unlockedTextCell(r.drwRemarks), // Unlocked for Drawn
+          _unlockedTextCell(r.drwRemarks),
         ],
       ),
       TableRow(
@@ -598,7 +597,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasAny, r.dueGpf, isBold: true),
           _conditionalCalcCell(r.hasAny, r.dueItax, isBold: true),
           _conditionalCalcCell(r.hasAny, r.dueNet, isBold: true),
-          _unlockedTextCell(r.dueRemarks), // Unlocked for Due
+          _unlockedTextCell(r.dueRemarks),
         ],
       ),
     ];
@@ -780,7 +779,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF (No Double Borders, Perfectly Balanced Height) ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -810,7 +809,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               pw.SizedBox(height: 2),
               _buildPdfTable(sh),
               
-              // Exact space of ~1.5mm between GRAND TOTAL and Verified
+              // Spacing matching Excel sheet
               pw.SizedBox(height: 4.5),
               
               pw.Row(
@@ -825,8 +824,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                      // Seal & Stamp space of ~14mm
-                      pw.SizedBox(height: 40),
+                      pw.SizedBox(height: 36),
                       pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
                     ],
                   ),
@@ -918,7 +916,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // 100% Guaranteed Calculation Table with Perfectly Hidden Internal Horizontal Borders
+  // 100% Guaranteed Calculation Table with No Double Borders and Increased Row Height
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
       0: pw.FlexColumnWidth(2.3),  // MONTH
@@ -950,7 +948,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey400),
         children: headers.map((h) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 3.2),
+          padding: const pw.EdgeInsets.symmetric(vertical: 4.2),
           alignment: pw.Alignment.center,
           child: pw.Text(h, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: pw.FontWeight.bold)),
         )).toList(),
@@ -959,48 +957,48 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     // 12 Months * 3 Rows = 36 Rows
     for (var r in sh.records) {
-      // 1. Admissible Row (Month name on Top-Left, Remarks on Top-Center)
+      // 1. Admissible Row (Top-Left month name, Top-Center remarks)
       rows.add(
         pw.TableRow(
           children: [
-            _pMonthPartCell(r.monthName, isTop: true),
+            _pCleanCell(r.monthName, alignLeft: true),
             _pCell("Admissible"),
             _pCondNum(r.hasAdm, r.aBasic), _pCondNum(r.hasAdm, r.aDp), _pCondNum(r.hasAdm, r.aSp),
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
             _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
-            _pRemarksPartCell(r.effectiveAdmRemarks, isTop: true),
+            _pCleanCell(r.effectiveAdmRemarks),
           ],
         ),
       );
 
-      // 2. Drawn Row (White space inside Month & Remarks cells)
+      // 2. Drawn Row
       rows.add(
         pw.TableRow(
           children: [
-            _pMonthPartCell("", isMiddle: true),
+            _pCleanCell(""),
             _pCell("Drawn"),
             _pCondNum(r.hasDrw, r.dBasic), _pCondNum(r.hasDrw, r.dDp), _pCondNum(r.hasDrw, r.dSp),
             _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
             _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf), _pCondNum(r.hasDrw, r.dPtax),
             _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
-            _pRemarksPartCell(r.effectiveDrwRemarks, isMiddle: true),
+            _pCleanCell(r.effectiveDrwRemarks),
           ],
         ),
       );
 
-      // 3. Due Row (Bottom of Month & Remarks block)
+      // 3. Due Row
       rows.add(
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
           children: [
-            _pMonthPartCell("", isBottom: true),
+            _pCleanCell(""),
             _pCell("Due", isBold: true),
             _pCondNum(r.hasAny, r.dueBasic, isBold: true), _pCondNum(r.hasAny, r.dueDp, isBold: true), _pCondNum(r.hasAny, r.dueSp, isBold: true),
             _pCondNum(r.hasAny, r.dueDa, isBold: true), _pCondNum(r.hasAny, r.dueHra, isBold: true), _pCondNum(r.hasAny, r.dueMa, isBold: true),
             _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true), _pCondNum(r.hasAny, r.duePtax, isBold: true),
             _pCondNum(r.hasAny, r.dueGpf, isBold: true), _pCondNum(r.hasAny, r.dueItax, isBold: true), _pCondNum(r.hasAny, r.dueNet, isBold: true),
-            _pRemarksPartCell(r.effectiveDueRemarks, isBottom: true),
+            _pCleanCell(r.effectiveDueRemarks),
           ],
         ),
       );
@@ -1079,71 +1077,56 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
 
     return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+      border: const pw.TableBorder(
+        top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+      ),
       columnWidths: colWidths,
       children: rows,
     );
   }
 
-  // Cell components that overwrite the middle horizontal borders with white
-  pw.Widget _pMonthPartCell(String text, {bool isTop = false, bool isMiddle = false, bool isBottom = false}) {
+  // Clean Single-Border cell with increased row height
+  pw.Widget _pCleanCell(String text, {bool alignLeft = false}) {
     return pw.Container(
-      decoration: pw.BoxDecoration(
-        color: PdfColors.white,
-        border: pw.Border(
-          bottom: isBottom ? const pw.BorderSide(color: PdfColors.black, width: 0.8) : const pw.BorderSide(color: PdfColors.white, width: 0.8),
-          top: isTop ? const pw.BorderSide(color: PdfColors.black, width: 0.8) : const pw.BorderSide(color: PdfColors.white, width: 0.8),
-        ),
-      ),
-      padding: const pw.EdgeInsets.only(left: 3, top: 1.5, bottom: 1.5),
-      alignment: pw.Alignment.topLeft,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.8),
+      alignment: alignLeft ? pw.Alignment.topLeft : pw.Alignment.topCenter,
       child: pw.Text(
         text,
-        style: pw.TextStyle(fontSize: 6.0, fontWeight: pw.FontWeight.bold),
-      ),
-    );
-  }
-
-  pw.Widget _pRemarksPartCell(String text, {bool isTop = false, bool isMiddle = false, bool isBottom = false}) {
-    return pw.Container(
-      decoration: pw.BoxDecoration(
-        color: PdfColors.white,
-        border: pw.Border(
-          bottom: isBottom ? const pw.BorderSide(color: PdfColors.black, width: 0.8) : const pw.BorderSide(color: PdfColors.white, width: 0.8),
-          top: isTop ? const pw.BorderSide(color: PdfColors.black, width: 0.8) : const pw.BorderSide(color: PdfColors.white, width: 0.8),
-        ),
-      ),
-      padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 1.5),
-      alignment: pw.Alignment.topCenter,
-      child: pw.Text(
-        text,
-        textAlign: pw.TextAlign.center,
+        textAlign: alignLeft ? pw.TextAlign.left : pw.TextAlign.center,
         softWrap: true,
-        style: pw.TextStyle(fontSize: 5.6, fontWeight: pw.FontWeight.bold),
+        style: pw.TextStyle(
+          fontSize: alignLeft ? 6.0 : 5.6,
+          fontWeight: pw.FontWeight.bold,
+        ),
       ),
     );
   }
 
   pw.Widget _pCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.1),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
     alignment: pw.Alignment.center,
     child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pLeftSummaryCell(String t, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.only(left: 3, top: 2.1, bottom: 2.1),
+    padding: const pw.EdgeInsets.only(left: 3, top: 3.8, bottom: 3.8),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pCondNum(bool condition, double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.1),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
     alignment: pw.Alignment.center,
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
   pw.Widget _pCondSummary(bool condition, double val, {bool isBold = false}) => pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2.1),
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.8),
     alignment: pw.Alignment.center,
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
