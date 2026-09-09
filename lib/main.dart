@@ -157,7 +157,7 @@ class YearSheet {
   double get totSp => records.fold(0, (s, r) => s + r.dueSp);
   double get totDa => records.fold(0, (s, r) => s + r.dueDa);
   double get totHra => records.fold(0, (s, r) => s + r.dueHra);
-  double get totMa => records.fold(0, (s, r) => s + r.dueMa);
+  double get totMa => records.fold(0, (s, r) => s + r.dueHra);
   double get totGross => records.fold(0, (s, r) => s + r.dueGross);
   double get totCpf => records.fold(0, (s, r) => s + r.dueCpf);
   double get totPtax => records.fold(0, (s, r) => s + r.duePtax);
@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),  // MONTH
-      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
-      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
-      3: pw.FlexColumnWidth(1.4),  // D.P/IR
-      4: pw.FlexColumnWidth(1.3),  // S.P
-      5: pw.FlexColumnWidth(1.8),  // D.A
-      6: pw.FlexColumnWidth(1.7),  // H.R.A
-      7: pw.FlexColumnWidth(1.3),  // M.A
-      8: pw.FlexColumnWidth(2.0),  // GROSS
-      9: pw.FlexColumnWidth(1.4),  // C.P.F
-      10: pw.FlexColumnWidth(1.4), // P.TAX
-      11: pw.FlexColumnWidth(1.6), // G.P.F
-      12: pw.FlexColumnWidth(1.4), // I.TAX
-      13: pw.FlexColumnWidth(2.0), // NET
-      14: pw.FlexColumnWidth(2.5), // REMARKS
+      0: pw.FlexColumnWidth(2.3),
+      1: pw.FlexColumnWidth(2.4),
+      2: pw.FlexColumnWidth(2.0),
+      3: pw.FlexColumnWidth(1.4),
+      4: pw.FlexColumnWidth(1.3),
+      5: pw.FlexColumnWidth(1.8),
+      6: pw.FlexColumnWidth(1.7),
+      7: pw.FlexColumnWidth(1.3),
+      8: pw.FlexColumnWidth(2.0),
+      9: pw.FlexColumnWidth(1.4),
+      10: pw.FlexColumnWidth(1.4),
+      11: pw.FlexColumnWidth(1.6),
+      12: pw.FlexColumnWidth(1.4),
+      13: pw.FlexColumnWidth(2.0),
+      14: pw.FlexColumnWidth(2.5),
     };
 
     final headers = [
@@ -1203,7 +1203,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double wGross = 82.5;
     const double wCpf = 82.5;
     
-    // IN RS. এর চওড়া মাপ
     const double wInRs = 46.0;
 
     // শেষ ৪টি কলামের সুনির্দিষ্ট সমান মাপ
@@ -1250,9 +1249,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
-    // IN RS. এর নিচের একক অবিভাজ্য ফাঁকা বক্সের উচ্চতা:
-    // মাঝের টেবিলের নিচের ২টি রো (rowH * 2) + Ad-hoc টেবিলের ৬টি রো (rowH * 6) = rowH * 8
-    const double inRsTallBoxHeight = rowH * 8; // 114.0 pt (ACTUAL CLAIM-এর তলার সাথে এক সুতোয় লক করা)
+    // IN RS. এর নিচের অবিভাজ্য একক ফাঁকা বক্সের উচ্চতা
+    const double inRsTallBoxHeight = rowH * 8; // Exactly 114.0 pt, perfectly aligns with ACTUAL CLAIM!
 
     doc.addPage(
       pw.Page(
@@ -1362,7 +1360,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
               ),
 
-              // 2. Middle & Lower Section: ১টি একক কাঠামোয় বাঁধা যাতে কোনো অতিরিক্ত দাগ না পড়ে
+              // 2. Middle & Lower Combined Section
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -1441,37 +1439,37 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                                 alignment: pw.Alignment.centerLeft,
                                 child: pw.Row(
-                              children: [
-                                pw.Text("REASON OF ARREAR :", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-                                pw.SizedBox(width: 30),
-                                pw.Text("FOR LATE APPROVAL", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-                              ],
-                            ),
+                                  children: [
+                                    pw.Text("REASON OF ARREAR :", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(width: 30),
+                                    pw.Text("FOR LATE APPROVAL", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                              pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(5),
+                                child: pw.Column(
+                                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                  children: [
+                                    pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                    pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.5)),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(5),
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.5)),
-                                pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.5)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
                   // Middle Column: IN RS. এবং তার ঠিক নিচের অবিভাজ্য একক দীর্ঘ ফাঁকা বক্স
                   pw.Container(
@@ -1487,7 +1485,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                           child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                         ),
-                        // ৩টি খোপ এক করে তৈরি সম্পূর্ণ দাগহীন একক অবিভাজ্য ফাঁকা বক্স
+                        // ৩টি খোপ এক করে তৈরি দাগহীন একক অবিভাজ্য ফাঁকা বক্স
                         pw.Container(
                           width: wInRs,
                           height: inRsTallBoxHeight,
@@ -1503,7 +1501,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Right Side: TO BE CREDITED TO + Ad-hoc + ACTUAL CLAIM
+                  // Right Side: TO BE CREDITED TO + Ad-hoc + ACTUAL CLAIM + PASSED FOR RS + IN WORDS
+                  // সমস্ত রো একটি একক কলামে সুন্দরভাবে পরপর সাজানো, যাতে কোনো অতিরিক্ত ফাঁকা গ্যাপ না তৈরি হয়!
                   pw.Container(
                     width: rightTotalWidth,
                     child: pw.Column(
@@ -1626,24 +1625,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
 
-              // নিচের ডানদিকের অংশ (Certificate Box-এর সমান্তরালে একটানা শুরু)
-              pw.Row(
-                children: [
-                  pw.SizedBox(width: leftBoxWidth),
-                  pw.Container(
-                    width: wInRs + rightTotalWidth,
-                    child: pw.Column(
-                      children: [
-                        // ACTUAL CLAIM ও PASSED FOR RS এর মাঝের 14.25 pt উচ্চতার বর্ডারযুক্ত ফাঁকা রো
+                        // ACTUAL CLAIM-এর ঠিক নিচেই নির্দিষ্ট 14.25 pt উচ্চতার বর্ডারযুক্ত ফাঁকা রো (অতিরিক্ত গ্যাপ মুছে ফেলা হয়েছে)
                         pw.Container(
                           height: rowH,
-                          width: wInRs + rightTotalWidth,
+                          width: rightTotalWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
@@ -1651,8 +1637,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: pw.FixedColumnWidth(wInRs + wPtax + wGpf + wOthers), // 229.0 pt
-                            1: const pw.FixedColumnWidth(wNet),                     // 67.0 pt
+                            0: pw.FixedColumnWidth(wPtax + wGpf + wOthers), // 183.0 pt
+                            1: const pw.FixedColumnWidth(wNet),             // 67.0 pt
                           },
                           children: [
                             pw.TableRow(children: [
@@ -1667,19 +1653,19 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // PASSED FOR RS ও IN WORDS এর মাঝের 14.25 pt উচ্চতার বর্ডারযুক্ত ফাঁকা রো
+                        // PASSED FOR RS ও IN WORDS এর মাঝে 14.25 pt উচ্চতার ফাঁকা রো
                         pw.Container(
                           height: rowH,
-                          width: wInRs + rightTotalWidth,
+                          width: rightTotalWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // IN WORDS ROW
+                        // IN WORDS ROW:
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt
-                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt
+                            0: const pw.FixedColumnWidth(wPtax),            // 63.0 pt
+                            1: pw.FixedColumnWidth(wGpf + wOthers + wNet), // 187.0 pt
                           },
                           children: [
                             pw.TableRow(children: [
