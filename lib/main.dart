@@ -830,7 +830,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF (100% অপরিবর্তিত) ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1403,7 +1403,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ],
                       ),
 
-                      // Middle Column: IN RS. (তলার বর্ডারটি TO BE CREDITED TO ও P.TAX এর মাঝের বর্ডারের সাথে এক সুতোয় লক করা)
+                      // Middle Column: IN RS. (নিচের পুরো ফাঁকা বক্সটি একীভূত করা হয়েছে)
                       pw.Container(
                         height: rowH * 3,
                         decoration: const pw.BoxDecoration(
@@ -1426,6 +1426,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                               child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                             ),
+                            // কোনো আনুভূমিক রেখা ছাড়া একীভূত ফাঁকা অংশ
                             pw.Container(
                               height: rowH * 2,
                               width: wInRs,
@@ -1434,7 +1435,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ),
                       ),
 
-                      // Right Block: TO BE CREDITED TO (একক মার্জড হেডার)
+                      // Right Block: TO BE CREDITED TO
                       pw.Table(
                         border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                         children: [
@@ -1543,7 +1544,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Part B & C: Right Blocks (IN RS. কলাম সহ সম্পূর্ণ অংশ Certificate Box-এর সাথে এক লাইনে মিশে গেছে)
+                  // Part B & C: Right Blocks
                   pw.Container(
                     width: wInRs + rightTotalWidth,
                     child: pw.Column(
@@ -1552,7 +1553,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            // IN RS. এর নিচের দীর্ঘ ফাঁকা বক্স
+                            // IN RS. এর নিচের অবিভাজ্য ফাঁকা বক্স
                             pw.Container(
                               width: wInRs,
                               height: rowH * 6,
@@ -1570,7 +1571,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               child: pw.Table(
                                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                                 children: [
-                                  // LESS ANY AD-HOC PAYMENT MODE (সম্পূর্ণ একক মার্জড সেল)
+                                  // LESS ANY AD-HOC PAYMENT MODE
                                   pw.TableRow(
                                     children: [
                                       pw.Container(
@@ -1616,7 +1617,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                       ),
                                     ],
                                   ),
-                                  // ACTUAL CLAIM: (মাঝের দাগ মুছে সম্পূর্ণ একক মার্জড বক্সে Left Aligned)
+                                  // ACTUAL CLAIM: (মাঝের দাগ ছাড়া একক মার্জড সেল)
                                   pw.TableRow(
                                     children: [
                                       pw.Table(
@@ -1643,9 +1644,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        pw.SizedBox(height: 5),
+                        // ACTUAL CLAIM ও PASSED FOR RS এর মাঝের সমান উচ্চতা ও বর্ডারযুক্ত ফাঁকা রো
+                        pw.Container(
+                          height: rowH,
+                          width: wInRs + rightTotalWidth,
+                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                        ),
 
-                        // PASSED FOR RS.: (Certificate Box-এর প্রান্ত থেকে শুরু হয়ে শেষ পর্যন্ত)
+                        // PASSED FOR RS.:
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1665,15 +1671,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        pw.SizedBox(height: 5),
+                        // PASSED FOR RS ও IN WORDS এর মাঝের সমান উচ্চতা ও বর্ডারযুক্ত ফাঁকা রো
+                        pw.Container(
+                          height: rowH,
+                          width: wInRs + rightTotalWidth,
+                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                        ),
 
                         // IN WORDS ROW:
-                        // (বামের IN WORDS বক্সটি Certificate Box-এর সোজা দাগ থেকে শুরু হয়ে IN RS. ও P.TAX এর মাঝের দাগের সাথে মিলেছে)
+                        // বামের IN WORDS বক্সটি ঠিক IN RS. কলামের সমান এবং এর ডান দাগটি P.TAX এর দাগের সাথে এক সুতোয় লক করা
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt (IN RS. কলামের সাথে এক সুতোয় লক করা)
-                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt (P.TAX থেকে শেষ পর্যন্ত)
+                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt
+                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt
                           },
                           children: [
                             pw.TableRow(children: [
