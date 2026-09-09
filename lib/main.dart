@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),
-      1: pw.FlexColumnWidth(2.4),
-      2: pw.FlexColumnWidth(2.0),
-      3: pw.FlexColumnWidth(1.4),
-      4: pw.FlexColumnWidth(1.3),
-      5: pw.FlexColumnWidth(1.8),
-      6: pw.FlexColumnWidth(1.7),
-      7: pw.FlexColumnWidth(1.3),
-      8: pw.FlexColumnWidth(2.0),
-      9: pw.FlexColumnWidth(1.4),
-      10: pw.FlexColumnWidth(1.4),
-      11: pw.FlexColumnWidth(1.6),
-      12: pw.FlexColumnWidth(1.4),
-      13: pw.FlexColumnWidth(2.0),
-      14: pw.FlexColumnWidth(2.5),
+      0: pw.FlexColumnWidth(2.3),  // MONTH
+      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
+      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
+      3: pw.FlexColumnWidth(1.4),  // D.P/IR
+      4: pw.FlexColumnWidth(1.3),  // S.P
+      5: pw.FlexColumnWidth(1.8),  // D.A
+      6: pw.FlexColumnWidth(1.7),  // H.R.A
+      7: pw.FlexColumnWidth(1.3),  // M.A
+      8: pw.FlexColumnWidth(2.0),  // GROSS
+      9: pw.FlexColumnWidth(1.4),  // C.P.F
+      10: pw.FlexColumnWidth(1.4), // P.TAX
+      11: pw.FlexColumnWidth(1.6), // G.P.F
+      12: pw.FlexColumnWidth(1.4), // I.TAX
+      13: pw.FlexColumnWidth(2.0), // NET
+      14: pw.FlexColumnWidth(2.5), // REMARKS
     };
 
     final headers = [
@@ -1180,7 +1180,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF (১০০% নিখুঁত গাণিতিক সমান্তরাল প্রস্থ) ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF (১০০% গাণিতিক সমান্তরাল উলম্ব বর্ডার) ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1194,23 +1194,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double rowH = 14.25; 
     const double reasonH = 28.50; 
 
-    // সুনির্দিষ্ট স্থির পয়েন্টে কলামের প্রস্থ (Fixed Points guarantees 100% pixel-perfect vertical alignment):
-    const double wBasic = 76.0;
-    const double wDp = 59.0;
-    const double wDa = 76.0;
-    const double wHra = 68.0;
-    const double wMa = 59.0;
-    const double wGross = 85.0;
-    const double wCpf = 85.0;
-    const double wInRs = 42.0;
+    // সুনির্দিষ্ট পয়েন্টে লক করা কলামের প্রস্থ (মোট প্রস্থ = ৭৯৬.০ পয়েন্ট)
+    const double wBasic = 75.0;
+    const double wDp = 60.0;
+    const double wDa = 75.0;
+    const double wHra = 70.0;
+    const double wMa = 55.0;
+    const double wGross = 86.5;
+    const double wCpf = 86.5;
+    const double wInRs = 38.0;
 
-    // শেষ ৪টি কলামের নির্দিষ্ট অপরিবর্তনীয় প্রস্থ:
+    // শেষ ৪টি কলামের প্রস্থ (যা ওপরের ৪টি বক্স ও নিচের টেবিলের জন্য ১০০% সমান)
     const double wPtax = 55.0;   // INDEX NO. / P.TAX / Ad-hoc Col 1
-    const double wGpf = 59.0;    // B3-083 / G.P.F/C.P.F / Ad-hoc Col 2
-    const double wOthers = 59.0; // H.S. CODE: / OTHERS / Ad-hoc Col 3
-    const double wNet = 78.0;    // 103280 / NET CLAIM / Ad-hoc Col 4
+    const double wGpf = 60.0;    // B3-083 / G.P.F/C.P.F / Ad-hoc Col 2
+    const double wOthers = 60.0; // H.S. CODE: / OTHERS / Ad-hoc Col 3
+    const double wNet = 75.0;    // 103280 / NET CLAIM / Ad-hoc Col 4
 
-    // Table 2 মাস্টার গ্রিডের প্রস্থ
+    // Table 2 মাস্টার গ্রিড (মোট = ৭৯৬.০ pt)
     const masterColWidths = {
       0: pw.FixedColumnWidth(wBasic),
       1: pw.FixedColumnWidth(wDp),
@@ -1226,10 +1226,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       11: pw.FixedColumnWidth(wNet),
     };
 
-    // Table 1 হেডার টেবিলের প্রস্থ:
-    // ১ম কলাম = wBasic + wDp = 135.0 pt (D.P/IR/S.P ও D.A এর মাঝের দাগের সাথে সোজা মিলবে)
-    // ২য় কলাম = wDa + wHra + wMa + wGross + wCpf + wInRs = 415.0 pt (IN RS. এর ডান পাশের দাগের সাথে মিলবে)
-    // বাকি ৪টি কলাম হুবহু wPtax, wGpf, wOthers, wNet এর সমান!
+    // Table 1 হেডার টেবিলের প্রস্থ (মোট = ৭৯৬.০ pt)
+    // ১ম কলাম = 75.0 + 60.0 = 135.0 pt (D.P/IR/S.P ও D.A এর মাঝের দাগের সাথে মিলবে)
+    // ২য় কলাম = 75 + 70 + 55 + 86.5 + 86.5 + 38 = 411.0 pt (IN RS. এর ডান পাশের দাগের সাথে মিলবে)
+    // ৩য়..৬ষ্ঠ কলাম = হুবহু 55, 60, 60, 75 pt
     const headerTableColWidths = {
       0: pw.FixedColumnWidth(wBasic + wDp),
       1: pw.FixedColumnWidth(wDa + wHra + wMa + wGross + wCpf + wInRs),
@@ -1239,7 +1239,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       5: pw.FixedColumnWidth(wNet),
     };
 
-    // নিচের ডানদিকের ৪টি কলামের প্রস্থ
+    // Table 3 (Ad-hoc ও Claim টেবিল) এর ৪টি কলামের প্রস্থ (মোট = ২৫০.০ pt)
     const right4ColWidths = {
       0: pw.FixedColumnWidth(wPtax),
       1: pw.FixedColumnWidth(wGpf),
@@ -1273,7 +1273,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table (ডানদিকের ৪টি বক্সের প্রস্থ হুবহু লক করা)
+              // 1. Header Table (ডানদিকের ৪টি বক্সের প্রস্থ হুবহু 55, 60, 60, 75 pt লক করা)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: headerTableColWidths,
@@ -1294,7 +1294,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     _finalHCell("EMPLOYEE ID:", height: rowH),
                     _finalValCell(empIdController.text, height: rowH),
                   ]),
-                  // তারিখের ঘরটি উল্লম্ব বর্ডার দিয়ে সমান ৩টি ভাগে বিভক্ত (Box 1: Blank/Date, Box 2: "TO", Box 3: Blank/Date)
+                  // তারিখের ঘর সমান ৩টি ভাগে বিভক্ত
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                     pw.Container(
@@ -1412,11 +1412,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // 3. Lower Section: হুবহু একই ফিক্সড পয়েন্ট মাপে পারফেক্ট অ্যালাইনমেন্ট
+              // 3. Lower Section: হুবহু একই 508.0 pt, 38.0 pt এবং 250.0 pt মাপে লক করা
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Part A: Left Box (Exact cols 0..6 width = 508.0 pt)
+                  // Part A: Left Box (Exact 508.0 pt)
                   pw.Container(
                     width: leftBoxWidth,
                     decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
@@ -1472,14 +1472,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Part B: Middle Box under "IN RS." (width = 42.0 pt)
+                  // Part B: Middle Box under "IN RS." (Exact 38.0 pt)
                   pw.Container(
                     width: wInRs,
                     height: (rowH * 6) + 4.8,
                     decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                   ),
 
-                  // Part C: Right 4 Columns (Width = 55 + 59 + 59 + 78 = 251.0 pt)
+                  // Part C: Right 4 Columns (Exact 250.0 pt -> 55, 60, 60, 75 pt)
                   pw.Container(
                     width: wPtax + wGpf + wOthers + wNet,
                     child: pw.Column(
@@ -1546,7 +1546,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
                         pw.SizedBox(height: 5),
 
-                        // PASSED FOR RS.: (Cols 0, 1, 2 merged | Col 3 holds Amount)
+                        // PASSED FOR RS.:
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
