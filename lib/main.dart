@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),
-      1: pw.FlexColumnWidth(2.4),
-      2: pw.FlexColumnWidth(2.0),
-      3: pw.FlexColumnWidth(1.4),
-      4: pw.FlexColumnWidth(1.3),
-      5: pw.FlexColumnWidth(1.8),
-      6: pw.FlexColumnWidth(1.7),
-      7: pw.FlexColumnWidth(1.3),
-      8: pw.FlexColumnWidth(2.0),
-      9: pw.FlexColumnWidth(1.4),
-      10: pw.FlexColumnWidth(1.4),
-      11: pw.FlexColumnWidth(1.6),
-      12: pw.FlexColumnWidth(1.4),
-      13: pw.FlexColumnWidth(2.0),
-      14: pw.FlexColumnWidth(2.5),
+      0: pw.FlexColumnWidth(2.3),  // MONTH
+      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
+      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
+      3: pw.FlexColumnWidth(1.4),  // D.P/IR
+      4: pw.FlexColumnWidth(1.3),  // S.P
+      5: pw.FlexColumnWidth(1.8),  // D.A
+      6: pw.FlexColumnWidth(1.7),  // H.R.A
+      7: pw.FlexColumnWidth(1.3),  // M.A
+      8: pw.FlexColumnWidth(2.0),  // GROSS
+      9: pw.FlexColumnWidth(1.4),  // C.P.F
+      10: pw.FlexColumnWidth(1.4), // P.TAX
+      11: pw.FlexColumnWidth(1.6), // G.P.F
+      12: pw.FlexColumnWidth(1.4), // I.TAX
+      13: pw.FlexColumnWidth(2.0), // NET
+      14: pw.FlexColumnWidth(2.5), // REMARKS
     };
 
     final headers = [
@@ -1192,7 +1192,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     final inWordsText = actClaim > 0 ? numberToWordsIndian(actClaim.round()) : "";
 
     const double rowH = 14.25; 
-    const double reasonH = 28.50; 
 
     // সুনির্দিষ্ট পয়েন্টে লক করা কলামের মাপ (মোট = ৭৯৬.০ pt)
     const double wBasic = 75.0;
@@ -1250,9 +1249,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
-    // IN RS. এর নিচের অবিভাজ্য একক ফাঁকা বক্সের উচ্চতা:
-    // মাঝের টেবিলের নিচের ২টি রো (rowH * 2) + Ad-hoc টেবিলের ৬টি রো (rowH * 6) = rowH * 8
-    const double inRsTallBoxHeight = rowH * 8; 
+    // গাণিতিক সমান্তরাল উচ্চতা: 6 * rowH = 85.5 pt (যা ঠিক ACTUAL CLAIM-এর তলার দাগে মিলে যাবে)
+    const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
+    const double receiptBoxHeight = rowH * 2;  // 28.5 pt
+    const double reasonBoxHeight = rowH * 4;   // 57.0 pt (28.5 + 57.0 = 85.5 pt!)
 
     doc.addPage(
       pw.Page(
@@ -1421,8 +1421,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           child: pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
                             children: [
+                              // Date of receipt box (Exact 28.5 pt)
                               pw.Container(
-                                height: rowH + 6,
+                                height: receiptBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                                 alignment: pw.Alignment.centerLeft,
                                 child: pw.Column(
@@ -1435,9 +1436,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                              // REASON OF ARREAR (28.50 pt)
+                              // REASON OF ARREAR (Exact 57.0 pt -> নিচের দাগটি সোজা ACTUAL CLAIM এর তলার দাগে মিলবে!)
                               pw.Container(
-                                height: reasonH,
+                                height: reasonBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
                                 alignment: pw.Alignment.centerLeft,
                                 child: pw.Row(
@@ -1449,6 +1450,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                              // CERTIFIED THAT (পয়েন্ট ১ থেকে ৮)
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
                                 child: pw.Column(
@@ -1473,7 +1475,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Middle & Right Sections
+                  // Middle & Right Sections: Ad-hoc + ACTUAL CLAIM + নিচের ৪টি রো
                   pw.Container(
                     width: bottomSectionWidth,
                     child: pw.Column(
@@ -1481,10 +1483,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            // IN RS. এবং তার নিচের অবিভাজ্য একক দীর্ঘ ফাঁকা বক্স
+                            // IN RS. এবং তার নিচের অবিভাজ্য একক ফাঁকা বক্স
                             pw.Container(
                               width: wInRs,
-                              height: rowH + inRsTallBoxHeight,
+                              height: (rowH * 3) + inRsTallBoxHeight,
                               decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                               child: pw.Column(
                                 children: [
@@ -1501,9 +1503,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                     ),
                                     child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                                   ),
-                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ (ACTUAL CLAIM এর তলার সাথে এক সুতোয় লক করা)
+                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ (ACTUAL CLAIM ও REASON OF ARREAR এর তলার সাথে এক সুতোয় লক করা)
                                   pw.Container(
-                                    height: inRsTallBoxHeight - 0.8,
+                                    height: (rowH * 2) + inRsTallBoxHeight - 0.8,
                                     width: wInRs,
                                   ),
                                 ],
@@ -1639,15 +1641,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // ঠিক এই ৪টি রো-এর বাম প্রান্ত Certificate অংশের সাথে সরাসরি মিশিয়ে দেওয়া হলো:
-                        // ১. ACTUAL CLAIM-এর নিচের ফাঁকা রো (প্রস্থ = 296.0 pt)
+                        // এই ৪টি রো বামের Certificate Box-এর সাথে এক সুতোয় লক করা:
+                        // ১. ACTUAL CLAIM-এর নিচের ফাঁকা রো (উচ্চতা = 14.25 pt, প্রস্থ = 296.0 pt)
                         pw.Container(
                           height: rowH,
                           width: bottomSectionWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ২. PASSED FOR RS.: (প্রস্থ = 296.0 pt, বাম প্রান্ত Certificate Box-এর সাথে লক করা)
+                        // ২. PASSED FOR RS.: (বাম প্রান্ত Certificate Box-এর সাথে লক করা)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1667,19 +1669,19 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // ৩. PASSED FOR RS ও IN WORDS এর মাঝের ফাঁকা রো (প্রস্থ = 296.0 pt)
+                        // ৩. PASSED FOR RS ও IN WORDS এর মাঝের ফাঁকা রো (উচ্চতা = 14.25 pt, প্রস্থ = 296.0 pt)
                         pw.Container(
                           height: rowH,
                           width: bottomSectionWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ৪. IN WORDS ROW: (প্রস্থ = 296.0 pt, উলম্ব দাগ IN RS. ও P.TAX এর সংযোগস্থলে লক করা)
+                        // ৪. IN WORDS ROW: (বাম প্রান্ত Certificate Box-এর সাথে লক করা, মাঝের উলম্ব দাগ IN RS. ও P.TAX এর সংযোগস্থলে লক করা)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt (IN RS. কলামের সাথে এক সুতোয়)
-                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt (P.TAX থেকে শেষ পর্যন্ত)
+                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt
+                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt
                           },
                           children: [
                             pw.TableRow(children: [
