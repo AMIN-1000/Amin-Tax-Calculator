@@ -830,7 +830,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF (100% অপরিবর্তিত) ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),
-      1: pw.FlexColumnWidth(2.4),
-      2: pw.FlexColumnWidth(2.0),
-      3: pw.FlexColumnWidth(1.4),
-      4: pw.FlexColumnWidth(1.3),
-      5: pw.FlexColumnWidth(1.8),
-      6: pw.FlexColumnWidth(1.7),
-      7: pw.FlexColumnWidth(1.3),
-      8: pw.FlexColumnWidth(2.0),
-      9: pw.FlexColumnWidth(1.4),
-      10: pw.FlexColumnWidth(1.4),
-      11: pw.FlexColumnWidth(1.6),
-      12: pw.FlexColumnWidth(1.4),
-      13: pw.FlexColumnWidth(2.0),
-      14: pw.FlexColumnWidth(2.5),
+      0: pw.FlexColumnWidth(2.3),  // MONTH
+      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
+      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
+      3: pw.FlexColumnWidth(1.4),  // D.P/IR
+      4: pw.FlexColumnWidth(1.3),  // S.P
+      5: pw.FlexColumnWidth(1.8),  // D.A
+      6: pw.FlexColumnWidth(1.7),  // H.R.A
+      7: pw.FlexColumnWidth(1.3),  // M.A
+      8: pw.FlexColumnWidth(2.0),  // GROSS
+      9: pw.FlexColumnWidth(1.4),  // C.P.F
+      10: pw.FlexColumnWidth(1.4), // P.TAX
+      11: pw.FlexColumnWidth(1.6), // G.P.F
+      12: pw.FlexColumnWidth(1.4), // I.TAX
+      13: pw.FlexColumnWidth(2.0), // NET
+      14: pw.FlexColumnWidth(2.5), // REMARKS
     };
 
     final headers = [
@@ -1180,7 +1180,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF (১০০% নিখুঁত মার্জড গ্রিড) ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1203,7 +1203,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double wGross = 82.5;
     const double wCpf = 82.5;
     
-    // IN RS. এর প্রস্থ বাড়ানো হলো (38.0 pt -> 46.0 pt)
+    // IN RS. এর চওড়া মাপ
     const double wInRs = 46.0;
 
     // শেষ ৪টি কলামের সুনির্দিষ্ট সমান মাপ
@@ -1249,16 +1249,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       3: pw.FixedColumnWidth(wNet),
     };
 
-    // ACTUAL CLAIM রো-এর জন্য ৩টি কলাম (১ম ও ২য় কলামের মাঝের দাগ তুলে মার্জ করা হলো)
+    // ACTUAL CLAIM রো (১ম ও ২য় কলাম মার্জ করা)
     const actualClaimRowWidths = {
-      0: pw.FixedColumnWidth(wPtax + wGpf), // 63 + 60 = 123.0 pt
+      0: pw.FixedColumnWidth(wPtax + wGpf), // 123.0 pt
       1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
-
-    // IN RS. এর নিচের দীর্ঘ একক অবিভাজ্য ফাঁকা বক্সের নিখুঁত উচ্চতা
-    // Table 2 এর নিচের ২টি রো (rowH * 2) + Ad-hoc টেবিলের ৬টি রো (rowH * 6) = rowH * 8
-    const double inRsTallBoxHeight = rowH * 8; // Exactly 114.0 pt, perfectly aligns with bottom of ACTUAL CLAIM!
 
     doc.addPage(
       pw.Page(
@@ -1305,6 +1301,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     _finalHCell("EMPLOYEE ID:", height: rowH),
                     _finalValCell(empIdController.text, height: rowH),
                   ]),
+                  // তারিখের ঘর সমান ৩টি ভাগে বিভক্ত
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                     pw.Container(
@@ -1356,7 +1353,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 2. Middle Table (TO BE CREDITED TO সম্পূর্ণ একক মার্জড সেল)
+              // 2. Middle Table (IN RS. এর তলার বর্ডারটি TO BE CREDITED TO এর তলার বর্ডারের সাথে এক সুতোয় সমান্তরাল)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: table2MasterWidths,
@@ -1406,7 +1403,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ],
                       ),
 
-                      // Middle Column: IN RS. (নিচের ছোট খোপগুলোর আনুভূমিক দাগ মুছে ফেলা হয়েছে)
+                      // Middle Column: IN RS. (তলার বর্ডারটি TO BE CREDITED TO ও P.TAX এর মাঝের বর্ডারের সাথে এক সুতোয় লক করা)
                       pw.Container(
                         height: rowH * 3,
                         decoration: const pw.BoxDecoration(
@@ -1422,6 +1419,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               width: wInRs,
                               color: PdfColors.grey300,
                               alignment: pw.Alignment.center,
+                              decoration: const pw.BoxDecoration(
+                                border: pw.Border(
+                                  bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                ),
+                              ),
                               child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                             ),
                             pw.Container(
@@ -1432,7 +1434,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ),
                       ),
 
-                      // Right Block: TO BE CREDITED TO (সম্পূর্ণ অবিভাজ্য মার্জড সেল)
+                      // Right Block: TO BE CREDITED TO (একক মার্জড হেডার)
                       pw.Table(
                         border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                         children: [
@@ -1485,7 +1487,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Part A: Left Box (Exact 500.0 pt)
+                  // Part A: Left Box (500.0 pt)
                   pw.Container(
                     width: leftBoxWidth,
                     decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
@@ -1541,105 +1543,114 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Part B: IN RS. এর নিচের একক অবিভাজ্য ফাঁকা বক্স (প্রস্থ = 46.0 pt, যার নিচের বর্ডার ACTUAL CLAIM-এর নিচের বর্ডারের সাথে এক সুতোয় লক করা)
+                  // Part B & C: Right Blocks (IN RS. কলাম সহ সম্পূর্ণ অংশ Certificate Box-এর সাথে এক লাইনে মিশে গেছে)
                   pw.Container(
-                    width: wInRs,
-                    height: inRsTallBoxHeight - (rowH * 2), // Perfectly aligns with the bottom border of ACTUAL CLAIM!
-                    decoration: const pw.BoxDecoration(
-                      border: pw.Border(
-                        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                      ),
-                    ),
-                  ),
-
-                  // Part C: Right 4 Columns
-                  pw.Container(
-                    width: rightTotalWidth,
+                    width: wInRs + rightTotalWidth,
                     child: pw.Column(
                       children: [
-                        pw.Table(
-                          border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                        // Ad-hoc এবং ACTUAL CLAIM টেবিল
+                        pw.Row(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            // LESS ANY AD-HOC PAYMENT MODE (সম্পূর্ণ একক মার্জড সেল)
-                            pw.TableRow(
-                              children: [
-                                pw.Container(
-                                  height: rowH,
-                                  width: rightTotalWidth,
-                                  alignment: pw.Alignment.center,
-                                  child: pw.Text("LESS ANY AD-HOC PAYMENT MODE:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                            // IN RS. এর নিচের দীর্ঘ ফাঁকা বক্স
+                            pw.Container(
+                              width: wInRs,
+                              height: rowH * 6,
+                              decoration: const pw.BoxDecoration(
+                                border: pw.Border(
+                                  left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                 ),
-                              ],
+                              ),
                             ),
-                            // Ad-hoc রো ১ থেকে ৪
-                            pw.TableRow(
-                              children: [
-                                pw.Table(
-                                  border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                                  columnWidths: right4ColWidths,
-                                  children: [
-                                    pw.TableRow(children: [
-                                      _finalValCell("1", height: rowH),
-                                      _finalValCell(double.tryParse(adHoc1Ctrl.text) != null && double.parse(adHoc1Ctrl.text) > 0 ? adHoc1Ctrl.text : "", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                    ]),
-                                    pw.TableRow(children: [
-                                      _finalValCell("2", height: rowH),
-                                      _finalValCell(double.tryParse(adHoc2Ctrl.text) != null && double.parse(adHoc2Ctrl.text) > 0 ? adHoc2Ctrl.text : "", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                    ]),
-                                    pw.TableRow(children: [
-                                      _finalValCell("3", height: rowH),
-                                      _finalValCell(double.tryParse(adHoc3Ctrl.text) != null && double.parse(adHoc3Ctrl.text) > 0 ? adHoc3Ctrl.text : "", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                    ]),
-                                    pw.TableRow(children: [
-                                      _finalValCell("4", height: rowH),
-                                      _finalValCell(double.tryParse(adHoc4Ctrl.text) != null && double.parse(adHoc4Ctrl.text) > 0 ? adHoc4Ctrl.text : "", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                      _finalValCell("", height: rowH),
-                                    ]),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            // ACTUAL CLAIM: (মাঝের উলম্ব দাগ মুছে সম্পূর্ণ একক মার্জড বক্সে Left Aligned)
-                            pw.TableRow(
-                              children: [
-                                pw.Table(
-                                  border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                                  columnWidths: actualClaimRowWidths,
-                                  children: [
-                                    pw.TableRow(children: [
+                            // ডানদিকের Ad-hoc ও ACTUAL CLAIM টেবিল
+                            pw.Container(
+                              width: rightTotalWidth,
+                              child: pw.Table(
+                                border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                children: [
+                                  // LESS ANY AD-HOC PAYMENT MODE (সম্পূর্ণ একক মার্জড সেল)
+                                  pw.TableRow(
+                                    children: [
                                       pw.Container(
                                         height: rowH,
-                                        padding: const pw.EdgeInsets.only(left: 4),
-                                        alignment: pw.Alignment.centerLeft,
-                                        child: pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                                        width: rightTotalWidth,
+                                        alignment: pw.Alignment.center,
+                                        child: pw.Text("LESS ANY AD-HOC PAYMENT MODE:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
                                       ),
-                                      _finalValCell(adHocTotal > 0 ? adHocTotal.round().toString() : "0", height: rowH),
-                                      _finalValCell(actClaim.round().toString(), height: rowH, isBold: true),
-                                    ]),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                  // Ad-hoc রো ১ থেকে ৪
+                                  pw.TableRow(
+                                    children: [
+                                      pw.Table(
+                                        border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                        columnWidths: right4ColWidths,
+                                        children: [
+                                          pw.TableRow(children: [
+                                            _finalValCell("1", height: rowH),
+                                            _finalValCell(double.tryParse(adHoc1Ctrl.text) != null && double.parse(adHoc1Ctrl.text) > 0 ? adHoc1Ctrl.text : "", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                          ]),
+                                          pw.TableRow(children: [
+                                            _finalValCell("2", height: rowH),
+                                            _finalValCell(double.tryParse(adHoc2Ctrl.text) != null && double.parse(adHoc2Ctrl.text) > 0 ? adHoc2Ctrl.text : "", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                          ]),
+                                          pw.TableRow(children: [
+                                            _finalValCell("3", height: rowH),
+                                            _finalValCell(double.tryParse(adHoc3Ctrl.text) != null && double.parse(adHoc3Ctrl.text) > 0 ? adHoc3Ctrl.text : "", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                          ]),
+                                          pw.TableRow(children: [
+                                            _finalValCell("4", height: rowH),
+                                            _finalValCell(double.tryParse(adHoc4Ctrl.text) != null && double.parse(adHoc4Ctrl.text) > 0 ? adHoc4Ctrl.text : "", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                            _finalValCell("", height: rowH),
+                                          ]),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  // ACTUAL CLAIM: (মাঝের দাগ মুছে সম্পূর্ণ একক মার্জড বক্সে Left Aligned)
+                                  pw.TableRow(
+                                    children: [
+                                      pw.Table(
+                                        border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                        columnWidths: actualClaimRowWidths,
+                                        children: [
+                                          pw.TableRow(children: [
+                                            pw.Container(
+                                              height: rowH,
+                                              padding: const pw.EdgeInsets.only(left: 4),
+                                              alignment: pw.Alignment.centerLeft,
+                                              child: pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                                            ),
+                                            _finalValCell(adHocTotal > 0 ? adHocTotal.round().toString() : "0", height: rowH),
+                                            _finalValCell(actClaim.round().toString(), height: rowH, isBold: true),
+                                          ]),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
 
                         pw.SizedBox(height: 5),
 
-                        // PASSED FOR RS.:
+                        // PASSED FOR RS.: (Certificate Box-এর প্রান্ত থেকে শুরু হয়ে শেষ পর্যন্ত)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: pw.FixedColumnWidth(wPtax + wGpf + wOthers),
-                            1: const pw.FixedColumnWidth(wNet),
+                            0: pw.FixedColumnWidth(wInRs + wPtax + wGpf + wOthers), // 229.0 pt
+                            1: const pw.FixedColumnWidth(wNet),                     // 67.0 pt
                           },
                           children: [
                             pw.TableRow(children: [
@@ -1657,19 +1668,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.SizedBox(height: 5),
 
                         // IN WORDS ROW:
+                        // (বামের IN WORDS বক্সটি Certificate Box-এর সোজা দাগ থেকে শুরু হয়ে IN RS. ও P.TAX এর মাঝের দাগের সাথে মিলেছে)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: const pw.FixedColumnWidth(wPtax),
-                            1: pw.FixedColumnWidth(wGpf + wOthers + wNet),
+                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt (IN RS. কলামের সাথে এক সুতোয় লক করা)
+                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt (P.TAX থেকে শেষ পর্যন্ত)
                           },
                           children: [
                             pw.TableRow(children: [
                               pw.Container(
                                 height: rowH * 2.2,
-                                padding: const pw.EdgeInsets.only(left: 4, top: 4),
+                                padding: const pw.EdgeInsets.only(left: 3, top: 4),
                                 alignment: pw.Alignment.topLeft,
-                                child: pw.Text("IN WORDS:", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                child: pw.Text("IN WORDS:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
                               ),
                               pw.Container(
                                 height: rowH * 2.2,
