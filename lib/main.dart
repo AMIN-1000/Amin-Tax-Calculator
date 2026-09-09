@@ -977,21 +977,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),
-      1: pw.FlexColumnWidth(2.4),
-      2: pw.FlexColumnWidth(2.0),
-      3: pw.FlexColumnWidth(1.4),
-      4: pw.FlexColumnWidth(1.3),
-      5: pw.FlexColumnWidth(1.8),
-      6: pw.FlexColumnWidth(1.7),
-      7: pw.FlexColumnWidth(1.3),
-      8: pw.FlexColumnWidth(2.0),
-      9: pw.FlexColumnWidth(1.4),
-      10: pw.FlexColumnWidth(1.4),
-      11: pw.FlexColumnWidth(1.6),
-      12: pw.FlexColumnWidth(1.4),
-      13: pw.FlexColumnWidth(2.0),
-      14: pw.FlexColumnWidth(2.5),
+      0: pw.FlexColumnWidth(2.3),  // MONTH
+      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
+      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
+      3: pw.FlexColumnWidth(1.4),  // D.P/IR
+      4: pw.FlexColumnWidth(1.3),  // S.P
+      5: pw.FlexColumnWidth(1.8),  // D.A
+      6: pw.FlexColumnWidth(1.7),  // H.R.A
+      7: pw.FlexColumnWidth(1.3),  // M.A
+      8: pw.FlexColumnWidth(2.0),  // GROSS
+      9: pw.FlexColumnWidth(1.4),  // C.P.F
+      10: pw.FlexColumnWidth(1.4), // P.TAX
+      11: pw.FlexColumnWidth(1.6), // G.P.F
+      12: pw.FlexColumnWidth(1.4), // I.TAX
+      13: pw.FlexColumnWidth(2.0), // NET
+      14: pw.FlexColumnWidth(2.5), // REMARKS
     };
 
     final headers = [
@@ -1196,9 +1196,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     // মাস্টার গ্রিড অনুপাত (Master Columns):
     // Col 0: BASIC PAY (1.8)
-    // Col 1: D.P/IR/S.P (1.4)
-    // Col 0 + Col 1 = 3.2 -> ঠিক এই দাগেই Table 1-এর প্রথম উলম্ব দাগটি বসবে!
-    // Col 2..7: D.A, H.R.A, M.A, Gross, C.P.F/G.P.F, IN RS. (1.8+1.6+1.4+2.0+2.0+1.0 = 9.8)
+    // Col 1: D.P/IR/S.P (1.4) -> Col 0 + Col 1 = 3.2 (Table 1 এর ১ম কলাম)
+    // Col 2..7: D.A, H.R.A, M.A, Gross, C.P.F/G.P.F, IN RS. (1.8+1.6+1.4+2.0+2.0+1.0 = 9.8) (Table 1 এর ২য় কলাম)
     // Col 8: P.TAX (1.3)
     // Col 9: G.P.F/C.P.F (1.4)
     // Col 10: OTHERS (1.4)
@@ -1218,21 +1217,22 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       11: pw.FlexColumnWidth(1.7), // NET CLAIM
     };
 
-    // Table 1 এর কলাম অনুপাত: প্রথম কলামটি (1.8 + 1.4 = 3.2), যাতে দাগটি D.P/IR/S.P ও D.A এর মাঝে ঠিকভাবে বসে!
+    // Table 1 এর কলাম অনুপাত যা ওপর থেকে নিচ পর্যন্ত হুবহু ১০০% একই সমান্তরালে থাকবে
     const headerTableColWidths = {
-      0: pw.FlexColumnWidth(3.2), // Aligns exactly with border between D.P/IR/S.P and D.A!
-      1: pw.FlexColumnWidth(9.8), // Spans through IN RS. right border!
-      2: pw.FlexColumnWidth(1.3), // Aligns with P.TAX
-      3: pw.FlexColumnWidth(1.4), // Aligns with G.P.F/C.P.F
-      4: pw.FlexColumnWidth(1.4), // Aligns with OTHERS
-      5: pw.FlexColumnWidth(1.7), // Aligns with NET CLAIM
+      0: pw.FlexColumnWidth(3.2), // Col 0: Aligns exactly with border between D.P/IR/S.P and D.A!
+      1: pw.FlexColumnWidth(9.8), // Col 1: Spans through IN RS. right border!
+      2: pw.FlexColumnWidth(1.3), // Col 2: Aligns with P.TAX
+      3: pw.FlexColumnWidth(1.4), // Col 3: Aligns with G.P.F/C.P.F
+      4: pw.FlexColumnWidth(1.4), // Col 4: Aligns with OTHERS
+      5: pw.FlexColumnWidth(1.7), // Col 5: Aligns with NET CLAIM
     };
 
+    // Right 4 columns
     const right4ColWidths = {
-      0: pw.FlexColumnWidth(1.3),
-      1: pw.FlexColumnWidth(1.4),
-      2: pw.FlexColumnWidth(1.4),
-      3: pw.FlexColumnWidth(1.7),
+      0: pw.FlexColumnWidth(1.3), // P.TAX
+      1: pw.FlexColumnWidth(1.4), // G.P.F/C.P.F
+      2: pw.FlexColumnWidth(1.4), // OTHERS
+      3: pw.FlexColumnWidth(1.7), // NET CLAIM
     };
 
     doc.addPage(
@@ -1259,7 +1259,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table (প্রথম উলম্ব দাগটি D.P/IR/S.P ও D.A এর সংযোগস্থলে নিখুঁত সমান্তরালে)
+              // 1. Header Table (ডানদিকের ৪টি বক্স ও নিচের টেবিলের ৪টি বক্সের উল্লম্ব দাগ হুবহু একই সমান্তরালে)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: headerTableColWidths,
@@ -1280,9 +1280,41 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     _finalHCell("EMPLOYEE ID:", height: rowH),
                     _finalValCell(empIdController.text, height: rowH),
                   ]),
+                  // তারিখের ঘরটি উল্লম্ব বর্ডার দিয়ে সমান ৩টি ভাগে বিভক্ত (Box 1: Blank/Date, Box 2: "TO", Box 3: Blank/Date)
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
-                    _finalValCell("${fromDateController.text}   TO   ${toDateController.text}", height: rowH, isBold: true),
+                    pw.Container(
+                      height: rowH,
+                      child: pw.Table(
+                        border: const pw.TableBorder(
+                          verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        ),
+                        columnWidths: const {
+                          0: pw.FlexColumnWidth(1),
+                          1: pw.FlexColumnWidth(1),
+                          2: pw.FlexColumnWidth(1),
+                        },
+                        children: [
+                          pw.TableRow(children: [
+                            pw.Container(
+                              height: rowH,
+                              alignment: pw.Alignment.center,
+                              child: pw.Text(fromDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                            ),
+                            pw.Container(
+                              height: rowH,
+                              alignment: pw.Alignment.center,
+                              child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                            ),
+                            pw.Container(
+                              height: rowH,
+                              alignment: pw.Alignment.center,
+                              child: pw.Text(toDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                            ),
+                          ]),
+                        ],
+                      ),
+                    ),
                     _finalHCell("", height: rowH),
                     _finalValCell("", height: rowH),
                     _finalHCell("", height: rowH),
@@ -1434,6 +1466,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   ),
 
                   // Part B: Middle Box under "IN RS." (col 7, flex = 10)
+                  // চারিদিকে বর্ডারসহ লম্বা ফাঁকা মার্জড বক্স
                   pw.Expanded(
                     flex: 10,
                     child: pw.Container(
@@ -1509,7 +1542,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
                         pw.SizedBox(height: 5),
 
-                        // PASSED FOR RS.:
+                        // PASSED FOR RS.: (Cols 0, 1, 2 merged | Col 3 holds Amount)
+                        // টাকার ঘরটি ঠিক উপরের NET CLAIM-এর সোজা উল্লম্ব দাগে লক করা
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
