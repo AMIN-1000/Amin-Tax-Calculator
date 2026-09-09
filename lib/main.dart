@@ -1249,16 +1249,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
-    // গাণিতিক সমন্বয়:
-    // Date of receipt box দ্বিগুণ বড় = 57.0 pt (4 * rowH)
+    // গাণিতিক সমন্বয়
     const double receiptBoxHeight = rowH * 4; // 57.0 pt
-    // FOR LATE APPROVAL box থেকে ঠিক ততটাই কমানো = 28.5 pt (2 * rowH)
     const double reasonBoxHeight = rowH * 2;  // 28.5 pt
-    // যোগফল = 57.0 + 28.5 = 85.5 pt (6 * rowH), যা হুবহু ACTUAL CLAIM-এর তলার দাগে মিলবে!
     const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
+    const double certificateBoxHeight = 145.0; // 1.5x বৃদ্ধি
 
-    // Certificate Box-এর উচ্চতা দেড় গুণ বৃদ্ধি
-    const double certificateBoxHeight = 145.0;
+    // IN WORDS বক্সের উচ্চতা ০.৫ গুণ (হাফ) বাড়িয়ে 47.0 pt করা হলো
+    const double inWordsBoxHeight = 47.0;
 
     doc.addPage(
       pw.Page(
@@ -1377,10 +1375,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     width: leftBoxWidth,
                     child: pw.Column(
                       children: [
-                        // ARREAR DUE ON ACCOUNT OF Table
+                        // ARREAR DUE ON ACCOUNT OF Table (১. নং সমাধান: ডানপাশের দাগ মুছে সম্পূর্ণ একক সেল, Center Aligned)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                          columnWidths: table2LeftCols,
                           children: [
                             pw.TableRow(
                               decoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -1391,30 +1388,39 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                   alignment: pw.Alignment.center,
                                   child: pw.Text("ARREAR DUE ON ACCOUNT OF:", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                                 ),
-                                pw.Container(), pw.Container(), pw.Container(), pw.Container(), pw.Container(), pw.Container(),
-                              ],
-                            ),
-                            pw.TableRow(
-                              decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                              children: [
-                                _finalValCell("BASIC PAY", height: rowH, isBold: true),
-                                _finalValCell("D.P/IR/S.P", height: rowH, isBold: true),
-                                _finalValCell("D.A", height: rowH, isBold: true),
-                                _finalValCell("H.R.A", height: rowH, isBold: true),
-                                _finalValCell("M.A", height: rowH, isBold: true),
-                                _finalValCell("Gross", height: rowH, isBold: true),
-                                _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
                               ],
                             ),
                             pw.TableRow(
                               children: [
-                                _finalValCell(allGrandBasic.round().toString(), height: rowH),
-                                _finalValCell((allGrandDp + allGrandSp).round().toString(), height: rowH),
-                                _finalValCell(allGrandDa.round().toString(), height: rowH),
-                                _finalValCell(allGrandHra.round().toString(), height: rowH),
-                                _finalValCell(allGrandMa.round().toString(), height: rowH),
-                                _finalValCell(allGrandGross.round().toString(), height: rowH),
-                                _finalValCell("0", height: rowH),
+                                pw.Table(
+                                  border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                  columnWidths: table2LeftCols,
+                                  children: [
+                                    pw.TableRow(
+                                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                                      children: [
+                                        _finalValCell("BASIC PAY", height: rowH, isBold: true),
+                                        _finalValCell("D.P/IR/S.P", height: rowH, isBold: true),
+                                        _finalValCell("D.A", height: rowH, isBold: true),
+                                        _finalValCell("H.R.A", height: rowH, isBold: true),
+                                        _finalValCell("M.A", height: rowH, isBold: true),
+                                        _finalValCell("Gross", height: rowH, isBold: true),
+                                        _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
+                                      ],
+                                    ),
+                                    pw.TableRow(
+                                      children: [
+                                        _finalValCell(allGrandBasic.round().toString(), height: rowH),
+                                        _finalValCell((allGrandDp + allGrandSp).round().toString(), height: rowH),
+                                        _finalValCell(allGrandDa.round().toString(), height: rowH),
+                                        _finalValCell(allGrandHra.round().toString(), height: rowH),
+                                        _finalValCell(allGrandMa.round().toString(), height: rowH),
+                                        _finalValCell(allGrandGross.round().toString(), height: rowH),
+                                        _finalValCell("0", height: rowH),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ],
@@ -1427,7 +1433,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           child: pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
                             children: [
-                              // Date of receipt box (দ্বিগুণ উচ্চতা = 57.0 pt)
+                              // Date of receipt box (উচ্চতা = 57.0 pt)
                               pw.Container(
                                 height: receiptBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -1443,7 +1449,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                              // REASON OF ARREAR (উচ্চতা কমানো হলো = 28.5 pt, দাগটি ACTUAL CLAIM-এর তলায় মিলবে)
+                              // REASON OF ARREAR (উচ্চতা = 28.5 pt)
                               pw.Container(
                                 height: reasonBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -1456,8 +1462,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                   ],
                                 ),
                               ),
-                              pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                              // CERTIFIED THAT (দেড় গুণ বড় উচ্চতা = 145.0 pt)
+                              // ২. নং সমাধান: FOR LATE APPROVAL এর নিচের দাগটিকে Bold (thickness: 1.6 pt) করা হলো
+                              pw.Divider(color: PdfColors.black, thickness: 1.6, height: 1.6),
+                              // CERTIFIED THAT (উচ্চতা = 145.0 pt)
                               pw.Container(
                                 height: certificateBoxHeight,
                                 padding: const pw.EdgeInsets.all(5),
@@ -1484,7 +1491,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Middle & Right Sections: Ad-hoc + ACTUAL CLAIM + নিচের ৪টি রো
+                  // Middle & Right Sections
                   pw.Container(
                     width: bottomSectionWidth,
                     child: pw.Column(
@@ -1512,7 +1519,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                     ),
                                     child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                                   ),
-                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ (ACTUAL CLAIM ও REASON OF ARREAR এর তলার সাথে এক সুতোয় লক করা)
+                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ
                                   pw.Container(
                                     height: (rowH * 2) + inRsTallBoxHeight - 0.8,
                                     width: wInRs,
@@ -1650,15 +1657,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // নিচের ৪টি রো যা বামের Certificate Box-এর সাথে হুবহু এক সুতোয় লক করা:
-                        // ১. ACTUAL CLAIM-এর নিচের ফাঁকা রো (উচ্চতা = 14.25 pt, প্রস্থ = 296.0 pt)
+                        // এই ৪টি রো বামের Certificate Box-এর সাথে এক সুতোয় লক করা:
+                        // ১. ACTUAL CLAIM-এর নিচের ফাঁকা রো
                         pw.Container(
                           height: rowH,
                           width: bottomSectionWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ২. PASSED FOR RS.: (বাম প্রান্ত Certificate Box-এর সাথে লক করা)
+                        // ২. PASSED FOR RS.:
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1678,14 +1685,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // ৩. PASSED FOR RS ও IN WORDS এর মাঝের ফাঁকা রো (উচ্চতা = 14.25 pt, প্রস্থ = 296.0 pt)
+                        // ৩. PASSED FOR RS ও IN WORDS এর মাঝের ফাঁকা রো
                         pw.Container(
                           height: rowH,
                           width: bottomSectionWidth,
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ৪. IN WORDS ROW: (বাম প্রান্ত Certificate Box-এর সাথে লক করা, মাঝের উলম্ব দাগ IN RS. ও P.TAX এর সংযোগস্থলে লক করা)
+                        // ৪. IN WORDS ROW (৩. নং সমাধান: উচ্চতা হাফ গুণ বাড়িয়ে 47.0 pt করা হলো)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1695,14 +1702,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           children: [
                             pw.TableRow(children: [
                               pw.Container(
-                                height: rowH * 2.2,
+                                height: inWordsBoxHeight,
                                 padding: const pw.EdgeInsets.only(left: 3, top: 4),
                                 alignment: pw.Alignment.topLeft,
                                 child: pw.Text("IN WORDS:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
                               ),
                               pw.Container(
-                                height: rowH * 2.2,
-                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                height: inWordsBoxHeight,
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                                 alignment: pw.Alignment.centerLeft,
                                 child: pw.Text(
                                   inWordsText,
