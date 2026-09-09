@@ -1180,7 +1180,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF (১০০% নিখুঁত মার্জড গ্রিড) ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1194,24 +1194,26 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double rowH = 14.25; 
     const double reasonH = 28.50; 
 
-    // সুনির্দিষ্ট পয়েন্টে লক করা কলামের প্রস্থ (মোট প্রস্থ = ৭৯৬.০ পয়েন্ট)
+    // সুনির্দিষ্ট পয়েন্টে লক করা কলামের মাপ (মোট = ৭৯৬.০ pt)
     const double wBasic = 75.0;
     const double wDp = 60.0;
     const double wDa = 75.0;
     const double wHra = 70.0;
     const double wMa = 55.0;
-    const double wGross = 86.5;
-    const double wCpf = 86.5;
-    const double wInRs = 38.0;
+    const double wGross = 82.5;
+    const double wCpf = 82.5;
+    
+    // IN RS. এর প্রস্থ বাড়ানো হলো (38.0 pt -> 46.0 pt)
+    const double wInRs = 46.0;
 
-    // শেষ ৪টি কলামের নির্দিষ্ট অপরিবর্তনীয় প্রস্থ:
+    // শেষ ৪টি কলামের সুনির্দিষ্ট সমান মাপ
     const double wPtax = 63.0;   // INDEX NO. / P.TAX / Ad-hoc Col 1
     const double wGpf = 60.0;    // B3-083 / G.P.F/C.P.F / Ad-hoc Col 2
     const double wOthers = 60.0; // H.S. CODE: / OTHERS / Ad-hoc Col 3
     const double wNet = 67.0;    // 103280 / NET CLAIM / Ad-hoc Col 4
 
     const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; // 250.0 pt
-    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; // 508.0 pt
+    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; // 500.0 pt
 
     // Table 1 হেডার টেবিল
     const headerTableColWidths = {
@@ -1223,7 +1225,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       5: pw.FixedColumnWidth(wNet),    // 67.0 pt
     };
 
-    // Table 2 এর কলাম বিভাজন (বাম ব্লক, মাঝের IN RS, এবং ডান ব্লক)
+    // Table 2 এর কলাম বিভাজন
     const table2MasterWidths = {
       0: pw.FixedColumnWidth(leftBoxWidth),
       1: pw.FixedColumnWidth(wInRs),
@@ -1246,6 +1248,17 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       2: pw.FixedColumnWidth(wOthers),
       3: pw.FixedColumnWidth(wNet),
     };
+
+    // ACTUAL CLAIM রো-এর জন্য ৩টি কলাম (১ম ও ২য় কলামের মাঝের দাগ তুলে মার্জ করা হলো)
+    const actualClaimRowWidths = {
+      0: pw.FixedColumnWidth(wPtax + wGpf), // 63 + 60 = 123.0 pt
+      1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
+      2: pw.FixedColumnWidth(wNet),         // 67.0 pt
+    };
+
+    // IN RS. এর নিচের দীর্ঘ একক অবিভাজ্য ফাঁকা বক্সের নিখুঁত উচ্চতা
+    // Table 2 এর নিচের ২টি রো (rowH * 2) + Ad-hoc টেবিলের ৬টি রো (rowH * 6) = rowH * 8
+    const double inRsTallBoxHeight = rowH * 8; // Exactly 114.0 pt, perfectly aligns with bottom of ACTUAL CLAIM!
 
     doc.addPage(
       pw.Page(
@@ -1292,7 +1305,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     _finalHCell("EMPLOYEE ID:", height: rowH),
                     _finalValCell(empIdController.text, height: rowH),
                   ]),
-                  // তারিখের ঘর সমান ৩টি ভাগে বিভক্ত
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                     pw.Container(
@@ -1344,7 +1356,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 2. Middle Table: TO BE CREDITED TO পুরো ৪টি কলাম জুড়ে একটি অবিভাজ্য মার্জড বক্স
+              // 2. Middle Table (TO BE CREDITED TO সম্পূর্ণ একক মার্জড সেল)
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                 columnWidths: table2MasterWidths,
@@ -1394,30 +1406,36 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ],
                       ),
 
-                      // Middle Column: IN RS.
-                      pw.Table(
-                        border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                        children: [
-                          pw.TableRow(
-                            decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                            children: [
-                              pw.Container(
-                                height: rowH,
-                                alignment: pw.Alignment.center,
-                                child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
-                              ),
-                            ],
+                      // Middle Column: IN RS. (নিচের ছোট খোপগুলোর আনুভূমিক দাগ মুছে ফেলা হয়েছে)
+                      pw.Container(
+                        height: rowH * 3,
+                        decoration: const pw.BoxDecoration(
+                          border: pw.Border(
+                            left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                            right: pw.BorderSide(color: PdfColors.black, width: 0.8),
                           ),
-                          pw.TableRow(children: [pw.Container(height: rowH)]),
-                          pw.TableRow(children: [pw.Container(height: rowH)]),
-                        ],
+                        ),
+                        child: pw.Column(
+                          children: [
+                            pw.Container(
+                              height: rowH,
+                              width: wInRs,
+                              color: PdfColors.grey300,
+                              alignment: pw.Alignment.center,
+                              child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                            ),
+                            pw.Container(
+                              height: rowH * 2,
+                              width: wInRs,
+                            ),
+                          ],
+                        ),
                       ),
 
-                      // Right Block: TO BE CREDITED TO (৪টি কলামের মাঝে কোনো দাগ নেই, সম্পূর্ণ একক মার্জড বক্স)
+                      // Right Block: TO BE CREDITED TO (সম্পূর্ণ অবিভাজ্য মার্জড সেল)
                       pw.Table(
                         border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                         children: [
-                          // একক অবিভাজ্য মার্জড হেডার
                           pw.TableRow(
                             decoration: const pw.BoxDecoration(color: PdfColors.grey300),
                             children: [
@@ -1429,7 +1447,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                             ],
                           ),
-                          // নিচের ৪টি কলামের সাব-টেবিল
                           pw.TableRow(
                             children: [
                               pw.Table(
@@ -1468,7 +1485,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Part A: Left Box (Exact 508.0 pt)
+                  // Part A: Left Box (Exact 500.0 pt)
                   pw.Container(
                     width: leftBoxWidth,
                     decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
@@ -1524,14 +1541,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Part B: Middle Box under "IN RS." (Exact 38.0 pt)
+                  // Part B: IN RS. এর নিচের একক অবিভাজ্য ফাঁকা বক্স (প্রস্থ = 46.0 pt, যার নিচের বর্ডার ACTUAL CLAIM-এর নিচের বর্ডারের সাথে এক সুতোয় লক করা)
                   pw.Container(
                     width: wInRs,
-                    height: (rowH * 6) + 4.8,
-                    decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                    height: inRsTallBoxHeight - (rowH * 2), // Perfectly aligns with the bottom border of ACTUAL CLAIM!
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                      ),
+                    ),
                   ),
 
-                  // Part C: Right 4 Columns: LESS ANY AD-HOC PAYMENT MODE পুরো ৪টি কলাম জুড়ে সম্পূর্ণ একক মার্জড বক্স
+                  // Part C: Right 4 Columns
                   pw.Container(
                     width: rightTotalWidth,
                     child: pw.Column(
@@ -1539,7 +1562,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           children: [
-                            // 1. LESS ANY AD-HOC PAYMENT MODE: (মাঝের ৩টি দাগ তুলে সম্পূর্ণ একক মার্জড সেল)
+                            // LESS ANY AD-HOC PAYMENT MODE (সম্পূর্ণ একক মার্জড সেল)
                             pw.TableRow(
                               children: [
                                 pw.Container(
@@ -1550,42 +1573,48 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ],
                             ),
-                            // 2. নিচের ৪টি কলামের Ad-hoc রো
+                            // Ad-hoc রো ১ থেকে ৪
                             pw.TableRow(
                               children: [
                                 pw.Table(
                                   border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                                   columnWidths: right4ColWidths,
                                   children: [
-                                    // Row 1
                                     pw.TableRow(children: [
                                       _finalValCell("1", height: rowH),
                                       _finalValCell(double.tryParse(adHoc1Ctrl.text) != null && double.parse(adHoc1Ctrl.text) > 0 ? adHoc1Ctrl.text : "", height: rowH),
                                       _finalValCell("", height: rowH),
                                       _finalValCell("", height: rowH),
                                     ]),
-                                    // Row 2
                                     pw.TableRow(children: [
                                       _finalValCell("2", height: rowH),
                                       _finalValCell(double.tryParse(adHoc2Ctrl.text) != null && double.parse(adHoc2Ctrl.text) > 0 ? adHoc2Ctrl.text : "", height: rowH),
                                       _finalValCell("", height: rowH),
                                       _finalValCell("", height: rowH),
                                     ]),
-                                    // Row 3
                                     pw.TableRow(children: [
                                       _finalValCell("3", height: rowH),
                                       _finalValCell(double.tryParse(adHoc3Ctrl.text) != null && double.parse(adHoc3Ctrl.text) > 0 ? adHoc3Ctrl.text : "", height: rowH),
                                       _finalValCell("", height: rowH),
                                       _finalValCell("", height: rowH),
                                     ]),
-                                    // Row 4
                                     pw.TableRow(children: [
                                       _finalValCell("4", height: rowH),
                                       _finalValCell(double.tryParse(adHoc4Ctrl.text) != null && double.parse(adHoc4Ctrl.text) > 0 ? adHoc4Ctrl.text : "", height: rowH),
                                       _finalValCell("", height: rowH),
                                       _finalValCell("", height: rowH),
                                     ]),
-                                    // ACTUAL CLAIM:
+                                  ],
+                                ),
+                              ],
+                            ),
+                            // ACTUAL CLAIM: (মাঝের উলম্ব দাগ মুছে সম্পূর্ণ একক মার্জড বক্সে Left Aligned)
+                            pw.TableRow(
+                              children: [
+                                pw.Table(
+                                  border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                  columnWidths: actualClaimRowWidths,
+                                  children: [
                                     pw.TableRow(children: [
                                       pw.Container(
                                         height: rowH,
@@ -1593,7 +1622,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                         alignment: pw.Alignment.centerLeft,
                                         child: pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
                                       ),
-                                      pw.Container(),
                                       _finalValCell(adHocTotal > 0 ? adHocTotal.round().toString() : "0", height: rowH),
                                       _finalValCell(actClaim.round().toString(), height: rowH, isBold: true),
                                     ]),
