@@ -1249,10 +1249,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
-    // গাণিতিক সমান্তরাল উচ্চতা: 6 * rowH = 85.5 pt (যা ঠিক ACTUAL CLAIM-এর তলার দাগে মিলে যাবে)
+    // গাণিতিক সমন্বয়:
+    // Date of receipt box দ্বিগুণ বড় = 57.0 pt (4 * rowH)
+    const double receiptBoxHeight = rowH * 4; // 57.0 pt
+    // FOR LATE APPROVAL box থেকে ঠিক ততটাই কমানো = 28.5 pt (2 * rowH)
+    const double reasonBoxHeight = rowH * 2;  // 28.5 pt
+    // যোগফল = 57.0 + 28.5 = 85.5 pt (6 * rowH), যা হুবহু ACTUAL CLAIM-এর তলার দাগে মিলবে!
     const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
-    const double receiptBoxHeight = rowH * 2;  // 28.5 pt
-    const double reasonBoxHeight = rowH * 4;   // 57.0 pt (28.5 + 57.0 = 85.5 pt!)
+
+    // Certificate Box-এর উচ্চতা দেড় গুণ বৃদ্ধি
+    const double certificateBoxHeight = 145.0;
 
     doc.addPage(
       pw.Page(
@@ -1421,7 +1427,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           child: pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
                             children: [
-                              // Date of receipt box (Exact 28.5 pt)
+                              // Date of receipt box (দ্বিগুণ উচ্চতা = 57.0 pt)
                               pw.Container(
                                 height: receiptBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -1431,12 +1437,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                   mainAxisAlignment: pw.MainAxisAlignment.center,
                                   children: [
                                     pw.Text("Date of receipt of 1st Grant-in-Aid by the School:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(height: 3),
                                     pw.Text("Lump Grant w.e.f under salary deficit Scheme.", style: const pw.TextStyle(fontSize: 6.8)),
                                   ],
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                              // REASON OF ARREAR (Exact 57.0 pt -> নিচের দাগটি সোজা ACTUAL CLAIM এর তলার দাগে মিলবে!)
+                              // REASON OF ARREAR (উচ্চতা কমানো হলো = 28.5 pt, দাগটি ACTUAL CLAIM-এর তলায় মিলবে)
                               pw.Container(
                                 height: reasonBoxHeight,
                                 padding: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -1450,21 +1457,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-                              // CERTIFIED THAT (পয়েন্ট ১ থেকে ৮)
-                              pw.Padding(
+                              // CERTIFIED THAT (দেড় গুণ বড় উচ্চতা = 145.0 pt)
+                              pw.Container(
+                                height: certificateBoxHeight,
                                 padding: const pw.EdgeInsets.all(5),
                                 child: pw.Column(
                                   crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-                                    pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.5)),
-                                    pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.5)),
+                                    pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                    pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.7)),
                                   ],
                                 ),
                               ),
@@ -1483,7 +1492,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            // IN RS. এবং তার নিচের অবিভাজ্য একক ফাঁকা বক্স
+                            // IN RS. এবং তার নিচের অবিভাজ্য একক দীর্ঘ ফাঁকা বক্স
                             pw.Container(
                               width: wInRs,
                               height: (rowH * 3) + inRsTallBoxHeight,
@@ -1503,7 +1512,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                     ),
                                     child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
                                   ),
-                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ (ACTUAL CLAIM ও REASON OF ARREAR এর তলার সাথে এক সুতোয় লক করা)
+                                  // অবিভাজ্য একক দীর্ঘ ফাঁকা অংশ (ACTUAL CLAIM ও REASON OF ARREAR এর তলার সাথে এক সুতোয় লক করা)
                                   pw.Container(
                                     height: (rowH * 2) + inRsTallBoxHeight - 0.8,
                                     width: wInRs,
@@ -1641,7 +1650,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           ],
                         ),
 
-                        // এই ৪টি রো বামের Certificate Box-এর সাথে এক সুতোয় লক করা:
+                        // নিচের ৪টি রো যা বামের Certificate Box-এর সাথে হুবহু এক সুতোয় লক করা:
                         // ১. ACTUAL CLAIM-এর নিচের ফাঁকা রো (উচ্চতা = 14.25 pt, প্রস্থ = 296.0 pt)
                         pw.Container(
                           height: rowH,
@@ -1680,8 +1689,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
-                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt
-                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt
+                            0: const pw.FixedColumnWidth(wInRs),         // 46.0 pt (IN RS. কলামের সাথে এক সুতোয়)
+                            1: pw.FixedColumnWidth(rightTotalWidth),      // 250.0 pt (P.TAX থেকে শেষ পর্যন্ত)
                           },
                           children: [
                             pw.TableRow(children: [
