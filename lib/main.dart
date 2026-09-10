@@ -833,7 +833,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF (পূর্বের মূল ফরম্যাটে অটুট) ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -976,24 +976,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ১. নং সমাধান: Calculation Sheet এর Month ও Remarks কলামের সেল মার্জ
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),  // MONTH
-      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
-      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
-      3: pw.FlexColumnWidth(1.4),  // D.P/IR
-      4: pw.FlexColumnWidth(1.3),  // S.P
-      5: pw.FlexColumnWidth(1.8),  // D.A
-      6: pw.FlexColumnWidth(1.7),  // H.R.A
-      7: pw.FlexColumnWidth(1.3),  // M.A
-      8: pw.FlexColumnWidth(2.0),  // GROSS
-      9: pw.FlexColumnWidth(1.4),  // C.P.F
-      10: pw.FlexColumnWidth(1.4), // P.TAX
-      11: pw.FlexColumnWidth(1.6), // G.P.F
-      12: pw.FlexColumnWidth(1.4), // I.TAX
-      13: pw.FlexColumnWidth(2.0), // NET
-      14: pw.FlexColumnWidth(2.5), // REMARKS
+      0: pw.FlexColumnWidth(2.3),
+      1: pw.FlexColumnWidth(2.4),
+      2: pw.FlexColumnWidth(2.0),
+      3: pw.FlexColumnWidth(1.4),
+      4: pw.FlexColumnWidth(1.3),
+      5: pw.FlexColumnWidth(1.8),
+      6: pw.FlexColumnWidth(1.7),
+      7: pw.FlexColumnWidth(1.3),
+      8: pw.FlexColumnWidth(2.0),
+      9: pw.FlexColumnWidth(1.4),
+      10: pw.FlexColumnWidth(1.4),
+      11: pw.FlexColumnWidth(1.6),
+      12: pw.FlexColumnWidth(1.4),
+      13: pw.FlexColumnWidth(2.0),
+      14: pw.FlexColumnWidth(2.5),
     };
 
     final headers = [
@@ -1015,56 +1014,50 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
 
     for (var r in sh.records) {
-      final String remText = r.fixedRemarks.isNotEmpty ? r.fixedRemarks : (r.effectiveAdmRemarks.isNotEmpty ? r.effectiveAdmRemarks : (r.effectiveDrwRemarks.isNotEmpty ? r.effectiveDrwRemarks : r.effectiveDueRemarks));
-
-      // Row 1: Admissible
       rows.add(
         pw.TableRow(
           children: [
-            _pMergedMonthCell(r.monthName, isTop: true),
+            _pCleanCell(r.monthName, alignLeft: true),
             _pCell("Admissible"),
             _pCondNum(r.hasAdm, r.aBasic), _pCondNum(r.hasAdm, r.aDp), _pCondNum(r.hasAdm, r.aSp),
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
             _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
-            _pMergedRemarksCell(remText, isTop: true),
+            _pCleanCell(r.effectiveAdmRemarks),
           ],
         ),
       );
 
-      // Row 2: Drawn
       rows.add(
         pw.TableRow(
           children: [
-            _pMergedMonthCell("", isMiddle: true),
+            _pCleanCell(""),
             _pCell("Drawn"),
             _pCondNum(r.hasDrw, r.dBasic), _pCondNum(r.hasDrw, r.dDp), _pCondNum(r.hasDrw, r.dSp),
             _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
             _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf), _pCondNum(r.hasDrw, r.dPtax),
             _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
-            _pMergedRemarksCell("", isMiddle: true),
+            _pCleanCell(r.effectiveDrwRemarks),
           ],
         ),
       );
 
-      // Row 3: Due
       rows.add(
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
           children: [
-            _pMergedMonthCell("", isBottom: true),
+            _pCleanCell(""),
             _pCell("Due", isBold: true),
             _pCondNum(r.hasAny, r.dueBasic, isBold: true), _pCondNum(r.hasAny, r.dueDp, isBold: true), _pCondNum(r.hasAny, r.dueSp, isBold: true),
             _pCondNum(r.hasAny, r.dueDa, isBold: true), _pCondNum(r.hasAny, r.dueHra, isBold: true), _pCondNum(r.hasAny, r.dueMa, isBold: true),
             _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true), _pCondNum(r.hasAny, r.duePtax, isBold: true),
             _pCondNum(r.hasAny, r.dueGpf, isBold: true), _pCondNum(r.hasAny, r.dueItax, isBold: true), _pCondNum(r.hasAny, r.dueNet, isBold: true),
-            _pMergedRemarksCell("", isBottom: true),
+            _pCleanCell(r.effectiveDueRemarks),
           ],
         ),
       );
     }
 
-    // TOTAL রো
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -1088,7 +1081,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       ),
     );
 
-    // BALANCE রো
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -1112,7 +1104,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       ),
     );
 
-    // GRAND TOTAL রো
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey400),
@@ -1150,27 +1141,19 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // মার্জড Month Cell (Top-Left Aligned এবং মাঝের দাগ মুক্ত)
-  pw.Widget _pMergedMonthCell(String text, {bool isTop = false, bool isMiddle = false, bool isBottom = false}) {
+  pw.Widget _pCleanCell(String text, {bool alignLeft = false}) {
     return pw.Container(
-      color: PdfColors.white,
       padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.4),
-      alignment: pw.Alignment.topLeft,
-      child: isTop
-          ? pw.Text(text, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 6.0, fontWeight: pw.FontWeight.bold))
-          : pw.SizedBox.shrink(),
-    );
-  }
-
-  // মার্জড Remarks Cell (মাঝের দাগ মুক্ত)
-  pw.Widget _pMergedRemarksCell(String text, {bool isTop = false, bool isMiddle = false, bool isBottom = false}) {
-    return pw.Container(
-      color: PdfColors.white,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.4),
-      alignment: pw.Alignment.center,
-      child: isTop
-          ? pw.Text(text, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: pw.FontWeight.bold))
-          : pw.SizedBox.shrink(),
+      alignment: alignLeft ? pw.Alignment.topLeft : pw.Alignment.topCenter,
+      child: pw.Text(
+        text,
+        textAlign: alignLeft ? pw.TextAlign.left : pw.TextAlign.center,
+        softWrap: true,
+        style: pw.TextStyle(
+          fontSize: alignLeft ? 6.0 : 5.6,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
     );
   }
 
@@ -1307,7 +1290,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table (২, ৩ ও ৪. নং সমাধান অনুযায়ী নরমাল স্পষ্ট বর্ডারসহ)
+              // 1. Header Table
               pw.Container(
                 width: totalSheetWidth,
                 decoration: const pw.BoxDecoration(
@@ -1382,7 +1365,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ),
                     ),
 
-                    // ডানদিকের টেবিল সেকশন (বর্ডার সারিবদ্ধ)
+                    // ডানদিকের টেবিল সেকশন
                     pw.Container(
                       width: headerRightWidth,
                       child: pw.Column(
@@ -1518,33 +1501,38 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                               
-                              // ৫. নং সমাধান: মাঝের উলম্ব বর্ডারটি একক ও নরমাল (0.8 pt)
-                              pw.Container(
-                                height: reasonBoxHeight,
-                                child: pw.Row(
-                                  children: [
-                                    pw.Container(
-                                      width: wBasic + wDp,
-                                      height: reasonBoxHeight,
-                                      padding: const pw.EdgeInsets.symmetric(horizontal: 5),
-                                      alignment: pw.Alignment.centerLeft,
-                                      child: pw.Text(
-                                        "REASON OF ARREAR :",
-                                        style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
-                                      ),
-                                    ),
-                                    pw.Container(width: 0.8, height: reasonBoxHeight, color: PdfColors.black),
-                                    pw.Container(
-                                      width: leftBoxWidth - (wBasic + wDp) - 0.8,
-                                      height: reasonBoxHeight,
-                                      alignment: pw.Alignment.center,
-                                      child: pw.Text(
-                                        "FOR LATE APPROVAL",
-                                        style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
-                                      ),
-                                    ),
-                                  ],
+                              // REASON OF ARREAR রো: Table দিয়ে একদম একক ও নরমাল 0.8 pt Vertical Border করা হলো
+                              pw.Table(
+                                border: const pw.TableBorder(
+                                  verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                 ),
+                                columnWidths: {
+                                  0: const pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
+                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), // 365.0 pt
+                                },
+                                children: [
+                                  pw.TableRow(
+                                    children: [
+                                      pw.Container(
+                                        height: reasonBoxHeight,
+                                        padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                                        alignment: pw.Alignment.centerLeft,
+                                        child: pw.Text(
+                                          "REASON OF ARREAR :",
+                                          style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                        ),
+                                      ),
+                                      pw.Container(
+                                        height: reasonBoxHeight,
+                                        alignment: pw.Alignment.center,
+                                        child: pw.Text(
+                                          "FOR LATE APPROVAL",
+                                          style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
 
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
