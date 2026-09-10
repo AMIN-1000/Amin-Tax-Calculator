@@ -71,7 +71,6 @@ class MonthEntry {
   double get aBasic => _val(admBasic);
   double get aDp => _val(admDp);
   double get aSp => _val(admSp);
-  // Admissible D.A ও H.R.A round করা হয়েছে:
   double get aDa => hasAdm ? ((aBasic + aDp) * daRate).roundToDouble() : 0;
   double get aHra => hasAdm ? (((aBasic + aDp) * 0.15).clamp(0, 6000)).roundToDouble() : 0;
   double get aMa => hasAdm ? 300 : 0;
@@ -86,7 +85,6 @@ class MonthEntry {
   double get dBasic => _val(drwBasic);
   double get dDp => _val(drwDp);
   double get dSp => _val(drwSp);
-  // Drawn D.A ও H.R.A round করা হয়েছে:
   double get dDa => hasDrw ? ((dBasic + dDp) * daRate).roundToDouble() : 0;
   double get dHra => hasDrw ? (((dBasic + dDp) * 0.15).clamp(0, 6000)).roundToDouble() : 0;
   double get dMa => hasDrw ? 300 : 0;
@@ -793,16 +791,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         _leftLabelCell("GRAND TOTAL:", isBold: true),
         _labelCell(""),
         _condSummaryCell(sh.hasAnyInput, sh.grandBasic, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandDp, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandSp, isBold: true),
+        _condSummaryCell(sh.grandDp != 0, sh.grandDp, isBold: true),
+        _condSummaryCell(sh.grandSp != 0, sh.grandSp, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandDa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandHra, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandMa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandCpf, isBold: true),
+        _condSummaryCell(sh.grandCpf != 0, sh.grandCpf, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandPtax, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandGpf, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandItax, isBold: true),
+        _condSummaryCell(sh.grandGpf != 0, sh.grandGpf, isBold: true),
+        _condSummaryCell(sh.grandItax != 0, sh.grandItax, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandNet, isBold: true),
         _labelCell(""),
       ],
@@ -847,10 +845,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           pageFormat: PdfPageFormat.a4,
           theme: theme,
           margin: const pw.EdgeInsets.only(
-            top: 45.4,    // 16mm Top Margin
-            left: 22.7,   // 8mm Left Margin
-            right: 22.7,  // 8mm Right Margin
-            bottom: 28.3, // 10mm Bottom Margin
+            top: 45.4,
+            left: 22.7,
+            right: 22.7,
+            bottom: 28.3,
           ),
           build: (pw.Context context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -864,9 +862,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               _buildPdfScale(),
               pw.SizedBox(height: 3),
               _buildPdfTable(sh),
-              
               pw.SizedBox(height: 5.0),
-              
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -982,21 +978,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
-      0: pw.FlexColumnWidth(2.3),  // MONTH
-      1: pw.FlexColumnWidth(2.4),  // Admissible/Drawn & Due
-      2: pw.FlexColumnWidth(2.0),  // BASIC PAY
-      3: pw.FlexColumnWidth(1.4),  // D.P/IR
-      4: pw.FlexColumnWidth(1.3),  // S.P
-      5: pw.FlexColumnWidth(1.8),  // D.A
-      6: pw.FlexColumnWidth(1.7),  // H.R.A
-      7: pw.FlexColumnWidth(1.3),  // M.A
-      8: pw.FlexColumnWidth(2.0),  // GROSS
-      9: pw.FlexColumnWidth(1.4),  // C.P.F
-      10: pw.FlexColumnWidth(1.4), // P.TAX
-      11: pw.FlexColumnWidth(1.6), // G.P.F
-      12: pw.FlexColumnWidth(1.4), // I.TAX
-      13: pw.FlexColumnWidth(2.0), // NET
-      14: pw.FlexColumnWidth(2.5), // REMARKS
+      0: pw.FlexColumnWidth(2.3),
+      1: pw.FlexColumnWidth(2.4),
+      2: pw.FlexColumnWidth(2.0),
+      3: pw.FlexColumnWidth(1.4),
+      4: pw.FlexColumnWidth(1.3),
+      5: pw.FlexColumnWidth(1.8),
+      6: pw.FlexColumnWidth(1.7),
+      7: pw.FlexColumnWidth(1.3),
+      8: pw.FlexColumnWidth(2.0),
+      9: pw.FlexColumnWidth(1.4),
+      10: pw.FlexColumnWidth(1.4),
+      11: pw.FlexColumnWidth(1.6),
+      12: pw.FlexColumnWidth(1.4),
+      13: pw.FlexColumnWidth(2.0),
+      14: pw.FlexColumnWidth(2.5),
     };
 
     final headers = [
@@ -1198,6 +1194,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double rowH = 14.25; 
 
+    // বামদিকের কলামের মাপ
     const double wBasic = 67.5;
     const double wDp = 67.5;
     const double wDa = 73.0;
@@ -1208,6 +1205,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     
     const double wInRs = 46.0;
 
+    // ডানদিকের ৪টি কলামের সুনির্দিষ্ট মাপ
     const double wPtax = 63.0;
     const double wGpf = 60.0;
     const double wOthers = 60.0;
@@ -1218,19 +1216,26 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
     const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
 
-    const headerTableColWidths = {
-      0: pw.FixedColumnWidth(wBasic + wDp), 
-      1: pw.FixedColumnWidth(wDa + wHra + wMa + wGross + wCpf + wInRs), 
-      2: pw.FixedColumnWidth(wPtax),   
-      3: pw.FixedColumnWidth(wGpf),    
-      4: pw.FixedColumnWidth(wOthers), 
-      5: pw.FixedColumnWidth(wNet),    
+    // ১. নং সমাধান: হেডার টেবিল বিভক্তকরণ
+    const double headerLeftWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf + wInRs; // 546.0 pt
+    const double headerRightWidth = rightTotalWidth; // 250.0 pt
+
+    const headerLeftColWidths = {
+      0: pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
+      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), // 411.0 pt
+    };
+
+    const headerRight4Cols = {
+      0: pw.FixedColumnWidth(wPtax),
+      1: pw.FixedColumnWidth(wGpf),
+      2: pw.FixedColumnWidth(wOthers),
+      3: pw.FixedColumnWidth(wNet),
     };
 
     const dateRowColWidths = {
-      0: pw.FixedColumnWidth(wDa + wHra),          
-      1: pw.FixedColumnWidth(wMa + wGross),        
-      2: pw.FixedColumnWidth(wCpf + wInRs),        
+      0: pw.FixedColumnWidth(wDa + wHra),          // 146.0 pt
+      1: pw.FixedColumnWidth(wMa + wGross),        // 146.0 pt
+      2: pw.FixedColumnWidth(wCpf + wInRs),        // 119.0 pt
     };
 
     const table2LeftCols = {
@@ -1251,9 +1256,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     const actualClaimRowWidths = {
-      0: pw.FixedColumnWidth(wPtax + wGpf), 
-      1: pw.FixedColumnWidth(wOthers),      
-      2: pw.FixedColumnWidth(wNet),         
+      0: pw.FixedColumnWidth(wPtax + wGpf), // 123.0 pt
+      1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
+      2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
     const double receiptBoxHeight = 49.5; 
@@ -1286,73 +1291,113 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table
-              pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-                columnWidths: headerTableColWidths,
-                children: [
-                  pw.TableRow(children: [
-                    _finalHCell("NAME OF THE INSTITUTION:", height: rowH),
-                    _finalValCell(instController.text, height: rowH, alignLeft: true),
-                    _finalHCell("INDEX NO.:", height: rowH),
-                    _finalValCell(indexController.text, height: rowH),
-                    _finalHCell("H.S. CODE:", height: rowH),
-                    _finalValCell(hsCodeController.text, height: rowH),
-                  ]),
-                  pw.TableRow(children: [
-                    _finalHCell("NAME OF THE EMPLOYEE:", height: rowH),
-                    _finalValCell(empNameController.text, height: rowH, alignLeft: true),
-                    _finalHCell("DESIGNATION:", height: rowH),
-                    _finalValCell(desigController.text, height: rowH),
-                    _finalHCell("EMPLOYEE ID:", height: rowH),
-                    _finalValCell(empIdController.text, height: rowH),
-                  ]),
-                  pw.TableRow(children: [
-                    _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
+              // 1. Header Table (১. ও ৩. নং সমাধান: ডানদিকের নিচের ৮টি সেল মার্জ করে একটি একক ব্ল্যাঙ্ক বক্স)
+              pw.Container(
+                width: totalSheetWidth,
+                decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    // বামদিকের সেকশন (৪টি রো)
                     pw.Container(
-                      height: rowH,
+                      width: headerLeftWidth,
+                      decoration: const pw.BoxDecoration(
+                        border: pw.Border(right: pw.BorderSide(color: PdfColors.black, width: 0.8)),
+                      ),
                       child: pw.Table(
                         border: const pw.TableBorder(
+                          horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                           verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                         ),
-                        columnWidths: dateRowColWidths,
+                        columnWidths: headerLeftColWidths,
                         children: [
                           pw.TableRow(children: [
+                            _finalHCell("NAME OF THE INSTITUTION:", height: rowH),
+                            _finalValCell(instController.text, height: rowH, alignLeft: true),
+                          ]),
+                          pw.TableRow(children: [
+                            _finalHCell("NAME OF THE EMPLOYEE:", height: rowH),
+                            _finalValCell(empNameController.text, height: rowH, alignLeft: true),
+                          ]),
+                          pw.TableRow(children: [
+                            _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                             pw.Container(
                               height: rowH,
-                              alignment: pw.Alignment.center,
-                              child: pw.Text(fromDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                              child: pw.Table(
+                                border: const pw.TableBorder(
+                                  verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                ),
+                                columnWidths: dateRowColWidths,
+                                children: [
+                                  pw.TableRow(children: [
+                                    pw.Container(
+                                      height: rowH,
+                                      alignment: pw.Alignment.center,
+                                      child: pw.Text(fromDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                    ),
+                                    pw.Container(
+                                      height: rowH,
+                                      alignment: pw.Alignment.center,
+                                      child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                    ),
+                                    pw.Container(
+                                      height: rowH,
+                                      alignment: pw.Alignment.center,
+                                      child: pw.Text(toDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                    ),
+                                  ]),
+                                ],
+                              ),
                             ),
-                            pw.Container(
-                              height: rowH,
-                              alignment: pw.Alignment.center,
-                              child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
-                            ),
-                            pw.Container(
-                              height: rowH,
-                              alignment: pw.Alignment.center,
-                              child: pw.Text(toDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
-                            ),
+                          ]),
+                          pw.TableRow(children: [
+                            _finalHCell("IN TERMS OF ORDER NO.:", height: rowH),
+                            _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
                           ]),
                         ],
                       ),
                     ),
-                    _finalHCell("", height: rowH),
-                    _finalValCell("", height: rowH),
-                    _finalHCell("", height: rowH),
-                    _finalValCell("", height: rowH),
-                  ]),
-                  pw.TableRow(children: [
-                    _finalHCell("IN TERMS OF ORDER NO.:", height: rowH),
-                    _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
-                    _finalHCell("", height: rowH),
-                    _finalValCell("", height: rowH),
-                    _finalHCell("", height: rowH),
-                    _finalValCell("", height: rowH),
-                  ]),
-                ],
+
+                    // ডানদিকের সেকশন (উপরের ২টি রো এবং নিচে ১টি সম্পূর্ণ ব্ল্যাঙ্ক বক্স)
+                    pw.Container(
+                      width: headerRightWidth,
+                      child: pw.Column(
+                        children: [
+                          pw.Table(
+                            border: const pw.TableBorder(
+                              horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                            ),
+                            columnWidths: headerRight4Cols,
+                            children: [
+                              pw.TableRow(children: [
+                                _finalHCell("INDEX NO.:", height: rowH),
+                                _finalValCell(indexController.text, height: rowH),
+                                _finalHCell("H.S. CODE:", height: rowH),
+                                _finalValCell(hsCodeController.text, height: rowH),
+                              ]),
+                              pw.TableRow(children: [
+                                _finalHCell("DESIGNATION:", height: rowH),
+                                _finalValCell(desigController.text, height: rowH),
+                                _finalHCell("EMPLOYEE ID:", height: rowH),
+                                _finalValCell(empIdController.text, height: rowH),
+                              ]),
+                            ],
+                          ),
+                          // ১. নং সমাধান: নিচের ৮টি ব্ল্যাঙ্ক সেল সংযুক্ত করে একক ব্ল্যাঙ্ক বক্স (উচ্চতা rowH * 2)
+                          pw.Container(
+                            height: rowH * 2,
+                            width: headerRightWidth,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
+              // উপরের ও নিচের টেবিলের মাঝে ফাঁকা রো
               pw.Container(
                 height: rowH,
                 width: totalSheetWidth,
@@ -1446,18 +1491,39 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 ),
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                              
+                              // ২. নং সমাধান: REASON OF ARREAR রো-তে উল্লম্ব দাগ দিয়ে দুটি বক্সে বিভাজন
                               pw.Container(
                                 height: reasonBoxHeight,
-                                padding: const pw.EdgeInsets.symmetric(horizontal: 5),
-                                alignment: pw.Alignment.centerLeft,
                                 child: pw.Row(
                                   children: [
-                                    pw.Text("REASON OF ARREAR :", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-                                    pw.SizedBox(width: 30),
-                                    pw.Text("FOR LATE APPROVAL", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
+                                    // ১ম বক্স: D.P ও D.A এর মাঝের দাগের সাথে মিলবে (135.0 pt) এবং Left Aligned
+                                    pw.Container(
+                                      width: wBasic + wDp,
+                                      height: reasonBoxHeight,
+                                      padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                                      alignment: pw.Alignment.centerLeft,
+                                      child: pw.Text(
+                                        "REASON OF ARREAR :",
+                                        style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                      ),
+                                    ),
+                                    // Vertical Border
+                                    pw.Container(width: 0.8, height: reasonBoxHeight, color: PdfColors.black),
+                                    // ২য় বক্স: Center Aligned "FOR LATE APPROVAL"
+                                    pw.Container(
+                                      width: leftBoxWidth - (wBasic + wDp) - 0.8,
+                                      height: reasonBoxHeight,
+                                      alignment: pw.Alignment.center,
+                                      child: pw.Text(
+                                        "FOR LATE APPROVAL",
+                                        style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
+
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                               pw.Container(
                                 height: certificateBoxHeight,
@@ -1675,6 +1741,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
+                        // ৩. নং সমাধান: IN WORDS কলামের প্রান্তরেখা উপরের সাথে এক সুতোয় লক করা
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
