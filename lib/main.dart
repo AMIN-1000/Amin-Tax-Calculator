@@ -1193,14 +1193,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double rowH = 14.25; 
 
-    // সুনির্দিষ্ট পয়েন্টে লক করা কলামের মাপ (মোট = ৭৯৬.০ pt)
-    const double wBasic = 75.0;
-    const double wDp = 60.0;
-    const double wDa = 75.0;
-    const double wHra = 70.0;
-    const double wMa = 55.0;
-    const double wGross = 82.5;
-    const double wCpf = 82.5;
+    // ২. ও ৩. নং সমাধান: BASIC PAY ও D.P এর মাঝের দাগ সেন্টারে (প্রতিটি 67.5 pt)
+    // এবং D.A থেকে C.P.F/G.P.F পর্যন্ত ৫টি কলামের প্রত্যেকে সমান 73.0 pt!
+    const double wBasic = 67.5;
+    const double wDp = 67.5;
+    const double wDa = 73.0;
+    const double wHra = 73.0;
+    const double wMa = 73.0;
+    const double wGross = 73.0;
+    const double wCpf = 73.0;
     
     const double wInRs = 46.0;
 
@@ -1215,14 +1216,24 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
     const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
 
-    // Table 1 হেডার টেবিল
+    // Table 1 হেডার টেবিল (কলাম ০ = 135.0 pt, কলাম ১ = 411.0 pt)
     const headerTableColWidths = {
-      0: pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
+      0: pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt (D.P ও D.A এর মাঝের দাগের সাথে মিলবে)
       1: pw.FixedColumnWidth(wDa + wHra + wMa + wGross + wCpf + wInRs), // 411.0 pt
       2: pw.FixedColumnWidth(wPtax),   // 63.0 pt
       3: pw.FixedColumnWidth(wGpf),    // 60.0 pt
       4: pw.FixedColumnWidth(wOthers), // 60.0 pt
       5: pw.FixedColumnWidth(wNet),    // 67.0 pt
+    };
+
+    // ৪. ও ৫. নং সমাধান: তারিখের ৩টি বক্সের গাণিতিক অনুপাত
+    // Box 1 (01.03.2013) = wDa + wHra = 146.0 pt (H.R.A ও M.A এর মাঝের দাগের সাথে মিলবে!)
+    // Box 2 (TO) = wMa + wGross = 146.0 pt (GROSS ও C.P.F/G.P.F এর মাঝের দাগের সাথে মিলবে!)
+    // Box 3 (28.02.2018) = wCpf + wInRs = 119.0 pt (411.0 - 146.0 - 146.0 = 119.0 pt!)
+    const dateRowColWidths = {
+      0: pw.FixedColumnWidth(wDa + wHra),          // 146.0 pt
+      1: pw.FixedColumnWidth(wMa + wGross),        // 146.0 pt
+      2: pw.FixedColumnWidth(wCpf + wInRs),        // 119.0 pt
     };
 
     const table2LeftCols = {
@@ -1242,24 +1253,19 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       3: pw.FixedColumnWidth(wNet),
     };
 
-    // ACTUAL CLAIM রো (১ম ও ২য় কলাম মার্জ করা)
+    // ACTUAL CLAIM রো
     const actualClaimRowWidths = {
       0: pw.FixedColumnWidth(wPtax + wGpf), // 123.0 pt
       1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
       2: pw.FixedColumnWidth(wNet),         // 67.0 pt
     };
 
-    // গাণিতিক সমান্তরাল হিসাব:
-    // ডানপাশের ৬টি রো এর মোট উচ্চতা = 6 * rowH = 85.5 pt.
-    // ডিভাইডারের থিকনেস (0.8 pt) বাদ দিয়ে:
-    // receiptBoxHeight = 49.5 pt
-    // reasonBoxHeight = 85.5 - 49.5 - 0.8 = 35.2 pt
-    // 49.5 + 0.8 + 35.2 = 85.5 pt (ACTUAL CLAIM এর তলার দাগে ১০০% হুবহু এক সুতোয় মিলবে!)
+    // ৩. নং সমাধান: 49.5 + 0.8 + 35.2 = 85.5 pt (ACTUAL CLAIM এর তলার দাগে ১০০.০০% হুবহু এক সুতোয় লক করা)
     const double receiptBoxHeight = 49.5; 
     const double reasonBoxHeight = 35.2;  
     const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
 
-    // Certificate Box-এর উচ্চতা বাড়িয়ে 165.0 pt করা হলো
+    // ৪. নং সমাধান: Certificate Box-এর উচ্চতা বাড়িয়ে 165.0 pt করা হলো
     const double certificateBoxHeight = 165.0;
 
     // IN WORDS বক্সের উচ্চতা
@@ -1270,7 +1276,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pageFormat: PdfPageFormat.a4.landscape,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 42.5,   // 15mm Top
+          top: 56.7,   // ১. নং সমাধান: Top Margin বাড়িয়ে 20mm (56.7 pt) করা হলো
           left: 22.7,  // 8mm Left
           right: 22.7, // 8mm Right
           bottom: 34.0 // 12mm Bottom
@@ -1310,7 +1316,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     _finalHCell("EMPLOYEE ID:", height: rowH),
                     _finalValCell(empIdController.text, height: rowH),
                   ]),
-                  // তারিখের ঘর সমান ৩টি ভাগে বিভক্ত
+                  // ৪. ও ৫. নং সমাধান: তারিখের ৩টি বক্সের উলম্ব রেখা নিচের দাগের সাথে সমান্তরাল
                   pw.TableRow(children: [
                     _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
                     pw.Container(
@@ -1319,11 +1325,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         border: const pw.TableBorder(
                           verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                         ),
-                        columnWidths: const {
-                          0: pw.FlexColumnWidth(1),
-                          1: pw.FlexColumnWidth(1),
-                          2: pw.FlexColumnWidth(1),
-                        },
+                        columnWidths: dateRowColWidths,
                         children: [
                           pw.TableRow(children: [
                             pw.Container(
@@ -1361,7 +1363,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // উপরের ও নিচের টেবিলের মাঝে 14.25 pt উচ্চতার ফাঁকা রো (উভয় প্রান্তে Vertical border সহ)
+              // উপরের ও নিচের টেবিলের মাঝে 14.25 pt উচ্চতার ফাঁকা রো
               pw.Container(
                 height: rowH,
                 width: totalSheetWidth,
@@ -1403,7 +1405,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                   border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                                   columnWidths: table2LeftCols,
                                   children: [
-                                    // Row 1: Subheaders
+                                    // Row 1: Subheaders (২. ও ৩. নং সমাধান অনুযায়ী নতুন কলামের মাপ)
                                     pw.TableRow(
                                       decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                                       children: [
@@ -1504,7 +1506,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
 
-                  // Middle & Right Sections:
+                  // Middle & Right Sections: Ad-hoc + ACTUAL CLAIM + নিচের ৪টি রো
                   pw.Container(
                     width: bottomSectionWidth,
                     child: pw.Column(
@@ -1512,10 +1514,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            // IN RS. এবং তার নিচের একক দীর্ঘ ফাঁকা বক্স
+                            // IN RS. এবং তার নিচের অবিভাজ্য একক দীর্ঘ ফাঁকা বক্স
                             pw.Container(
                               width: wInRs,
-                              height: (rowH * 4) + inRsTallBoxHeight, // Top header + 2 rows of table 2 + 6 rows of ad-hoc
+                              height: (rowH * 4) + inRsTallBoxHeight,
                               decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                               child: pw.Column(
                                 children: [
@@ -1647,7 +1649,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                           ),
                                         ],
                                       ),
-                                      // ACTUAL CLAIM
+                                      // ACTUAL CLAIM (মাঝের দাগ ছাড়া একক মার্জড সেল)
                                       pw.TableRow(
                                         children: [
                                           pw.Table(
@@ -1684,7 +1686,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ২. PASSED FOR RS.:
+                        // ২. PASSED FOR RS.: (বাম প্রান্ত Certificate Box-এর সাথে লক করা)
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1711,7 +1713,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
                         ),
 
-                        // ৪. IN WORDS ROW (বাম দাগ Certificate Box-এ এবং মাঝের দাগ IN RS. ও P.TAX এর সাথে লক করা)
+                        // ৪. IN WORDS ROW
                         pw.Table(
                           border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
                           columnWidths: {
@@ -1745,7 +1747,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
 
-              // সহির মাঝের ফাঁকা স্থান (20mm)
+              // "8. All relevant records..." এবং সহির মাঝের ফাঁকা স্থান (20mm)
               pw.SizedBox(height: 20.0 * PdfPageFormat.mm),
 
               // Signature Line
