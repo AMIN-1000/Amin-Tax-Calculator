@@ -2,7 +2,7 @@ name: Build Flutter APK
 
 on:
   push:
-    branches: [ main, Arrear-Calculator ]
+    branches: [ main, Amin-Arrear-Calculator ]
   workflow_dispatch:
 
 jobs:
@@ -36,5 +36,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Arrear-Calculator-APK
+          name: Amin-Arrear-Calculator-APK
           path: build/app/outputs/flutter-apk/app-release.apk
