@@ -833,7 +833,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ---------------- PORTRAIT CALCULATION SHEETS PDF (পূর্বের মূল ফরম্যাটে অটুট) ----------------
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1115,7 +1115,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pCondSummary(sh.grandSp != 0, sh.grandSp, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandDa, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandHra, isBold: true),
-          _pCondSummary(sh.hasAnyInput, sh.grandMa, isBold: true),
+          _pCondSummary(sh.grandMa != 0, sh.grandMa, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandGross, isBold: true),
           _pCondSummary(sh.grandCpf != 0, sh.grandCpf, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandPtax, isBold: true),
@@ -1501,7 +1501,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                               
-                              // REASON OF ARREAR রো: Table দিয়ে একদম একক ও নরমাল 0.8 pt Vertical Border করা হলো
+                              // REASON OF ARREAR Row
                               pw.Table(
                                 border: const pw.TableBorder(
                                   verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1762,9 +1762,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             pw.TableRow(children: [
                               pw.Container(
                                 height: inWordsBoxHeight,
-                                padding: const pw.EdgeInsets.only(left: 3, top: 4),
-                                alignment: pw.Alignment.topLeft,
-                                child: pw.Text("IN WORDS:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                                alignment: pw.Alignment.center, // IN WORDS: Center Aligned
+                                child: pw.Text(
+                                  "IN WORDS:",
+                                  textAlign: pw.TextAlign.center,
+                                  style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold),
+                                ),
                               ),
                               pw.Container(
                                 height: inWordsBoxHeight,
