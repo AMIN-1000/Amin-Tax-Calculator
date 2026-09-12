@@ -9,9 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
+
+  google_fonts: ^6.2.1
+  pdf: ^3.11.1
   printing: ^5.13.2
-  pdf: ^3.10.8
+
 
 dev_dependencies:
   flutter_test:
