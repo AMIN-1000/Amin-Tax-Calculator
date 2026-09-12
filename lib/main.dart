@@ -5,16 +5,16 @@ import 'package:printing/printing.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  runApp(const Amin18yearsCalculatorApp());
+  runApp(const ArrearCalculatorApp());
 }
 
-class Amin18yearsCalculatorApp extends StatelessWidget {
-  const Amin18yearsCalculatorApp({super.key});
+class ArrearCalculatorApp extends StatelessWidget {
+  const ArrearCalculatorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Amin 18Years Calculator',
+      title: 'Amin Arrear Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.teal,
@@ -795,7 +795,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         _condSummaryCell(sh.grandSp != 0, sh.grandSp, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandDa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandHra, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandMa, isBold: true),
+        _condSummaryCell(sh.grandMa != 0, sh.grandMa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
         _condSummaryCell(sh.grandCpf != 0, sh.grandCpf, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandPtax, isBold: true),
@@ -1762,7 +1762,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             pw.TableRow(children: [
                               pw.Container(
                                 height: inWordsBoxHeight,
-                                alignment: pw.Alignment.center, // IN WORDS: Center Aligned
+                                alignment: pw.Alignment.center,
                                 child: pw.Text(
                                   "IN WORDS:",
                                   textAlign: pw.TextAlign.center,
