@@ -993,19 +993,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfHeaderAligned(String periodText) {
     const double hRowH = 14.5;
-    const double wH1 = pColMonth + pColAdm + pColBasic; 
-    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; 
-    const double wH3 = pColCpf + pColPtax + pColGpf; 
-    const double wH4 = pColItax + pColNet + pColRemarks; 
-
-    const double wB1 = pColDp + pColSp; 
-    const double wB2 = pColDa;          
-    const double wB3 = pColHra + pColMa;
-    const double wB4 = pColGross;       
-    const double wB5 = pColCpf + pColPtax; 
-    const double wB6 = pColGpf;         
-    const double wB7 = pColItax + pColNet; 
-    const double wB8 = pColRemarks;     
+    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt
+    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
+    const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt
+    const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt
+    const double scaleRemainWidth = wH2 + wH3 + wH4; // 423.0 pt
 
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -1047,32 +1039,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         pw.TableRow(children: [
           _pdfHCell("SCALE ADMISSIBLE:", height: hRowH),
           pw.Container(
-            width: wH2 + wH3 + wH4, 
-            child: pw.Table(
-              border: const pw.TableBorder(
-                verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
-              ),
-              columnWidths: const {
-                0: pw.FixedColumnWidth(wB1),
-                1: pw.FixedColumnWidth(wB2),
-                2: pw.FixedColumnWidth(wB3),
-                3: pw.FixedColumnWidth(wB4),
-                4: pw.FixedColumnWidth(wB5),
-                5: pw.FixedColumnWidth(wB6),
-                6: pw.FixedColumnWidth(wB7),
-                7: pw.FixedColumnWidth(wB8),
-              },
+            width: scaleRemainWidth,
+            height: hRowH,
+            padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+            alignment: pw.Alignment.centerLeft,
+            child: pw.Row(
               children: [
-                pw.TableRow(children: [
-                  _pdfHCellCenter("BASIC PAY:", height: hRowH),
-                  _pdfValCenterCell(basicPayAdmController.text, height: hRowH),
-                  _pdfHCellCenter("GRADE PAY:", height: hRowH),
-                  _pdfValCenterCell(gradePayAdmController.text, height: hRowH),
-                  _pdfHCellCenter("LEVEL:", height: hRowH),
-                  _pdfValCenterCell(levelAdmController.text, height: hRowH),
-                  _pdfHCellCenter("CELL:", height: hRowH),
-                  _pdfValCenterCell(cellAdmController.text, height: hRowH),
-                ]),
+                pw.Text("BASIC PAY: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                pw.Text("${basicPayAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+                pw.Text("GRADE PAY: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                pw.Text("${gradePayAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+                pw.Text("LEVEL: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                pw.Text("${levelAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+                pw.Text("CELL: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                pw.Text(cellAdmController.text, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
               ],
             ),
           ),
@@ -1089,14 +1069,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     padding: const pw.EdgeInsets.symmetric(horizontal: 4),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
-  );
-
-  pw.Widget _pdfHCellCenter(String t, {double height = 14.0}) => pw.Container(
-    height: height,
-    color: PdfColors.grey300,
-    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
-    alignment: pw.Alignment.center,
-    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.3, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _pdfValLeftCell(String t, {double height = 14.0}) => pw.Container(
@@ -1333,7 +1305,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double rowH = 14.25;
 
-    // নিচের টেবিলের কলামগুলোর সঠিক মাপ (পয়েন্টে)
     const double wBasic = 67.5;
     const double wDp = 67.5;
     const double wDa = 73.0;
@@ -1356,7 +1327,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double scaleTitleWidth = wBasic + wDp; // 135.0 pt
 
-    // Final Sheet এর ৮টি বক্সের সুনির্দিষ্ট মাপ
     const double fBox1 = wDa + wHra; 
     const double fBox2 = wMa;  
     const double fBox3 = wGross + wCpf; 
@@ -1440,12 +1410,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // Final Header Container (১ নং ভুল সমাধান: শীর্ষ প্রান্তে নিশ্চিত নরমাল টপ বর্ডার)
+              // Final Header Container
               pw.Container(
                 width: totalSheetWidth,
                 decoration: const pw.BoxDecoration(
                   border: pw.Border(
-                    top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ১ নং সমাধান: শীর্ষ অনুভূমিক বর্ডার
+                    top: pw.BorderSide(color: PdfColors.black, width: 0.8),
                     left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                     right: pw.BorderSide(color: PdfColors.black, width: 0.8),
                     bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1461,9 +1431,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           width: headerLeftWidth,
                           child: pw.Table(
                             border: const pw.TableBorder(
-                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ১ নং সমাধান: NAME OF THE INSTITUTION এর টপ বর্ডার
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৩ নং সমাধান: বাম প্রান্তের বর্ডার
-                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // ২ নং সমাধান: IN TERMS OF ORDER NO এর নিচের বর্ডার
+                              top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                               horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                               verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                             ),
@@ -1521,7 +1491,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             children: [
                               pw.Table(
                                 border: const pw.TableBorder(
-                                  top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৫ নং সমাধান: INDEX NO ও H.S. CODE এর টপ বর্ডার
+                                  top: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1559,55 +1529,39 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
-                    // SCALE ADMISSIBLE রো (২, ৩, ৪, ৬ নং ভুল পুরোপুরি নিরসন করা হলো)
-                    pw.Row(
+                    // SCALE ADMISSIBLE রো (আলাদা টেবিল দিয়ে Left ও Top বর্ডার নিশ্চিত করা হলো)
+                    pw.Table(
+                      border: const pw.TableBorder(
+                        top: pw.BorderSide(color: PdfColors.black, width: 0.8), // Top Border নিশ্চিত করা হলো
+                        left: pw.BorderSide(color: PdfColors.black, width: 0.8), // Left Border নিশ্চিত করা হলো
+                        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                      ),
+                      columnWidths: {
+                        0: const pw.FixedColumnWidth(scaleTitleWidth),
+                        1: const pw.FixedColumnWidth(fBox1),
+                        2: const pw.FixedColumnWidth(fBox2),
+                        3: const pw.FixedColumnWidth(fBox3),
+                        4: const pw.FixedColumnWidth(fBox4),
+                        5: const pw.FixedColumnWidth(fBox5),
+                        6: const pw.FixedColumnWidth(fBox6),
+                        7: const pw.FixedColumnWidth(fBox7),
+                        8: const pw.FixedColumnWidth(fBox8),
+                      },
                       children: [
-                        pw.Container(
-                          width: scaleTitleWidth, // হুবহু উপরের অর্ডারের সোজা এক সুতোয় বাঁধা
-                          decoration: const pw.BoxDecoration(
-                            border: pw.Border(
-                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ২ নং সমাধান: উপরে অনুভূমিক বর্ডার
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৩ নং সমাধান: বাম পাশের খাড়া বর্ডার
-                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // নিচে অনুভূমিক বর্ডার
-                            ),
-                          ),
-                          child: _finalHCell("SCALE ADMISSIBLE:", height: rowH),
-                        ),
-                        pw.Container(
-                          width: totalSheetWidth - scaleTitleWidth,
-                          child: pw.Table(
-                            border: const pw.TableBorder(
-                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৪ ও ৬ নং সমাধান: BASIC PAY, GRADE PAY, LEVEL, CELL এর টপ বর্ডার
-                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // অর্ডারের সোজা খাড়া বর্ডার
-                              right: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                              verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                            ),
-                            columnWidths: const {
-                              0: pw.FixedColumnWidth(fBox1),
-                              1: pw.FixedColumnWidth(fBox2),
-                              2: pw.FixedColumnWidth(fBox3),
-                              3: pw.FixedColumnWidth(fBox4),
-                              4: pw.FixedColumnWidth(fBox5),
-                              5: pw.FixedColumnWidth(fBox6),
-                              6: pw.FixedColumnWidth(fBox7),
-                              7: pw.FixedColumnWidth(fBox8),
-                            },
-                            children: [
-                              pw.TableRow(
-                                children: [
-                                  _finalHCellCenter("BASIC PAY:", height: rowH),
-                                  _finalValCell(basicPayAdmController.text, height: rowH),
-                                  _finalHCellCenter("GRADE PAY:", height: rowH),
-                                  _finalValCell(gradePayAdmController.text, height: rowH),
-                                  _finalHCellCenter("LEVEL:", height: rowH),
-                                  _finalValCell(levelAdmController.text, height: rowH),
-                                  _finalHCellCenter("CELL:", height: rowH),
-                                  _finalValCell(cellAdmController.text, height: rowH),
-                                ],
-                              ),
-                            ],
-                          ),
+                        pw.TableRow(
+                          children: [
+                            _finalHCell("SCALE ADMISSIBLE:", height: rowH),
+                            _finalHCellCenter("BASIC PAY:", height: rowH),
+                            _finalValCell(basicPayAdmController.text, height: rowH),
+                            _finalHCellCenter("GRADE PAY:", height: rowH),
+                            _finalValCell(gradePayAdmController.text, height: rowH),
+                            _finalHCellCenter("LEVEL:", height: rowH),
+                            _finalValCell(levelAdmController.text, height: rowH),
+                            _finalHCellCenter("CELL:", height: rowH),
+                            _finalValCell(cellAdmController.text, height: rowH),
+                          ],
                         ),
                       ],
                     ),
