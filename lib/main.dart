@@ -33,6 +33,7 @@ class ArrearCalculatorApp extends StatelessWidget {
 
 class MonthEntry {
   String monthName;
+  DateTime monthDate;
   double daRate;
 
   TextEditingController admBasic = TextEditingController();
@@ -51,7 +52,12 @@ class MonthEntry {
 
   TextEditingController remarksCtrl = TextEditingController();
 
-  MonthEntry({required this.monthName, this.daRate = 0.52, String initialRemarks = ''}) {
+  MonthEntry({
+    required this.monthName,
+    required this.monthDate,
+    this.daRate = 0.52,
+    String initialRemarks = '',
+  }) {
     remarksCtrl.text = initialRemarks;
   }
 
@@ -67,7 +73,8 @@ class MonthEntry {
   double get aDp => _val(admDp);
   double get aSp => _val(admSp);
   double get aDa => hasAdm ? ((aBasic + aDp) * daRate).roundToDouble() : 0;
-  double get aHra => hasAdm ? (((aBasic + aDp) * 0.15).clamp(0, 6000)).roundToDouble() : 0;
+  // HRA ১২% ফিক্সড করা হলো
+  double get aHra => hasAdm ? (((aBasic + aDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
   double get aMa => hasAdm ? 300 : 0;
   double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
   double get aCpf => _val(admCpf);
@@ -81,7 +88,8 @@ class MonthEntry {
   double get dDp => _val(drwDp);
   double get dSp => _val(drwSp);
   double get dDa => hasDrw ? ((dBasic + dDp) * daRate).roundToDouble() : 0;
-  double get dHra => hasDrw ? (((dBasic + dDp) * 0.15).clamp(0, 6000)).roundToDouble() : 0;
+  // HRA ১২% ফিক্সড করা হলো
+  double get dHra => hasDrw ? (((dBasic + dDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
   double get dMa => hasDrw ? 300 : 0;
   double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
   double get dCpf => _val(drwCpf);
@@ -229,6 +237,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       sheets.add(_createYearSheetForDate(sheetStart));
     }
     _recalculateAllDaRates();
+    _applyAdmissibleBasicPay();
   }
 
   DateTime? _parseDate(String dateStr) {
@@ -247,31 +256,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     for (int i = 0; i < 12; i++) {
       String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
-      String rem = '';
-      double da = 0.52;
-
-      int y2 = cur.year % 100;
-      if (y2 == 13) {
-        da = 0.52;
-        if (mStr == "July,13") rem = "52%";
-      } else if (y2 == 14) {
-        da = 0.58;
-        if (mStr == "January,14" || mStr == "July,14") rem = "58%";
-      } else if (y2 == 15) {
-        da = 0.65;
-        if (mStr == "January,15" || mStr == "July,15") rem = "65%";
-      } else if (y2 == 16) {
-        da = 0.75;
-        if (mStr == "January,16" || mStr == "July,16") rem = "75%";
-      } else if (y2 == 17) {
-        da = 0.85;
-        if (mStr == "January,17" || mStr == "July,17") rem = "85%";
-      } else if (y2 >= 18) {
-        da = 1.00;
-        if (mStr == "January,18" || mStr == "July,18") rem = "100%";
-      }
-
-      mList.add(MonthEntry(monthName: mStr, daRate: da, initialRemarks: rem));
+      mList.add(MonthEntry(
+        monthName: mStr,
+        monthDate: DateTime(cur.year, cur.month, 1),
+        daRate: 0.52,
+      ));
       cur = DateTime(cur.year, cur.month + 1, 1);
     }
 
@@ -290,6 +279,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
+  // Remarks কলাম থেকে পার্সেন্টেজ রিড করে নিচের মাসগুলোতে Carry Forward করা
   void _recalculateAllDaRates() {
     double currentRate = 0.52;
     for (var sh in sheets) {
@@ -307,6 +297,29 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
+  // Header-এর Basic Pay ইনপুট অনুসারে 'TO' ডেট পর্যন্ত স্বয়ংক্রিয়ভাবে Admissible Basic বসানো
+  void _applyAdmissibleBasicPay() {
+    String basicVal = basicPayAdmController.text.trim();
+    DateTime? toLimit = _parseDate(toDateController.text);
+
+    for (var sh in sheets) {
+      for (var r in sh.records) {
+        if (basicVal.isNotEmpty && toLimit != null) {
+          DateTime endOfMonth = DateTime(r.monthDate.year, r.monthDate.month + 1, 0);
+          DateTime startOfMonth = DateTime(r.monthDate.year, r.monthDate.month, 1);
+
+          if (!startOfMonth.isAfter(toLimit)) {
+            r.admBasic.text = basicVal;
+          } else {
+            r.admBasic.clear();
+          }
+        } else if (basicVal.isEmpty) {
+          r.admBasic.clear();
+        }
+      }
+    }
+  }
+
   void _addNewSheet() {
     DateTime nextStart;
     if (sheets.isEmpty) {
@@ -317,6 +330,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     setState(() {
       sheets.add(_createYearSheetForDate(nextStart));
       _recalculateAllDaRates();
+      _applyAdmissibleBasicPay();
       _tabController.dispose();
       _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
     });
@@ -340,7 +354,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
   double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
 
-  Future<void> _selectDate(TextEditingController controller, {bool isFromDate = false}) async {
+  Future<void> _selectDate(TextEditingController controller, {bool isFromDate = false, bool isToDate = false}) async {
     DateTime initial = _parseDate(controller.text) ?? DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
@@ -357,6 +371,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _initSheetsFromDate();
           _tabController.dispose();
           _tabController = TabController(length: sheets.length, vsync: this);
+        } else if (isToDate) {
+          _applyAdmissibleBasicPay();
         }
       });
     }
@@ -501,7 +517,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                   Expanded(
                     child: InkWell(
-                      onTap: () => _selectDate(toDateController),
+                      onTap: () => _selectDate(toDateController, isToDate: true),
                       child: IgnorePointer(child: _centerTextField(toDateController)),
                     ),
                   ),
@@ -531,7 +547,24 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               child: Row(
                 children: [
                   const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  Expanded(child: _centerTextField(basicPayAdmController)),
+                  Expanded(
+                    child: TextField(
+                      controller: basicPayAdmController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                        border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
+                      ),
+                      onChanged: (_) {
+                        setState(() {
+                          _applyAdmissibleBasicPay();
+                        });
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -702,6 +735,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ];
   }
 
+  // Remarks কলামে Manually Input নেওয়ার সেল
   Widget _remarksCell(TextEditingController ctrl) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
