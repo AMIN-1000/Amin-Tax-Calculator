@@ -14,7 +14,7 @@ class ArrearCalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Amin Arrear Calculator',
+      title: 'Amin 18Years Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.teal,
@@ -432,7 +432,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Amin Arrear Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Amin 18Years Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
