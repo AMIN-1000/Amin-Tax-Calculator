@@ -14,7 +14,7 @@ class ArrearCalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Amin 18Years Calculator',
+      title: '18Years Arrear Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.teal,
@@ -432,7 +432,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Amin 18Years Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('18Years Arrear Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: false,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
@@ -934,6 +935,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   static const double pColItax    = 30.0;
   static const double pColNet     = 43.0;
   static const double pColRemarks = 53.0; 
+  static const double pTotalTableWidth = 546.0; // পুরো টেবিলের নির্দিষ্ট প্রস্থ
 
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
@@ -958,7 +960,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12.0)),
               ),
               pw.SizedBox(height: 4),
+              // ১. উপরের হেডার টেবিল
               _buildPdfHeaderAligned(sh.periodText),
+              // ২. দুই অংশের মাঝের Blank Row (যার দুই প্রান্তে Vertical Border থাকবে)
+              pw.Container(
+                width: pTotalTableWidth,
+                height: 7.0, // Blank Row এর উচ্চতা
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                ),
+              ),
+              // ৩. নিচের ক্যালকুলেশন টেবিল
               _buildPdfTableAligned(sh),
               pw.SizedBox(height: 5.0),
               pw.Row(
@@ -991,26 +1006,43 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ৭ম দাগ পর্যন্ত এবং ৭ম দাগের পর থেকে একদম ডান প্রান্তের সীমানা পর্যন্ত CELL-এর মানের ঘর
+  // Calculation Sheet হেডার অংশ
   pw.Widget _buildPdfHeaderAligned(String periodText) {
     const double hRowH = 14.5;
-    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt (SCALE ADMISSIBLE)
+    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt (NAME OF INSTITUTION / SCALE ADMISSIBLE)
     const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
     const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt
     const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt
 
-    // প্রতিটি বক্সের সুনির্দিষ্ট প্রস্থ:
+    // তারিখ বক্সকে ৩ ভাগে বিভক্ত করার মাপ (নিচের টেবিলের সমান্তরালে):
+    const double wDate1 = pColDp + pColSp; // 58.0 pt -> S.P ও D.A এর মাঝে শেষ (01.03.2013)
+    const double wDate2 = pColDa + pColHra; // 74.0 pt -> H.R.A ও M.A এর মাঝে শেষ (TO)
+    const double wDate3 = pColMa + pColGross; // 71.0 pt -> শেষ পর্যন্ত (28.02.2014)
+
+    // পিরিয়ডের তারিখ দুটি আলাদা করা
+    String fromDate = fromDateController.text;
+    String toDate = toDateController.text;
+    if (periodText.contains(" TO ")) {
+      final parts = periodText.split(" TO ");
+      if (parts.length == 2) {
+        fromDate = parts[0].trim();
+        toDate = parts[1].trim();
+      }
+    }
+
+    // SCALE ADMISSIBLE রো-এর বক্সগুলোর মাপ:
     const double wB1 = pColDp + pColSp; // 58.0 pt -> BASIC PAY:
     const double wB2 = pColDa; // 38.0 pt -> Blank
     const double wB3 = pColHra + pColMa; // 64.0 pt -> GRADE PAY:
     const double wB4 = pColGross; // 43.0 pt -> Blank
     const double wB5 = pColCpf + pColPtax; // 60.0 pt -> LEVEL:
-    const double wB6 = pColGpf; // 34.0 pt -> LEVEL-এর মান
-    const double wB7 = pColItax + pColNet; // 73.0 pt -> শুধুমাত্র "CELL:" (৭ম দাগ)
-    const double wB8 = pColRemarks; // 53.0 pt -> ৭ম দাগ ও একদম ডান প্রান্তের সীমানার মাঝের Cell-এর মানের ঘর
+    const double wB6 = pColGpf; // 34.0 pt -> LEVEL এর মান
+    const double wB7 = pColItax + pColNet; // 73.0 pt -> CELL:
+    const double wB8 = pColRemarks; // 53.0 pt -> CELL এর মান
 
     return pw.Column(
       children: [
+        // উপরের ৪টি রো
         pw.Table(
           border: const pw.TableBorder(
             top: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1039,12 +1071,40 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               _pdfHCell("DESIGNATION:", height: hRowH),
               _pdfValCenterCell(desigController.text, height: hRowH),
             ]),
+            // ৩টি নির্দিষ্ট বক্সে বিভক্ত ARREAR FOR THE PERIOD
             pw.TableRow(children: [
               _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
               pw.Container(
                 height: hRowH,
-                alignment: pw.Alignment.center,
-                child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                child: pw.Table(
+                  border: const pw.TableBorder(
+                    verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                  columnWidths: const {
+                    0: pw.FixedColumnWidth(wDate1),
+                    1: pw.FixedColumnWidth(wDate2),
+                    2: pw.FixedColumnWidth(wDate3),
+                  },
+                  children: [
+                    pw.TableRow(children: [
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(fromDate, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(toDate, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                    ]),
+                  ],
+                ),
               ),
               _pdfHCell("EMPLOYEE ID:", height: hRowH),
               _pdfValCenterCell(empIdController.text, height: hRowH),
@@ -1057,9 +1117,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             ]),
           ],
         ),
+        // SCALE ADMISSIBLE রো (প্রতিটি সেলে উপর ও নিচে সম্পূর্ণ অনুভূমিক বর্ডার)
         pw.Table(
           border: const pw.TableBorder(
-            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            top: pw.BorderSide(color: PdfColors.black, width: 0.8), // Top Horizontal Border
+            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // Bottom Horizontal Border
             left: pw.BorderSide(color: PdfColors.black, width: 0.8),
             right: pw.BorderSide(color: PdfColors.black, width: 0.8),
             verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1072,8 +1134,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             4: pw.FixedColumnWidth(wB4),
             5: pw.FixedColumnWidth(wB5),
             6: pw.FixedColumnWidth(wB6),
-            7: pw.FixedColumnWidth(wB7), // ৭ম দাগে শেষ হবে এই বক্স
-            8: pw.FixedColumnWidth(wB8), // ৭ম দাগ থেকে পাতার শেষ প্রান্তের মাঝের বক্স
+            7: pw.FixedColumnWidth(wB7),
+            8: pw.FixedColumnWidth(wB8),
           },
           children: [
             pw.TableRow(children: [
@@ -1084,8 +1146,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               _pdfValCenterCell(gradePayAdmController.text, height: hRowH),
               _pdfHCellCenter("LEVEL:", height: hRowH),
               _pdfValCenterCell(levelAdmController.text, height: hRowH),
-              _pdfHCellCenter("CELL:", height: hRowH), // ৭ম দাগের আগে শুধু "CELL:"
-              _pdfValCenterCell(cellAdmController.text, height: hRowH), // ৭ম দাগ ও ডান প্রান্তের মাঝের ঘরে CELL এর Value
+              _pdfHCellCenter("CELL:", height: hRowH),
+              _pdfValCenterCell(cellAdmController.text, height: hRowH),
             ]),
           ],
         ),
@@ -1149,6 +1211,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     List<pw.TableRow> rows = [];
 
+    // কলাম হেডার (D.A, GROSS, G.P.F, REMARKS সহ পুরো সারির শীর্ষে নিশ্চিত Top Border)
     rows.add(
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.grey400),
@@ -1279,7 +1342,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     return pw.Table(
       border: const pw.TableBorder(
-        top: pw.BorderSide.none,
+        top: pw.BorderSide(color: PdfColors.black, width: 0.8), // নিশ্চিত Top Border
         bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
         left: pw.BorderSide(color: PdfColors.black, width: 0.8),
         right: pw.BorderSide(color: PdfColors.black, width: 0.8),
