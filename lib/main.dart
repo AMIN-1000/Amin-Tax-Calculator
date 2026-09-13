@@ -55,7 +55,7 @@ class MonthEntry {
   MonthEntry({
     required this.monthName,
     required this.monthDate,
-    this.daRate = 0.52,
+    this.daRate = 0.38, // By default DA rate 38%
     String initialRemarks = '',
   }) {
     remarksCtrl.text = initialRemarks;
@@ -73,9 +73,10 @@ class MonthEntry {
   double get aDp => _val(admDp);
   double get aSp => _val(admSp);
   double get aDa => hasAdm ? ((aBasic + aDp) * daRate).roundToDouble() : 0;
-  // HRA ১২% ফিক্সড করা হলো
+  // HRA ১২% ফিক্সড
   double get aHra => hasAdm ? (((aBasic + aDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
-  double get aMa => hasAdm ? 300 : 0;
+  // M.A ফিক্সড ৫০০
+  double get aMa => hasAdm ? 500 : 0;
   double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
   double get aCpf => _val(admCpf);
   double get aPtax => hasAdm ? (aGross > 15000 ? 150 : 130) : 0;
@@ -88,9 +89,10 @@ class MonthEntry {
   double get dDp => _val(drwDp);
   double get dSp => _val(drwSp);
   double get dDa => hasDrw ? ((dBasic + dDp) * daRate).roundToDouble() : 0;
-  // HRA ১২% ফিক্সড করা হলো
+  // HRA ১২% ফিক্সড
   double get dHra => hasDrw ? (((dBasic + dDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
-  double get dMa => hasDrw ? 300 : 0;
+  // M.A ফিক্সড ৫০০
+  double get dMa => hasDrw ? 500 : 0;
   double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
   double get dCpf => _val(drwCpf);
   double get dPtax => hasDrw ? (dGross > 15000 ? 150 : 130) : 0;
@@ -259,7 +261,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       mList.add(MonthEntry(
         monthName: mStr,
         monthDate: DateTime(cur.year, cur.month, 1),
-        daRate: 0.52,
+        daRate: 0.38, // Default 38%
       ));
       cur = DateTime(cur.year, cur.month + 1, 1);
     }
@@ -279,9 +281,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Remarks কলাম থেকে পার্সেন্টেজ রিড করে নিচের মাসগুলোতে Carry Forward করা
+  // Remarks কলাম থেকে পার্সেন্টেজ রিড করে নিচের মাসগুলোতে Carry Forward করা (ডিফল্ট 38%)
   void _recalculateAllDaRates() {
-    double currentRate = 0.52;
+    double currentRate = 0.38; // Default 38%
     for (var sh in sheets) {
       for (var r in sh.records) {
         String rem = r.remarksCtrl.text.trim();
@@ -305,7 +307,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     for (var sh in sheets) {
       for (var r in sh.records) {
         if (basicVal.isNotEmpty && toLimit != null) {
-          DateTime endOfMonth = DateTime(r.monthDate.year, r.monthDate.month + 1, 0);
           DateTime startOfMonth = DateTime(r.monthDate.year, r.monthDate.month, 1);
 
           if (!startOfMonth.isAfter(toLimit)) {
@@ -747,7 +748,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 5),
           border: InputBorder.none,
-          hintText: "-",
+          hintText: "38%",
           hintStyle: TextStyle(fontSize: 9, color: Colors.grey),
         ),
         onChanged: (_) {
