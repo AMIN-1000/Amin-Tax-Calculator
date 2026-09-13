@@ -40,6 +40,7 @@ class MonthEntry {
   TextEditingController admDp = TextEditingController();
   TextEditingController admSp = TextEditingController();
   TextEditingController admCpf = TextEditingController();
+  TextEditingController admPtax = TextEditingController(); // ম্যানুয়ালি ইনপুটের জন্য
   TextEditingController admGpf = TextEditingController();
   TextEditingController admItax = TextEditingController();
 
@@ -47,6 +48,7 @@ class MonthEntry {
   TextEditingController drwDp = TextEditingController();
   TextEditingController drwSp = TextEditingController();
   TextEditingController drwCpf = TextEditingController();
+  TextEditingController drwPtax = TextEditingController(); // ম্যানুয়ালি ইনপুটের জন্য
   TextEditingController drwGpf = TextEditingController();
   TextEditingController drwItax = TextEditingController();
 
@@ -79,7 +81,8 @@ class MonthEntry {
   double get aMa => hasAdm ? 500 : 0;
   double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
   double get aCpf => _val(admCpf);
-  double get aPtax => hasAdm ? (aGross > 15000 ? 150 : 130) : 0;
+  // P.TAX এখন পুরোপুরি ম্যানুয়াল
+  double get aPtax => _val(admPtax);
   double get aGpf => _val(admGpf);
   double get aItax => _val(admItax);
   double get aNet => hasAdm ? (aGross - (aCpf + aPtax + aGpf + aItax)) : 0;
@@ -95,7 +98,8 @@ class MonthEntry {
   double get dMa => hasDrw ? 500 : 0;
   double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
   double get dCpf => _val(drwCpf);
-  double get dPtax => hasDrw ? (dGross > 15000 ? 150 : 130) : 0;
+  // P.TAX এখন পুরোপুরি ম্যানুয়াল
+  double get dPtax => _val(drwPtax);
   double get dGpf => _val(drwGpf);
   double get dItax => _val(drwItax);
   double get dNet => hasDrw ? (dGross - (dCpf + dPtax + dGpf + dItax)) : 0;
@@ -281,7 +285,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // Remarks কলাম থেকে পার্সেন্টেজ রিড করে নিচের মাসগুলোতে Carry Forward করা (ডিফল্ট 38%)
   void _recalculateAllDaRates() {
     double currentRate = 0.38; // Default 38%
     for (var sh in sheets) {
@@ -299,7 +302,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
-  // Header-এর Basic Pay ইনপুট অনুসারে 'TO' ডেট পর্যন্ত স্বয়ংক্রিয়ভাবে Admissible Basic বসানো
   void _applyAdmissibleBasicPay() {
     String basicVal = basicPayAdmController.text.trim();
     DateTime? toLimit = _parseDate(toDateController.text);
@@ -687,7 +689,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasAdm, r.aMa),
           _conditionalCalcCell(r.hasAdm, r.aGross, isBold: true),
           _unlockedCell(r.admCpf),
-          _conditionalCalcCell(r.hasAdm, r.aPtax),
+          _unlockedCell(r.admPtax), // P.TAX ম্যানুয়াল ইনপুট
           _unlockedCell(r.admGpf),
           _unlockedCell(r.admItax),
           _conditionalCalcCell(r.hasAdm, r.aNet, isBold: true),
@@ -706,7 +708,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasDrw, r.dMa),
           _conditionalCalcCell(r.hasDrw, r.dGross, isBold: true),
           _unlockedCell(r.drwCpf),
-          _conditionalCalcCell(r.hasDrw, r.dPtax),
+          _unlockedCell(r.drwPtax), // P.TAX ম্যানুয়াল ইনপুট
           _unlockedCell(r.drwGpf),
           _unlockedCell(r.drwItax),
           _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
@@ -736,7 +738,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ];
   }
 
-  // Remarks কলামে Manually Input নেওয়ার সেল
   Widget _remarksCell(TextEditingController ctrl) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
@@ -884,7 +885,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         _condSummaryCell(sh.grandMa != 0, sh.grandMa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
         _condSummaryCell(sh.grandCpf != 0, sh.grandCpf, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandPtax, isBold: true),
+        _condSummaryCell(sh.grandPtax != 0, sh.grandPtax, isBold: true), // যদি 0 না হয় দেখাবে
         _condSummaryCell(sh.grandGpf != 0, sh.grandGpf, isBold: true),
         _condSummaryCell(sh.grandItax != 0, sh.grandItax, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandNet, isBold: true),
@@ -1101,7 +1102,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCell("Admissible"),
             _pCondNum(r.hasAdm, r.aBasic), _pCondNum(r.hasAdm, r.aDp), _pCondNum(r.hasAdm, r.aSp),
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
-            _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
+            _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf),
+            _pCondNum(r.admPtax.text.trim().isNotEmpty, r.aPtax), // ম্যানুয়াল P.TAX
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
             _pCleanCell(r.remarksCtrl.text),
           ],
@@ -1115,7 +1117,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCell("Drawn"),
             _pCondNum(r.hasDrw, r.dBasic), _pCondNum(r.hasDrw, r.dDp), _pCondNum(r.hasDrw, r.dSp),
             _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
-            _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf), _pCondNum(r.hasDrw, r.dPtax),
+            _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf),
+            _pCondNum(r.drwPtax.text.trim().isNotEmpty, r.dPtax), // ম্যানুয়াল P.TAX
             _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
             _pCleanCell(""),
           ],
@@ -1130,7 +1133,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCell("Due", isBold: true),
             _pCondNum(r.hasAny, r.dueBasic, isBold: true), _pCondNum(r.hasAny, r.dueDp, isBold: true), _pCondNum(r.hasAny, r.dueSp, isBold: true),
             _pCondNum(r.hasAny, r.dueDa, isBold: true), _pCondNum(r.hasAny, r.dueHra, isBold: true), _pCondNum(r.hasAny, r.dueMa, isBold: true),
-            _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true), _pCondNum(r.hasAny, r.duePtax, isBold: true),
+            _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true),
+            _pCondNum(r.duePtax != 0, r.duePtax, isBold: true), // Due P.TAX
             _pCondNum(r.hasAny, r.dueGpf, isBold: true), _pCondNum(r.hasAny, r.dueItax, isBold: true), _pCondNum(r.hasAny, r.dueNet, isBold: true),
             _pCleanCell(""),
           ],
@@ -1152,7 +1156,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pCondSummary(sh.hasAnyInput, sh.totMa, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totGross, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totCpf, isBold: true),
-          _pCondSummary(sh.hasAnyInput, sh.totPtax, isBold: true),
+          _pCondSummary(sh.totPtax != 0, sh.totPtax, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totGpf, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totItax, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totNet, isBold: true),
@@ -1198,7 +1202,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pCondSummary(sh.grandMa != 0, sh.grandMa, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandGross, isBold: true),
           _pCondSummary(sh.grandCpf != 0, sh.grandCpf, isBold: true),
-          _pCondSummary(sh.hasAnyInput, sh.grandPtax, isBold: true),
+          _pCondSummary(sh.grandPtax != 0, sh.grandPtax, isBold: true),
           _pCondSummary(sh.grandGpf != 0, sh.grandGpf, isBold: true),
           _pCondSummary(sh.grandItax != 0, sh.grandItax, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.grandNet, isBold: true),
