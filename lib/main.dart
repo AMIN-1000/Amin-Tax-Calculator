@@ -32,9 +32,8 @@ class ArrearCalculatorApp extends StatelessWidget {
 }
 
 class MonthEntry {
-  final String monthName;
-  final String fixedRemarks;
-  final double daRate;
+  String monthName;
+  double daRate;
 
   TextEditingController admBasic = TextEditingController();
   TextEditingController admDp = TextEditingController();
@@ -50,15 +49,11 @@ class MonthEntry {
   TextEditingController drwGpf = TextEditingController();
   TextEditingController drwItax = TextEditingController();
 
-  TextEditingController admRemarks = TextEditingController();
-  TextEditingController drwRemarks = TextEditingController();
-  TextEditingController dueRemarks = TextEditingController();
+  TextEditingController remarksCtrl = TextEditingController();
 
-  MonthEntry({required this.monthName, this.fixedRemarks = '', this.daRate = 0.52});
-
-  String get effectiveAdmRemarks => fixedRemarks.isNotEmpty ? fixedRemarks : admRemarks.text.trim();
-  String get effectiveDrwRemarks => drwRemarks.text.trim();
-  String get effectiveDueRemarks => dueRemarks.text.trim();
+  MonthEntry({required this.monthName, this.daRate = 0.52, String initialRemarks = ''}) {
+    remarksCtrl.text = initialRemarks;
+  }
 
   double _val(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
   bool _hasInput(TextEditingController c) => c.text.trim().isNotEmpty && double.tryParse(c.text.trim()) != null;
@@ -111,11 +106,11 @@ class MonthEntry {
 }
 
 class YearSheet {
-  final int startYear;
-  final int endYear;
-  final String sheetTitle;
-  final String periodText;
-  final List<MonthEntry> records;
+  int startYear;
+  int endYear;
+  String sheetTitle;
+  String periodText;
+  List<MonthEntry> records;
 
   final balBasicCtrl = TextEditingController();
   final balDpCtrl = TextEditingController();
@@ -199,7 +194,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   final toDateController = TextEditingController(text: "28.02.2018");
   final empIdController = TextEditingController(text: "EYM08650");
   final orderNoController = TextEditingController(text: "118-SE/S/10M-29/16 Date: 06.02.2018.");
-  final scaleController = TextEditingController();
+
+  // SCALE ADMISSIBLE Controllers
+  final basicPayAdmController = TextEditingController();
+  final gradePayAdmController = TextEditingController();
+  final levelAdmController = TextEditingController();
+  final cellAdmController = TextEditingController();
 
   final adHoc1Ctrl = TextEditingController();
   final adHoc2Ctrl = TextEditingController();
@@ -209,67 +209,114 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   late TabController _tabController;
   List<YearSheet> sheets = [];
 
+  final List<String> monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
   @override
   void initState() {
     super.initState();
-    for (int yr = 2013; yr <= 2017; yr++) {
-      sheets.add(_createYearSheet(yr, yr + 1));
-    }
+    _initSheetsFromDate();
     _tabController = TabController(length: sheets.length, vsync: this);
   }
 
-  YearSheet _createYearSheet(int startY, int endY) {
-    int s2 = startY % 100;
-    int e2 = endY % 100;
-    String s2Str = s2.toString().padLeft(2, '0');
-    String e2Str = e2.toString().padLeft(2, '0');
+  void _initSheetsFromDate() {
+    sheets.clear();
+    DateTime start = _parseDate(fromDateController.text) ?? DateTime(2013, 3, 1);
+    for (int i = 0; i < 5; i++) {
+      DateTime sheetStart = DateTime(start.year + i, start.month, 1);
+      sheets.add(_createYearSheetForDate(sheetStart));
+    }
+    _recalculateAllDaRates();
+  }
 
-    final mNames = ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"];
+  DateTime? _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.trim().split('.');
+      if (parts.length == 3) {
+        return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  YearSheet _createYearSheetForDate(DateTime startDate) {
     List<MonthEntry> mList = [];
+    DateTime cur = startDate;
 
     for (int i = 0; i < 12; i++) {
-      int y = i < 10 ? s2 : e2;
-      String mStr = "${mNames[i]},$y";
+      String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
       String rem = '';
       double da = 0.52;
 
-      if (y == 13) {
+      int y2 = cur.year % 100;
+      if (y2 == 13) {
         da = 0.52;
         if (mStr == "July,13") rem = "52%";
-      } else if (y == 14) {
+      } else if (y2 == 14) {
         da = 0.58;
         if (mStr == "January,14" || mStr == "July,14") rem = "58%";
-      } else if (y == 15) {
+      } else if (y2 == 15) {
         da = 0.65;
         if (mStr == "January,15" || mStr == "July,15") rem = "65%";
-      } else if (y == 16) {
+      } else if (y2 == 16) {
         da = 0.75;
         if (mStr == "January,16" || mStr == "July,16") rem = "75%";
-      } else if (y == 17) {
+      } else if (y2 == 17) {
         da = 0.85;
         if (mStr == "January,17" || mStr == "July,17") rem = "85%";
-      } else if (y >= 18) {
+      } else if (y2 >= 18) {
         da = 1.00;
         if (mStr == "January,18" || mStr == "July,18") rem = "100%";
       }
 
-      mList.add(MonthEntry(monthName: mStr, fixedRemarks: rem, daRate: da));
+      mList.add(MonthEntry(monthName: mStr, daRate: da, initialRemarks: rem));
+      cur = DateTime(cur.year, cur.month + 1, 1);
     }
 
+    DateTime endDate = DateTime(cur.year, cur.month, 0);
+    String s2Str = (startDate.year % 100).toString().padLeft(2, '0');
+    String e2Str = (endDate.year % 100).toString().padLeft(2, '0');
+    String fromStr = "${startDate.day.toString().padLeft(2, '0')}.${startDate.month.toString().padLeft(2, '0')}.${startDate.year}";
+    String toStr = "${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}";
+
     return YearSheet(
-      startYear: startY,
-      endYear: endY,
-      sheetTitle: "Sheet ($startY-$e2Str)",
-      periodText: "01.03.$startY TO 28.02.$endY",
+      startYear: startDate.year,
+      endYear: endDate.year,
+      sheetTitle: "Sheet ($s2Str-$e2Str)",
+      periodText: "$fromStr TO $toStr",
       records: mList,
     );
   }
 
+  void _recalculateAllDaRates() {
+    double currentRate = 0.52;
+    for (var sh in sheets) {
+      for (var r in sh.records) {
+        String rem = r.remarksCtrl.text.trim();
+        if (rem.isNotEmpty) {
+          String cleaned = rem.replaceAll('%', '').trim();
+          double? parsed = double.tryParse(cleaned);
+          if (parsed != null && parsed > 0) {
+            currentRate = parsed / 100.0;
+          }
+        }
+        r.daRate = currentRate;
+      }
+    }
+  }
+
   void _addNewSheet() {
-    int nextStart = sheets.isEmpty ? 2013 : sheets.last.endYear;
-    int nextEnd = nextStart + 1;
+    DateTime nextStart;
+    if (sheets.isEmpty) {
+      nextStart = _parseDate(fromDateController.text) ?? DateTime(2013, 3, 1);
+    } else {
+      nextStart = DateTime(sheets.last.endYear, 3, 1);
+    }
     setState(() {
-      sheets.add(_createYearSheet(nextStart, nextEnd));
+      sheets.add(_createYearSheetForDate(nextStart));
+      _recalculateAllDaRates();
       _tabController.dispose();
       _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
     });
@@ -293,10 +340,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
   double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
 
-  Future<void> _selectDate(TextEditingController controller) async {
+  Future<void> _selectDate(TextEditingController controller, {bool isFromDate = false}) async {
+    DateTime initial = _parseDate(controller.text) ?? DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: DateTime(2035),
     );
@@ -305,6 +353,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       String month = picked.month.toString().padLeft(2, '0');
       setState(() {
         controller.text = "$day.$month.${picked.year}";
+        if (isFromDate) {
+          _initSheetsFromDate();
+          _tabController.dispose();
+          _tabController = TabController(length: sheets.length, vsync: this);
+        }
       });
     }
   }
@@ -397,8 +450,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         children: [
           _buildHeaderTable(),
           const SizedBox(height: 10),
-          _buildScaleRow(),
-          const SizedBox(height: 10),
           _buildCalculationTable(sh),
           const SizedBox(height: 12),
           _buildFooterSignatures(),
@@ -422,7 +473,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           children: [
             _headerCell("NAME OF THE INSTITUTION:"),
             Padding(padding: const EdgeInsets.all(4), child: _leftTextField(instController)),
-            _headerCell("INDEX NO :"),
+            _headerCell("INDEX NO:"),
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(indexController)),
           ],
         ),
@@ -443,7 +494,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => _selectDate(fromDateController),
+                      onTap: () => _selectDate(fromDateController, isFromDate: true),
                       child: IgnorePointer(child: _centerTextField(fromDateController)),
                     ),
                   ),
@@ -470,6 +521,35 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             ),
             _headerCell("H.S. CODE:"),
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
+          ],
+        ),
+        TableRow(
+          children: [
+            _headerCell("SCALE ADMISSIBLE:"),
+            Padding(
+              padding: const EdgeInsets.all(3),
+              child: Row(
+                children: [
+                  const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  Expanded(child: _centerTextField(basicPayAdmController)),
+                ],
+              ),
+            ),
+            _headerCell("GRADE PAY:"),
+            Padding(
+              padding: const EdgeInsets.all(3),
+              child: Row(
+                children: [
+                  Expanded(child: _centerTextField(gradePayAdmController)),
+                  const SizedBox(width: 4),
+                  const Text("L: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  SizedBox(width: 25, child: _centerTextField(levelAdmController)),
+                  const SizedBox(width: 4),
+                  const Text("C: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  SizedBox(width: 25, child: _centerTextField(cellAdmController)),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -503,41 +583,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
     ),
+    onChanged: (_) => setState(() {}),
   );
-
-  Widget _buildScaleRow() {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 1.2)),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            color: Colors.grey.shade300,
-            alignment: Alignment.center,
-            child: const Text(
-              "SCALE ADMISSIBLE",
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1.2),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            child: TextField(
-              controller: scaleController,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-              decoration: const InputDecoration(
-                isDense: true,
-                hintText: "Enter Scale Here",
-                hintStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.normal),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildCalculationTable(YearSheet sh) {
     return SingleChildScrollView(
@@ -575,7 +622,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   TableRow _buildColumnHeader() {
     final headers = [
-      "MONTH", "Admissible/\nDrawn & Due", "BASIC PAY", "D.P/IR", "S.P",
+      "MONTH", "ADMISSIBLE/\nDRAWN & DUE", "BASIC PAY", "D.P/IR", "S.P",
       "D.A", "H.R.A", "M.A", "GROSS", "C.P.F", "P.TAX", "G.P.F", "I.TAX", "NET", "REMARKS"
     ];
     return TableRow(
@@ -610,9 +657,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _unlockedCell(r.admGpf),
           _unlockedCell(r.admItax),
           _conditionalCalcCell(r.hasAdm, r.aNet, isBold: true),
-          r.fixedRemarks.isNotEmpty
-              ? _labelCell(r.fixedRemarks, isBold: true)
-              : _unlockedTextCell(r.admRemarks),
+          _remarksCell(r.remarksCtrl),
         ],
       ),
       TableRow(
@@ -631,7 +676,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _unlockedCell(r.drwGpf),
           _unlockedCell(r.drwItax),
           _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
-          _unlockedTextCell(r.drwRemarks),
+          _labelCell(""),
         ],
       ),
       TableRow(
@@ -651,10 +696,33 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _conditionalCalcCell(r.hasAny, r.dueGpf, isBold: true),
           _conditionalCalcCell(r.hasAny, r.dueItax, isBold: true),
           _conditionalCalcCell(r.hasAny, r.dueNet, isBold: true),
-          _unlockedTextCell(r.dueRemarks),
+          _labelCell(""),
         ],
       ),
     ];
+  }
+
+  Widget _remarksCell(TextEditingController ctrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: TextField(
+        controller: ctrl,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          border: InputBorder.none,
+          hintText: "-",
+          hintStyle: TextStyle(fontSize: 9, color: Colors.grey),
+        ),
+        onChanged: (_) {
+          setState(() {
+            _recalculateAllDaRates();
+          });
+        },
+      ),
+    );
   }
 
   Widget _unlockedCell(TextEditingController ctrl) {
@@ -665,23 +733,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
-        decoration: const InputDecoration(
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: 5),
-          border: InputBorder.none,
-        ),
-        onChanged: (_) => setState(() {}),
-      ),
-    );
-  }
-
-  Widget _unlockedTextCell(TextEditingController ctrl) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-      child: TextField(
-        controller: ctrl,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
         decoration: const InputDecoration(
           isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 5),
@@ -859,8 +910,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               pw.SizedBox(height: 4),
               _buildPdfHeader(sh.periodText),
               pw.SizedBox(height: 3),
-              _buildPdfScale(),
-              pw.SizedBox(height: 3),
               _buildPdfTable(sh),
               pw.SizedBox(height: 5.0),
               pw.Row(
@@ -923,6 +972,29 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValLeftCell(orderNoController.text),
           _pdfHCell("H.S. CODE:"), _pdfValCenterCell(hsCodeController.text),
         ]),
+        pw.TableRow(children: [
+          _pdfHCell("SCALE ADMISSIBLE:"),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3.5),
+            child: pw.Row(
+              children: [
+                pw.Text("BASIC PAY: ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+                pw.Expanded(child: pw.Center(child: pw.Text(basicPayAdmController.text, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)))),
+              ],
+            ),
+          ),
+          _pdfHCell("GRADE PAY:"),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3.5),
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: pw.Center(child: pw.Text(gradePayAdmController.text, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)))),
+                pw.Text(" L: ${levelAdmController.text}", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                pw.Text(" C: ${cellAdmController.text}", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+              ],
+            ),
+          ),
+        ]),
       ],
     );
   }
@@ -949,33 +1021,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     ),
   );
 
-  pw.Widget _buildPdfScale() {
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-      children: [
-        pw.TableRow(
-          children: [
-            pw.Container(
-              color: PdfColors.grey300,
-              padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
-              alignment: pw.Alignment.center,
-              child: pw.Text("SCALE ADMISSIBLE", style: pw.TextStyle(fontSize: 8.0, fontWeight: pw.FontWeight.bold)),
-            ),
-          ],
-        ),
-        pw.TableRow(
-          children: [
-            pw.Container(
-              height: 22.0,
-              alignment: pw.Alignment.center,
-              child: pw.Text(scaleController.text, style: const pw.TextStyle(fontSize: 7.2)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   pw.Widget _buildPdfTable(YearSheet sh) {
     const colWidths = {
       0: pw.FlexColumnWidth(2.3),
@@ -996,7 +1041,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     final headers = [
-      "MONTH", "Admissible/\nDrawn & Due", "BASIC PAY", "D.P/IR", "S.P",
+      "MONTH", "ADMISSIBLE/\nDRAWN & DUE", "BASIC PAY", "D.P/IR", "S.P",
       "D.A", "H.R.A", "M.A", "GROSS", "C.P.F", "P.TAX", "G.P.F", "I.TAX", "NET", "REMARKS"
     ];
 
@@ -1023,7 +1068,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
             _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf), _pCondNum(r.hasAdm, r.aPtax),
             _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
-            _pCleanCell(r.effectiveAdmRemarks),
+            _pCleanCell(r.remarksCtrl.text),
           ],
         ),
       );
@@ -1037,7 +1082,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
             _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf), _pCondNum(r.hasDrw, r.dPtax),
             _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
-            _pCleanCell(r.effectiveDrwRemarks),
+            _pCleanCell(""),
           ],
         ),
       );
@@ -1052,7 +1097,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             _pCondNum(r.hasAny, r.dueDa, isBold: true), _pCondNum(r.hasAny, r.dueHra, isBold: true), _pCondNum(r.hasAny, r.dueMa, isBold: true),
             _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true), _pCondNum(r.hasAny, r.duePtax, isBold: true),
             _pCondNum(r.hasAny, r.dueGpf, isBold: true), _pCondNum(r.hasAny, r.dueItax, isBold: true), _pCondNum(r.hasAny, r.dueNet, isBold: true),
-            _pCleanCell(r.effectiveDueRemarks),
+            _pCleanCell(""),
           ],
         ),
       );
@@ -1192,9 +1237,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     final inWordsText = actClaim > 0 ? numberToWordsIndian(actClaim.round()) : "";
 
-    const double rowH = 14.25; 
+    const double rowH = 14.25;
 
-    // বামদিকের কলামের মাপ
     const double wBasic = 67.5;
     const double wDp = 67.5;
     const double wDa = 73.0;
@@ -1205,7 +1249,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     
     const double wInRs = 46.0;
 
-    // ডানদিকের ৪টি কলামের সুনির্দিষ্ট মাপ
     const double wPtax = 63.0;
     const double wGpf = 60.0;
     const double wOthers = 60.0;
@@ -1220,8 +1263,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double headerRightWidth = rightTotalWidth; // 250.0 pt
 
     const headerLeftColWidths = {
-      0: pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
-      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), // 411.0 pt
+      0: pw.FixedColumnWidth(wBasic + wDp), 
+      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), 
     };
 
     const headerRight4Cols = {
@@ -1232,9 +1275,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     const dateRowColWidths = {
-      0: pw.FixedColumnWidth(wDa + wHra),          // 146.0 pt
-      1: pw.FixedColumnWidth(wMa + wGross),        // 146.0 pt
-      2: pw.FixedColumnWidth(wCpf + wInRs),        // 119.0 pt
+      0: pw.FixedColumnWidth(wDa + wHra),          
+      1: pw.FixedColumnWidth(wMa + wGross),        
+      2: pw.FixedColumnWidth(wCpf + wInRs),        
     };
 
     const table2LeftCols = {
@@ -1255,14 +1298,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     const actualClaimRowWidths = {
-      0: pw.FixedColumnWidth(wPtax + wGpf), // 123.0 pt
-      1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
-      2: pw.FixedColumnWidth(wNet),         // 67.0 pt
+      0: pw.FixedColumnWidth(wPtax + wGpf), 
+      1: pw.FixedColumnWidth(wOthers),      
+      2: pw.FixedColumnWidth(wNet),         
     };
 
     const double receiptBoxHeight = 49.5; 
     const double reasonBoxHeight = 35.2;  
-    const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
+    const double inRsTallBoxHeight = rowH * 6; 
     const double certificateBoxHeight = 165.0;
     const double inWordsBoxHeight = 47.0;
 
@@ -1290,7 +1333,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table
+              // Header Table
               pw.Container(
                 width: totalSheetWidth,
                 decoration: const pw.BoxDecoration(
@@ -1304,7 +1347,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 child: pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    // বামদিকের টেবিল সেকশন
                     pw.Container(
                       width: headerLeftWidth,
                       child: pw.Table(
@@ -1361,11 +1403,22 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             _finalHCell("IN TERMS OF ORDER NO.:", height: rowH),
                             _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
                           ]),
+                          pw.TableRow(children: [
+                            _finalHCell("SCALE ADMISSIBLE:", height: rowH),
+                            pw.Container(
+                              height: rowH,
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+                              alignment: pw.Alignment.centerLeft,
+                              child: pw.Text(
+                                "BASIC PAY: ${basicPayAdmController.text}    GRADE PAY: ${gradePayAdmController.text}    LEVEL: ${levelAdmController.text}    CELL: ${cellAdmController.text}",
+                                style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold),
+                              ),
+                            ),
+                          ]),
                         ],
                       ),
                     ),
 
-                    // ডানদিকের টেবিল সেকশন
                     pw.Container(
                       width: headerRightWidth,
                       child: pw.Column(
@@ -1396,7 +1449,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             ],
                           ),
                           pw.Container(
-                            height: rowH * 2,
+                            height: rowH * 3,
                             width: headerRightWidth,
                           ),
                         ],
@@ -1406,7 +1459,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
               ),
 
-              // মাঝের ফাঁকা রো
               pw.Container(
                 height: rowH,
                 width: totalSheetWidth,
@@ -1418,7 +1470,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
               ),
 
-              // 2. Middle & Lower Section
+              // Middle & Lower Section
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -1454,7 +1506,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                         _finalValCell("D.A", height: rowH, isBold: true),
                                         _finalValCell("H.R.A", height: rowH, isBold: true),
                                         _finalValCell("M.A", height: rowH, isBold: true),
-                                        _finalValCell("Gross", height: rowH, isBold: true),
+                                        _finalValCell("GROSS", height: rowH, isBold: true),
                                         _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
                                       ],
                                     ),
@@ -1501,14 +1553,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                               
-                              // REASON OF ARREAR Row
                               pw.Table(
                                 border: const pw.TableBorder(
                                   verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                 ),
                                 columnWidths: {
-                                  0: const pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
-                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), // 365.0 pt
+                                  0: const pw.FixedColumnWidth(wBasic + wDp), 
+                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), 
                                 },
                                 children: [
                                   pw.TableRow(
