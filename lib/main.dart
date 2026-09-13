@@ -201,8 +201,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   final fromDateController = TextEditingController(text: "01.03.2013");
   final toDateController = TextEditingController(text: "28.02.2018");
   final empIdController = TextEditingController(text: "EYM08650");
-  
-  // ১ নং ভুল সংশোধন: Order No
   final orderNoController = TextEditingController(text: "437-SE(P&B)/SL/5S-408/19,   Date. 13.12.2019.");
 
   final basicPayAdmController = TextEditingController();
@@ -297,7 +295,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
-  // ২ নং ভুল সংশোধন: Header থেকে Basic Pay নিচের সব Admissible ঘরে অটো-পপুলেট করা
   void _applyAdmissibleBasicPay() {
     String basicVal = basicPayAdmController.text.trim();
     DateTime? toLimit = _parseDate(toDateController.text);
@@ -574,9 +571,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               padding: const EdgeInsets.all(3),
               child: Row(
                 children: [
-                  Expanded(child: _centerTextField(gradePayAdmController)),
+                  // GRADE PAY এর ইনপুট বক্সের প্রস্থ ৩ গুণ বাড়িয়ে দেওয়া হলো
+                  Expanded(
+                    flex: 3,
+                    child: _centerTextField(gradePayAdmController),
+                  ),
                   const SizedBox(width: 4),
-                  // ৩ নং ভুল সংশোধন: LEVEL & CELL
                   const Text("LEVEL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   SizedBox(width: 32, child: _centerTextField(levelAdmController)),
                   const SizedBox(width: 4),
@@ -920,22 +920,22 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   }
 
   // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
-  // ৪ ও ৫ নং ভুল সংশোধন: নীচের টেবিলের নির্দিষ্ট কলাম মাপ অনুযায়ী একদম এক সুতোয় মেলানো
+  // টেবিলের মাপসমূহ (পয়েন্টে)
   static const double pColMonth   = 49.0;
   static const double pColAdm     = 51.0;
-  static const double pColBasic   = 43.0; // Month + Adm + Basic = 143.0 pt (NAME OF INSTITUTION)
+  static const double pColBasic   = 43.0; 
   static const double pColDp      = 30.0;
   static const double pColSp      = 28.0;
   static const double pColDa      = 38.0;
   static const double pColHra     = 36.0;
   static const double pColMa      = 28.0;
-  static const double pColGross   = 43.0; // Dp to Gross = 203.0 pt (KUMARPUKUR HIGH SCHOOL)
+  static const double pColGross   = 43.0; 
   static const double pColCpf     = 30.0;
   static const double pColPtax    = 30.0;
   static const double pColGpf     = 34.0;
   static const double pColItax    = 30.0;
   static const double pColNet     = 43.0;
-  static const double pColRemarks = 53.0; // মোট প্রস্থ = 546.0 pt (A4 পোট্রেট উইডথ)
+  static const double pColRemarks = 53.0; 
 
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
@@ -993,23 +993,31 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ৪ ও ৫ নং ভুল সমাধান: Header Table সম্পূর্ণভাবে নীচের কলামের এক সুতোয় সমান্তরাল করা
+  // Calculation Sheet-এর নির্দিষ্ট ৮টি বক্সের অ্যালাইনমেন্ট
   pw.Widget _buildPdfHeaderAligned(String periodText) {
     const double hRowH = 14.5;
-    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt (NAME OF INSTITUTION / SCALE ADMISSIBLE)
-    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt (SCHOOL NAME)
-    const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt (INDEX NO / DESIGNATION)
-    const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt (B3-083 / A.T. ইত্যাদি)
+    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt (NAME OF THE INSTITUTION / SCALE ADMISSIBLE)
+    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
+    const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt
+    const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt
 
-    // ৮টি Box এর নির্ভুল মাপ (নিচের টেবিল কলাম সমান্তরাল)
-    const double wB1 = pColDp + pColSp; // S.P & D.A মাঝের বর্ডার সোজা (58.0 pt) -> "BASIC PAY:"
-    const double wB2 = pColDa;          // D.A & H.R.A মাঝের বর্ডার সোজা (38.0 pt) -> Blank
-    const double wB3 = pColHra + pColMa;// M.A & GROSS মাঝের বর্ডার সোজা (64.0 pt) -> "GRADE PAY:"
-    const double wB4 = pColGross;       // GROSS & C.P.F মাঝের বর্ডার সোজা (43.0 pt) -> Blank
-    const double wB5 = pColCpf + pColPtax; // P.TAX & G.P.F মাঝের বর্ডার সোজা (60.0 pt) -> "LEVEL:"
-    const double wB6 = pColGpf + pColItax; // I TAX & NET মাঝের বর্ডার সোজা (64.0 pt) -> Blank
-    const double wB7 = pColNet;         // NET & REMARKS মাঝের বর্ডার সোজা (43.0 pt) -> "CELL:"
-    const double wB8 = pColRemarks;     // একদম শেষ প্রান্ত পর্যন্ত (53.0 pt) -> Blank
+    // আপনার দেওয়া সুনির্দিষ্ট ৮টি বর্ডার অনুযায়ী প্রস্থ:
+    // ১. BASIC PAY: -> S.P ও D.A এর মাঝের বর্ডার সোজা (Dp + Sp = 58 pt)
+    const double wB1 = pColDp + pColSp; 
+    // ২. 43400 (Blank) -> D.A ও H.R.A এর মাঝের বর্ডার সোজা (Da = 38 pt)
+    const double wB2 = pColDa;          
+    // ৩. GRADE PAY: -> M.A ও GROSS এর মাঝের বর্ডার সোজা (Hra + Ma = 64 pt)
+    const double wB3 = pColHra + pColMa;
+    // ৪. 2900 (Blank) -> GROSS ও C.P.F এর মাঝের বর্ডার সোজা (Gross = 43 pt)
+    const double wB4 = pColGross;       
+    // ৫. LEVEL: -> P.TAX ও G.P.F এর মাঝের বর্ডার সোজা (Cpf + Ptax = 60 pt)
+    const double wB5 = pColCpf + pColPtax; 
+    // ৬. Blank -> G.P.F ও I.TAX এর মাঝের বর্ডার সোজা (Gpf = 34 pt)
+    const double wB6 = pColGpf;         
+    // ৭. CELL: -> NET ও REMARKS এর মাঝের বর্ডার সোজা (Itax + Net = 73 pt)
+    const double wB7 = pColItax + pColNet; 
+    // ৮. Blank -> একদম ডান প্রান্ত পর্যন্ত (Remarks = 53 pt)
+    const double wB8 = pColRemarks;     
 
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
@@ -1020,21 +1028,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         3: const pw.FixedColumnWidth(wH4),
       },
       children: [
-        // Row 1: Name of Institution & Index No
+        // Row 1
         pw.TableRow(children: [
           _pdfHCell("NAME OF THE INSTITUTION:", height: hRowH),
           _pdfValLeftCell(instController.text, height: hRowH),
           _pdfHCell("INDEX NO:", height: hRowH),
           _pdfValCenterCell(indexController.text, height: hRowH),
         ]),
-        // Row 2: Name of Employee & Designation
+        // Row 2
         pw.TableRow(children: [
           _pdfHCell("NAME OF THE EMPLOYEE:", height: hRowH),
           _pdfValLeftCell(empNameController.text, height: hRowH),
           _pdfHCell("DESIGNATION:", height: hRowH),
           _pdfValCenterCell(desigController.text, height: hRowH),
         ]),
-        // Row 3: Arrear Period & Employee ID
+        // Row 3
         pw.TableRow(children: [
           _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
           pw.Container(
@@ -1045,18 +1053,18 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pdfHCell("EMPLOYEE ID:", height: hRowH),
           _pdfValCenterCell(empIdController.text, height: hRowH),
         ]),
-        // Row 4: Order No & H.S. Code
+        // Row 4
         pw.TableRow(children: [
           _pdfHCell("IN TERMS OF ORDER NO.:", height: hRowH),
           _pdfValLeftCell(orderNoController.text, height: hRowH),
           _pdfHCell("H.S. CODE:", height: hRowH),
           _pdfValCenterCell(hsCodeController.text, height: hRowH),
         ]),
-        // Row 5: Scale Admissible এবং সমান্তরাল ৮টি বক্স
+        // Row 5: Scale Admissible এবং সুনির্দিষ্ট ৮টি বক্স
         pw.TableRow(children: [
           _pdfHCell("SCALE ADMISSIBLE:", height: hRowH),
           pw.Container(
-            width: wH2 + wH3 + wH4, // ৪৭৩ pt
+            width: wH2 + wH3 + wH4, 
             child: pw.Table(
               border: const pw.TableBorder(
                 verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1085,7 +1093,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ],
             ),
           ),
-          pw.Container(), // Table cell span balancing
+          pw.Container(),
           pw.Container(),
         ]),
       ],
@@ -1105,7 +1113,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     color: PdfColors.grey300,
     padding: const pw.EdgeInsets.symmetric(horizontal: 2),
     alignment: pw.Alignment.center,
-    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold)),
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.3, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _pdfValLeftCell(String t, {double height = 14.0}) => pw.Container(
@@ -1278,7 +1286,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     return pw.Table(
       border: const pw.TableBorder(
-        top: pw.BorderSide.none, // Header টেবিলের সাথে যাতে ডাবল বর্ডার না হয়
+        top: pw.BorderSide.none,
         bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
         left: pw.BorderSide(color: PdfColors.black, width: 0.8),
         right: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1331,7 +1339,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   );
 
   // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
-  // ৬ নং ভুল সংশোধন: SCALE ADMISSIBLE এর পর সমান ৮টি বক্সে বিভক্ত করা
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1343,6 +1350,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double rowH = 14.25;
 
+    // নিচের টেবিলের কলামগুলোর সঠিক মাপ (পয়েন্টে)
     const double wBasic = 67.5;
     const double wDp = 67.5;
     const double wDa = 73.0;
@@ -1363,12 +1371,29 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
     const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
 
-    const double headerLeftWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf + wInRs; // 546.0 pt
-    const double headerRightWidth = rightTotalWidth; // 250.0 pt
+    // Scale Admissible-এর বামদিকের বক্সটি (Basic + Dp + Da) = 208.0 pt
+    const double scaleTitleWidth = wBasic + wDp + wDa; 
 
-    const double scaleTitleWidth = wBasic + wDp; // 135.0 pt
-    const double scale8BoxTotalWidth = totalSheetWidth - scaleTitleWidth; // 661.0 pt
-    const double scaleBoxWidth = scale8BoxTotalWidth / 8.0; // 82.625 pt প্রতিটি সমান বক্স
+    // Final Sheet এর নির্দেশিত সুনির্দিষ্ট ৮টি বক্সের মাপ (নিচের টেবিল অনুযায়ী সমান্তরাল):
+    // ১. BASIC PAY: -> H.R.A ও M.A এর মাঝের বর্ডার সোজা (Hra = 73 pt)
+    const double fBox1 = wHra; 
+    // ২. 43400 (Blank) -> M.A ও GROSS এর মাঝের বর্ডার সোজা (Ma = 73 pt)
+    const double fBox2 = wMa;  
+    // ৩. GRADE PAY: -> C.P.F/G.P.F ও IN RS. এর মাঝের বর্ডার সোজা (Gross + Cpf = 146 pt)
+    const double fBox3 = wGross + wCpf; 
+    // ৪. 2900 (Blank) -> IN RS. ও TO BE CREDITED TO: এর মাঝের বর্ডার সোজা (InRs = 46 pt)
+    const double fBox4 = wInRs; 
+    // ৫. LEVEL: -> P.TAX ও G.P.F/C.P.F এর মাঝের বর্ডার সোজা (Ptax = 63 pt)
+    const double fBox5 = wPtax; 
+    // ৬. Blank -> G.P.F/C.P.F ও OTHERS এর মাঝের বর্ডার সোজা (Gpf = 60 pt)
+    const double fBox6 = wGpf;  
+    // ৭. CELL: -> OTHERS ও NET CLAIM এর মাঝের বর্ডার সোজা (Others = 60 pt)
+    const double fBox7 = wOthers; 
+    // ৮. Blank -> একদম শেষ প্রান্ত পর্যন্ত (Net = 67 pt)
+    const double fBox8 = wNet;  
+
+    const headerLeftWidth = totalSheetWidth - rightTotalWidth; // 546.0 pt
+    const headerRightWidth = rightTotalWidth; // 250.0 pt
 
     const headerLeftColWidths = {
       0: pw.FixedColumnWidth(wBasic + wDp), 
@@ -1441,20 +1466,15 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // Final Header Container
+              // Final Header Container (চারিদিকে নরমাল বর্ডার নিশ্চিত করা হলো)
               pw.Container(
                 width: totalSheetWidth,
-                decoration: const pw.BoxDecoration(
-                  border: pw.Border(
-                    top: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                    bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                    right: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                  ),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.black, width: 0.8),
                 ),
                 child: pw.Column(
                   children: [
-                    // Top 4 Rows
+                    // উপরের ৪টি Row
                     pw.Row(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
@@ -1520,6 +1540,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               pw.Table(
                                 border: const pw.TableBorder(
                                   left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // DESIGNATION & EYM08650 এর নিচে বর্ডার নিশ্চিত করা হলো
                                   horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                 ),
@@ -1554,10 +1575,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
-                    // Divider before Scale Admissible
+                    // SCALE ADMISSIBLE এর উপরের নরমাল বর্ডার
                     pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
 
-                    // ৬ নং ভুল সমাধান: SCALE ADMISSIBLE ও ডান প্রান্ত পর্যন্ত সমান ৮টি বক্স
+                    // SCALE ADMISSIBLE এবং নিচের টেবিলের সমান্তরাল ৮টি নির্দিষ্ট বক্স
                     pw.Row(
                       children: [
                         pw.Container(
@@ -1565,14 +1586,21 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           child: _finalHCell("SCALE ADMISSIBLE:", height: rowH),
                         ),
                         pw.Container(
-                          width: scale8BoxTotalWidth,
+                          width: totalSheetWidth - scaleTitleWidth,
                           child: pw.Table(
                             border: const pw.TableBorder(
                               left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                               verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                             ),
-                            columnWidths: {
-                              for (int i = 0; i < 8; i++) i: const pw.FixedColumnWidth(scaleBoxWidth),
+                            columnWidths: const {
+                              0: pw.FixedColumnWidth(fBox1),
+                              1: pw.FixedColumnWidth(fBox2),
+                              2: pw.FixedColumnWidth(fBox3),
+                              3: pw.FixedColumnWidth(fBox4),
+                              4: pw.FixedColumnWidth(fBox5),
+                              5: pw.FixedColumnWidth(fBox6),
+                              6: pw.FixedColumnWidth(fBox7),
+                              7: pw.FixedColumnWidth(fBox8),
                             },
                             children: [
                               pw.TableRow(
@@ -2012,7 +2040,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     color: PdfColors.grey300,
     padding: const pw.EdgeInsets.symmetric(horizontal: 2),
     alignment: pw.Alignment.center,
-    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold)),
   );
 
   static pw.Widget _finalValCell(String t, {required double height, bool isBold = false, bool alignLeft = false}) => pw.Container(
