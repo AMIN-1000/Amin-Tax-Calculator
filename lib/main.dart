@@ -993,10 +993,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   pw.Widget _buildPdfHeaderAligned(String periodText) {
     const double hRowH = 14.5;
-    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt
-    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
-    const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt
-    const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt
+    const double wH1 = pColMonth + pColAdm + pColBasic; 
+    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; 
+    const double wH3 = pColCpf + pColPtax + pColGpf; 
+    const double wH4 = pColItax + pColNet + pColRemarks; 
 
     const double wB1 = pColDp + pColSp; 
     const double wB2 = pColDa;          
@@ -1354,25 +1354,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
     const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
 
-    // ১ নং সংশোধন: SCALE ADMISSIBLE: এর প্রস্থ ঠিক উপরের IN TERMS OF ORDER NO.: এর সোজা এক সুতোয় বাঁধা হলো (135.0 pt)
-    const double scaleTitleWidth = wBasic + wDp; 
+    const double scaleTitleWidth = wBasic + wDp; // 135.0 pt
 
-    // Final Sheet এর ৮টি বক্সের মাপ (নিচের টেবিলের দাগের সাথে সমান্তরাল):
-    // ১. BASIC PAY: -> H.R.A ও M.A এর মাঝের বর্ডার সোজা (wDa + wHra = 73.0 + 73.0 = 146.0 pt)
+    // Final Sheet এর ৮টি বক্সের সুনির্দিষ্ট মাপ
     const double fBox1 = wDa + wHra; 
-    // ২. 43400 (Blank) -> M.A ও GROSS এর মাঝের বর্ডার সোজা (wMa = 73.0 pt)
     const double fBox2 = wMa;  
-    // ৩. GRADE PAY: -> C.P.F/G.P.F ও IN RS. এর মাঝের বর্ডার সোজা (wGross + wCpf = 146.0 pt)
     const double fBox3 = wGross + wCpf; 
-    // ৪. 2900 (Blank) -> IN RS. ও TO BE CREDITED TO: এর মাঝের বর্ডার সোজা (wInRs = 46.0 pt)
     const double fBox4 = wInRs; 
-    // ৫. LEVEL: -> P.TAX ও G.P.F/C.P.F এর মাঝের বর্ডার সোজা (wPtax = 63.0 pt)
     const double fBox5 = wPtax; 
-    // ৬. Blank -> G.P.F/C.P.F ও OTHERS এর মাঝের বর্ডার সোজা (wGpf = 60.0 pt)
     const double fBox6 = wGpf;  
-    // ৭. CELL: -> OTHERS ও NET CLAIM এর মাঝের বর্ডার সোজা (wOthers = 60.0 pt)
     const double fBox7 = wOthers; 
-    // ৮. Blank -> একদম শেষ প্রান্ত পর্যন্ত (wNet = 67.0 pt)
     const double fBox8 = wNet;  
 
     const headerLeftWidth = totalSheetWidth - rightTotalWidth; // 546.0 pt
@@ -1449,13 +1440,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // ২ নং সংশোধন: সম্পূর্ণ কন্টেইনারে নরমাল বর্ডার (Left Side সহ চারপাশ নিশ্চিত করা হলো)
+              // Final Header Container (১ নং ভুল সমাধান: শীর্ষ প্রান্তে নিশ্চিত নরমাল টপ বর্ডার)
               pw.Container(
                 width: totalSheetWidth,
                 decoration: const pw.BoxDecoration(
                   border: pw.Border(
-                    top: pw.BorderSide(color: PdfColors.black, width: 0.8),
-                    left: pw.BorderSide(color: PdfColors.black, width: 0.8), // স্পষ্ট Left Border
+                    top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ১ নং সমাধান: শীর্ষ অনুভূমিক বর্ডার
+                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                     right: pw.BorderSide(color: PdfColors.black, width: 0.8),
                     bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                   ),
@@ -1470,7 +1461,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           width: headerLeftWidth,
                           child: pw.Table(
                             border: const pw.TableBorder(
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // Left Side Border
+                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ১ নং সমাধান: NAME OF THE INSTITUTION এর টপ বর্ডার
+                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৩ নং সমাধান: বাম প্রান্তের বর্ডার
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // ২ নং সমাধান: IN TERMS OF ORDER NO এর নিচের বর্ডার
                               horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                               verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                             ),
@@ -1528,6 +1521,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             children: [
                               pw.Table(
                                 border: const pw.TableBorder(
+                                  top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৫ নং সমাধান: INDEX NO ও H.S. CODE এর টপ বর্ডার
                                   left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1555,6 +1549,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                                 decoration: const pw.BoxDecoration(
                                   border: pw.Border(
                                     left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                    bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                   ),
                                 ),
                               ),
@@ -1564,17 +1559,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
-                    // ৩ নং সংশোধন: SCALE ADMISSIBLE রো-এর Top এ Normal Border একদম শেষ প্রান্ত পর্যন্ত
-                    pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
-
-                    // ১ নং সংশোধন: SCALE ADMISSIBLE ও উপরে অর্ডারের খাড়া দাগের সাথে নিখুঁত এক সুতোয় বাঁধা ৮টি বক্স
+                    // SCALE ADMISSIBLE রো (২, ৩, ৪, ৬ নং ভুল পুরোপুরি নিরসন করা হলো)
                     pw.Row(
                       children: [
                         pw.Container(
-                          width: scaleTitleWidth, // হুবহু 135.0 pt (উপরের IN TERMS OF ORDER NO: এর সোজা)
+                          width: scaleTitleWidth, // হুবহু উপরের অর্ডারের সোজা এক সুতোয় বাঁধা
                           decoration: const pw.BoxDecoration(
                             border: pw.Border(
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // Left Border
+                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ২ নং সমাধান: উপরে অনুভূমিক বর্ডার
+                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৩ নং সমাধান: বাম পাশের খাড়া বর্ডার
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8), // নিচে অনুভূমিক বর্ডার
                             ),
                           ),
                           child: _finalHCell("SCALE ADMISSIBLE:", height: rowH),
@@ -1583,7 +1577,10 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                           width: totalSheetWidth - scaleTitleWidth,
                           child: pw.Table(
                             border: const pw.TableBorder(
-                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // খাড়া দাগ উপরের অর্ডারের সাথে এক সুতোয় বাঁধা
+                              top: pw.BorderSide(color: PdfColors.black, width: 0.8), // ৪ ও ৬ নং সমাধান: BASIC PAY, GRADE PAY, LEVEL, CELL এর টপ বর্ডার
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              left: pw.BorderSide(color: PdfColors.black, width: 0.8), // অর্ডারের সোজা খাড়া বর্ডার
+                              right: pw.BorderSide(color: PdfColors.black, width: 0.8),
                               verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                             ),
                             columnWidths: const {
@@ -1614,9 +1611,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         ),
                       ],
                     ),
-
-                    // ৩ নং সংশোধন: SCALE ADMISSIBLE রো-এর Bottom এ Normal Border একদম শেষ প্রান্ত পর্যন্ত
-                    pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                   ],
                 ),
               ),
