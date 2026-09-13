@@ -991,74 +991,104 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
+  // ৭ম দাগ পর্যন্ত এবং ৭ম দাগের পর থেকে একদম ডান প্রান্তের সীমানা পর্যন্ত CELL-এর মানের ঘর
   pw.Widget _buildPdfHeaderAligned(String periodText) {
     const double hRowH = 14.5;
-    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt
+    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt (SCALE ADMISSIBLE)
     const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
     const double wH3 = pColCpf + pColPtax + pColGpf; // 94.0 pt
     const double wH4 = pColItax + pColNet + pColRemarks; // 126.0 pt
-    const double scaleRemainWidth = wH2 + wH3 + wH4; // 423.0 pt
 
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
-      columnWidths: {
-        0: const pw.FixedColumnWidth(wH1),
-        1: const pw.FixedColumnWidth(wH2),
-        2: const pw.FixedColumnWidth(wH3),
-        3: const pw.FixedColumnWidth(wH4),
-      },
+    // প্রতিটি বক্সের সুনির্দিষ্ট প্রস্থ:
+    const double wB1 = pColDp + pColSp; // 58.0 pt -> BASIC PAY:
+    const double wB2 = pColDa; // 38.0 pt -> Blank
+    const double wB3 = pColHra + pColMa; // 64.0 pt -> GRADE PAY:
+    const double wB4 = pColGross; // 43.0 pt -> Blank
+    const double wB5 = pColCpf + pColPtax; // 60.0 pt -> LEVEL:
+    const double wB6 = pColGpf; // 34.0 pt -> LEVEL-এর মান
+    const double wB7 = pColItax + pColNet; // 73.0 pt -> শুধুমাত্র "CELL:" (৭ম দাগ)
+    const double wB8 = pColRemarks; // 53.0 pt -> ৭ম দাগ ও একদম ডান প্রান্তের সীমানার মাঝের Cell-এর মানের ঘর
+
+    return pw.Column(
       children: [
-        pw.TableRow(children: [
-          _pdfHCell("NAME OF THE INSTITUTION:", height: hRowH),
-          _pdfValLeftCell(instController.text, height: hRowH),
-          _pdfHCell("INDEX NO:", height: hRowH),
-          _pdfValCenterCell(indexController.text, height: hRowH),
-        ]),
-        pw.TableRow(children: [
-          _pdfHCell("NAME OF THE EMPLOYEE:", height: hRowH),
-          _pdfValLeftCell(empNameController.text, height: hRowH),
-          _pdfHCell("DESIGNATION:", height: hRowH),
-          _pdfValCenterCell(desigController.text, height: hRowH),
-        ]),
-        pw.TableRow(children: [
-          _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
-          pw.Container(
-            height: hRowH,
-            alignment: pw.Alignment.center,
-            child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+        pw.Table(
+          border: const pw.TableBorder(
+            top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
           ),
-          _pdfHCell("EMPLOYEE ID:", height: hRowH),
-          _pdfValCenterCell(empIdController.text, height: hRowH),
-        ]),
-        pw.TableRow(children: [
-          _pdfHCell("IN TERMS OF ORDER NO.:", height: hRowH),
-          _pdfValLeftCell(orderNoController.text, height: hRowH),
-          _pdfHCell("H.S. CODE:", height: hRowH),
-          _pdfValCenterCell(hsCodeController.text, height: hRowH),
-        ]),
-        pw.TableRow(children: [
-          _pdfHCell("SCALE ADMISSIBLE:", height: hRowH),
-          pw.Container(
-            width: scaleRemainWidth,
-            height: hRowH,
-            padding: const pw.EdgeInsets.symmetric(horizontal: 5),
-            alignment: pw.Alignment.centerLeft,
-            child: pw.Row(
-              children: [
-                pw.Text("BASIC PAY: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
-                pw.Text("${basicPayAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-                pw.Text("GRADE PAY: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
-                pw.Text("${gradePayAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-                pw.Text("LEVEL: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
-                pw.Text("${levelAdmController.text}    ", style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-                pw.Text("CELL: ", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
-                pw.Text(cellAdmController.text, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-              ],
-            ),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(wH1),
+            1: pw.FixedColumnWidth(wH2),
+            2: pw.FixedColumnWidth(wH3),
+            3: pw.FixedColumnWidth(wH4),
+          },
+          children: [
+            pw.TableRow(children: [
+              _pdfHCell("NAME OF THE INSTITUTION:", height: hRowH),
+              _pdfValLeftCell(instController.text, height: hRowH),
+              _pdfHCell("INDEX NO:", height: hRowH),
+              _pdfValCenterCell(indexController.text, height: hRowH),
+            ]),
+            pw.TableRow(children: [
+              _pdfHCell("NAME OF THE EMPLOYEE:", height: hRowH),
+              _pdfValLeftCell(empNameController.text, height: hRowH),
+              _pdfHCell("DESIGNATION:", height: hRowH),
+              _pdfValCenterCell(desigController.text, height: hRowH),
+            ]),
+            pw.TableRow(children: [
+              _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
+              pw.Container(
+                height: hRowH,
+                alignment: pw.Alignment.center,
+                child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+              ),
+              _pdfHCell("EMPLOYEE ID:", height: hRowH),
+              _pdfValCenterCell(empIdController.text, height: hRowH),
+            ]),
+            pw.TableRow(children: [
+              _pdfHCell("IN TERMS OF ORDER NO.:", height: hRowH),
+              _pdfValLeftCell(orderNoController.text, height: hRowH),
+              _pdfHCell("H.S. CODE:", height: hRowH),
+              _pdfValCenterCell(hsCodeController.text, height: hRowH),
+            ]),
+          ],
+        ),
+        pw.Table(
+          border: const pw.TableBorder(
+            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
           ),
-          pw.Container(),
-          pw.Container(),
-        ]),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(wH1),
+            1: pw.FixedColumnWidth(wB1),
+            2: pw.FixedColumnWidth(wB2),
+            3: pw.FixedColumnWidth(wB3),
+            4: pw.FixedColumnWidth(wB4),
+            5: pw.FixedColumnWidth(wB5),
+            6: pw.FixedColumnWidth(wB6),
+            7: pw.FixedColumnWidth(wB7), // ৭ম দাগে শেষ হবে এই বক্স
+            8: pw.FixedColumnWidth(wB8), // ৭ম দাগ থেকে পাতার শেষ প্রান্তের মাঝের বক্স
+          },
+          children: [
+            pw.TableRow(children: [
+              _pdfHCell("SCALE ADMISSIBLE:", height: hRowH),
+              _pdfHCellCenter("BASIC PAY:", height: hRowH),
+              _pdfValCenterCell(basicPayAdmController.text, height: hRowH),
+              _pdfHCellCenter("GRADE PAY:", height: hRowH),
+              _pdfValCenterCell(gradePayAdmController.text, height: hRowH),
+              _pdfHCellCenter("LEVEL:", height: hRowH),
+              _pdfValCenterCell(levelAdmController.text, height: hRowH),
+              _pdfHCellCenter("CELL:", height: hRowH), // ৭ম দাগের আগে শুধু "CELL:"
+              _pdfValCenterCell(cellAdmController.text, height: hRowH), // ৭ম দাগ ও ডান প্রান্তের মাঝের ঘরে CELL এর Value
+            ]),
+          ],
+        ),
       ],
     );
   }
@@ -1069,6 +1099,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     padding: const pw.EdgeInsets.symmetric(horizontal: 4),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _pdfHCellCenter(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.3, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _pdfValLeftCell(String t, {double height = 14.0}) => pw.Container(
@@ -1293,7 +1331,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF (সম্পূর্ণ অপরিবর্তিত) ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1320,12 +1358,12 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double wOthers = 60.0;
     const double wNet = 67.0;
 
-    const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; // 250.0 pt
-    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; // 500.0 pt
-    const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
-    const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
+    const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; 
+    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; 
+    const double bottomSectionWidth = wInRs + rightTotalWidth; 
+    const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; 
 
-    const double scaleTitleWidth = wBasic + wDp; // 135.0 pt
+    const double scaleTitleWidth = wBasic + wDp; 
 
     const double fBox1 = wDa + wHra; 
     const double fBox2 = wMa;  
@@ -1336,8 +1374,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double fBox7 = wOthers; 
     const double fBox8 = wNet;  
 
-    const headerLeftWidth = totalSheetWidth - rightTotalWidth; // 546.0 pt
-    const headerRightWidth = rightTotalWidth; // 250.0 pt
+    const headerLeftWidth = totalSheetWidth - rightTotalWidth; 
+    const headerRightWidth = rightTotalWidth; 
 
     const headerLeftColWidths = {
       0: pw.FixedColumnWidth(wBasic + wDp), 
@@ -1423,7 +1461,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
                 child: pw.Column(
                   children: [
-                    // উপরের ৪টি Row
                     pw.Row(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
@@ -1529,11 +1566,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
-                    // SCALE ADMISSIBLE রো (আলাদা টেবিল দিয়ে Left ও Top বর্ডার নিশ্চিত করা হলো)
+                    // SCALE ADMISSIBLE রো
                     pw.Table(
                       border: const pw.TableBorder(
-                        top: pw.BorderSide(color: PdfColors.black, width: 0.8), // Top Border নিশ্চিত করা হলো
-                        left: pw.BorderSide(color: PdfColors.black, width: 0.8), // Left Border নিশ্চিত করা হলো
+                        top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
                         bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
                         right: pw.BorderSide(color: PdfColors.black, width: 0.8),
                         verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
