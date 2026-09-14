@@ -482,20 +482,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // স্ক্রিনশট ও নির্দেশিত ৪টি সমাধান অনুযায়ী নিখুঁত হেডার টেবিল
+  // স্ক্রিনশটের নির্দেশনানুযায়ী সম্পূর্ণ সমান্তরাল ও নিখুঁত হেডার টেবিল
   Widget _buildHeaderTable() {
-    // কলামগুলোর নির্দিষ্ট মাপ:
-    // ১ম কলাম: 170 px (নিচের MONTH 85 + ADMISSIBLE 85)
-    // ২য় কলাম: 305 px (BASIC 75 + D.P 55 + S.P 50 + D.A 65 + H.R.A 60)
-    // ৩য় কলাম: 175 px (M.A 50 + GROSS 70 + C.P.F 55 -> P.TAX ও G.P.F এর মাঝের দাগ পর্যন্ত)
-    // ৪র্থ কলাম: 270 px (P.TAX 55 + G.P.F 60 + I.TAX 55 + NET 70 + REMARKS 85 = 325 - margin)
+    // কলামগুলোর নির্দিষ্ট পিক্সেল মাপ:
+    // কলাম ১: 170 px (MONTH 85 + ADMISSIBLE 85)
+    // কলাম ২: 305 px (BASIC 75 + D.P 55 + S.P 50 + D.A 65 + H.R.A 60)
+    // কলাম ৩: 175 px (M.A 50 + GROSS 70 + C.P.F 55 -> P.TAX ও G.P.F এর মাঝের দাগ পর্যন্ত)
+    // কলাম ৪: 270 px (P.TAX 55 + G.P.F 60 + I.TAX 55 + NET 70 + REMARKS 85 - মার্জিন = 920 px)
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1.2),
       columnWidths: const {
         0: FixedColumnWidth(170), 
         1: FixedColumnWidth(305), 
-        2: FixedColumnWidth(175), // P.TAX ও G.P.F-এর মাঝের দাগ পর্যন্ত প্রসারিত
-        3: FixedColumnWidth(270), // মোট 920 px (নিচের টেবিলের সাথে হুবহু সমান)
+        2: FixedColumnWidth(175), // P.TAX ও G.P.F এর মাঝের উল্লম্ব দাগ বরাবর
+        3: FixedColumnWidth(270), // নিচের টেবিলের শেষ প্রান্ত (920 px) পর্যন্ত
       },
       children: [
         TableRow(
@@ -553,18 +553,17 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
           ],
         ),
-        // সমাধান ১, ২, ৩ ও ৪: ৫ নম্বর সারির চূড়ান্ত বিন্যাস
+        // ৫ নম্বর সারি: আপনার নির্দেশিত পরিবর্তনসমূহ
         TableRow(
           children: [
             _headerCell("SCALE ADMISSIBLE:"),
-            // BASIC PAY: লেখা এবং ঠিক ওপরের 28.02.2018-এর বক্সের সমান ও এক সমান্তরালে Blank Box
+            // BASIC PAY: এবং ওপরের 28.02.2018-এর বক্সের সাথে সমান্তরাল Blank Box
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   const Spacer(),
-                  // ঠিক ওপরের 28.02.2018 বক্সের সমান মাপের ইনপুট বক্স
                   SizedBox(
                     width: 135,
                     child: TextField(
@@ -587,7 +586,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ১ নং সমাধান: GRADE PAY: লেখাটি H.S. CODE:-এর নিচের বক্সে থাকবে এবং তার পাশে Blank Box
+            // ১ নং সমাধান: GRADE PAY: লেখাটি H.S. CODE:-এর নিচে এবং তার মান ইনপুটের বক্সটি ডানপাশে পূর্ণ প্রসারিত
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -600,16 +599,32 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ৩ নং সমাধান: LEVEL: ও CELL: এবং তাদের Blank Box দুটি নিয়ে ডান প্রান্ত পর্যন্ত প্রসারিত
+            // ২ ও ৩ নং সমাধান: LEVEL: ও CELL: এবং তাদের Blank Box দুটি সমান ভাগে বিভক্ত হয়ে ডান প্রান্ত পর্যন্ত প্রসারিত
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
-                  const Text("LEVEL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 45, child: _centerTextField(levelAdmController)),
-                  const Spacer(),
-                  const Text("CELL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 45, child: _centerTextField(cellAdmController)),
+                  // LEVEL অংশ (সমান ভাগ)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Text("LEVEL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 2),
+                        Expanded(child: _centerTextField(levelAdmController)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // CELL অংশ (সমান ভাগ)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Text("CELL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 2),
+                        Expanded(child: _centerTextField(cellAdmController)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1641,7 +1656,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
-                    // SCALE ADMISSIBLE রো
                     pw.Table(
                       border: const pw.TableBorder(
                         top: pw.BorderSide(color: PdfColors.black, width: 0.8),
