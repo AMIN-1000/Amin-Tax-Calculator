@@ -31,6 +31,71 @@ class ArrearCalculatorApp extends StatelessWidget {
   }
 }
 
+// ---------------- ROPA-19 PAY MATRIX DATABASE ----------------
+class PayMatrixInfo {
+  final int gradePay;
+  final int level;
+  final int cell;
+
+  PayMatrixInfo({required this.gradePay, required this.level, required this.cell});
+}
+
+class Ropa19Data {
+  static final List<int> gradePays = [
+    1700, 1800, 1900, 2100, 2300, 2600, 2900, 3200, 3600, 3900, 4100, 4400, 4600, 4700, 4800, 5400
+  ];
+
+  static final List<List<int>> matrix = [
+    // L-1 (GP 1700)
+    [17000, 17500, 18000, 18500, 19100, 19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600],
+    // L-2 (GP 1800)
+    [17600, 18100, 18600, 19200, 19800, 20400, 21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200],
+    // L-3 (GP 1900)
+    [18800, 19400, 20000, 20600, 21200, 21800, 22500, 23200, 23900, 24600, 25300, 26100, 26900, 27700, 28500, 29400, 30300, 31200, 32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700],
+    // L-4 (GP 2100)
+    [19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500],
+    // L-5 (GP 2300)
+    [21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000],
+    // L-6 (GP 2600)
+    [22700, 23400, 24100, 24800, 25500, 26300, 27100, 27900, 28700, 29600, 30500, 31400, 32300, 33300, 34300, 35300, 36400, 37500, 38600, 39800, 41000, 42200, 43500, 44800, 46100, 47500, 48900, 50400, 51900, 53500, 55100, 56800, 58500],
+    // L-7 (GP 2900)
+    [24700, 25400, 26200, 27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900],
+    // L-8 (GP 3200)
+    [27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900, 65800, 67800, 69800],
+    // L-9 (GP 3600)
+    [28900, 29800, 30700, 31600, 32500, 33500, 34500, 35500, 36600, 37700, 38800, 40000, 41200, 42400, 43700, 45000, 46400, 47800, 49200, 50700, 52200, 53800, 55400, 57100, 58800, 60600, 62400, 64300, 66200, 68200, 70200, 72300, 74500],
+    // L-10 (GP 3900)
+    [32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700, 50200, 51700, 53300, 54900, 56500, 58200, 59900, 61700, 63600, 65500, 67500, 69500, 71600, 73700, 75900, 78200, 80500, 82900],
+    // L-11 (GP 4100)
+    [33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100],
+    // L-12 (GP 4400)
+    [35800, 36900, 38000, 39100, 40300, 41500, 42700, 44000, 45300, 46700, 48100, 49500, 51000, 52500, 54100, 55700, 57400, 59100, 60900, 62700, 64600, 66500, 68500, 70600, 72700, 74900, 77100, 79400, 81800, 84300, 86800, 89400, 92100],
+    // L-13 (GP 4600)
+    [37100, 38200, 39300, 40500, 41700, 43000, 44300, 45600, 47000, 48400, 49900, 51400, 52900, 54500, 56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500],
+    // L-14 (GP 4700)
+    [39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100, 88700, 91400, 94100, 96900, 99800, 102800],
+    // L-15 (GP 4800)
+    [42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000, 55600, 57300, 59000, 60800, 62600, 64500, 66400, 68400, 70500, 72600, 74800, 77000, 79300, 81700, 84200, 86700, 89300, 92000, 94800, 97600, 100500, 103500, 106600, 109800],
+    // L-16 (GP 5400)
+    [56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500, 98400, 101400, 104400, 107500, 110700, 114000, 117400, 120900, 124500, 128200, 132000, 136000, 140100, 144300],
+  ];
+
+  static PayMatrixInfo? lookup(int basic) {
+    for (int l = 0; l < matrix.length; l++) {
+      for (int c = 0; c < matrix[l].length; c++) {
+        if (matrix[l][c] == basic) {
+          return PayMatrixInfo(
+            gradePay: gradePays[l],
+            level: l + 1,
+            cell: c + 1,
+          );
+        }
+      }
+    }
+    return null;
+  }
+}
+
 class MonthEntry {
   String monthName;
   DateTime monthDate;
@@ -295,6 +360,31 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
+  // Basic Pay ইনপুট হলে Pay Matrix থেকে GP, Level ও Cell অটো-পপুলেশন
+  void _onBasicPayChanged(String val) {
+    String cleanVal = val.trim();
+    int? basic = int.tryParse(cleanVal);
+
+    if (basic != null) {
+      final info = Ropa19Data.lookup(basic);
+      if (info != null) {
+        gradePayAdmController.text = info.gradePay.toString();
+        levelAdmController.text = info.level.toString();
+        cellAdmController.text = info.cell.toString();
+      } else {
+        gradePayAdmController.clear();
+        levelAdmController.clear();
+        cellAdmController.clear();
+      }
+    } else {
+      gradePayAdmController.clear();
+      levelAdmController.clear();
+      cellAdmController.clear();
+    }
+
+    _applyAdmissibleBasicPay();
+  }
+
   void _applyAdmissibleBasicPay() {
     String basicVal = basicPayAdmController.text.trim();
     DateTime? toLimit = _parseDate(toDateController.text);
@@ -482,20 +572,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ১, ২ ও ৩ নং সমাধান অনুযায়ী সম্পূর্ণ নিখুঁত হেডার টেবিল
   Widget _buildHeaderTable() {
-    // নির্ভুল গাণিতিক পিক্সেল বিস্তার:
-    // কলাম ১: 170 px (MONTH 85 + ADMISSIBLE 85)
-    // কলাম ২: 355 px (১ নং সমাধান: M.A ও GROSS এর মাঝের দাগ পর্যন্ত)
-    // কলাম ৩: 240 px (২ নং সমাধান: GROSS 70 + C.P.F 55 + P.TAX 55 + G.P.F 60 -> G.P.F ও I.TAX এর মাঝের দাগ পর্যন্ত)
-    // কলাম ৪: 210 px (৩ নং সমাধান: I.TAX 55 + NET 70 + REMARKS 85 -> নিচের টেবিলের শেষ প্রান্ত 975 px পর্যন্ত)
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1.2),
       columnWidths: const {
         0: FixedColumnWidth(170), 
-        1: FixedColumnWidth(355), // ১ নং: M.A ও GROSS-এর মাঝের দাগ বরাবর
-        2: FixedColumnWidth(240), // ২ নং: G.P.F ও I.TAX-এর মাঝের দাগ বরাবর
-        3: FixedColumnWidth(210), // ৩ নং: নিচের টেবিলের শেষ প্রান্ত পর্যন্ত (মোট ৯৭৫ px)
+        1: FixedColumnWidth(355), 
+        2: FixedColumnWidth(240), 
+        3: FixedColumnWidth(210), 
       },
       children: [
         TableRow(
@@ -528,7 +612,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
                   const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  // 28.02.2018 এর ইনপুট বক্স
                   SizedBox(
                     width: 155,
                     child: InkWell(
@@ -554,18 +637,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
           ],
         ),
-        // ৫ নম্বর সারি
         TableRow(
           children: [
             _headerCell("SCALE ADMISSIBLE:"),
-            // BASIC PAY: এবং ওপরের 28.02.2018-এর বক্সের সাথে এক সুতোয় সমান্তরাল Blank Box
+            // BASIC PAY Input (পরিবর্তন হলে Pay Matrix থেকে GP, Level, Cell অটোমেটিক আসবে)
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   const Spacer(),
-                  // ঠিক ওপরের 28.02.2018 বক্সের সমান ও এক সমান্তরালে ইনপুট বক্স
                   SizedBox(
                     width: 155,
                     child: TextField(
@@ -578,9 +659,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                         contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
                         border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
                       ),
-                      onChanged: (_) {
+                      onChanged: (val) {
                         setState(() {
-                          _applyAdmissibleBasicPay();
+                          _onBasicPayChanged(val);
                         });
                       },
                     ),
@@ -588,7 +669,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ২ নম্বর কলামের পরের ৩ নম্বর কলাম: GRADE PAY: এবং তার মান বসানোর ব্ল্যাঙ্ক বক্স
+            // GRADE PAY
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -601,7 +682,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ৪ নম্বর কলাম: LEVEL: ও CELL: সমানভাবে বিভক্ত হয়ে ডান প্রান্ত পর্যন্ত
+            // LEVEL ও CELL
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
