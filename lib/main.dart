@@ -463,7 +463,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       padding: const EdgeInsets.all(10),
       child: Column(
         children: [
-          // স্ক্রিনশটের মতো হেডার ও নিচের টেবিল দুটোকেই পাশাপাশি একই Horizontal Scroll-এ আবদ্ধ রাখা হলো যাতে কলামগুলো নিখুঁত এক সুতোয় মেলে
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Column(
@@ -483,15 +482,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ১ থেকে ৬ নং সমাধান: নিচের টেবিলের কলাম মাপের সাথে হুবহু এক সুতোয় মেলানো হেডার টেবিল
+  // স্ক্রিনশট ও নির্দেশিত ৪টি সমাধান অনুযায়ী নিখুঁত হেডার টেবিল
   Widget _buildHeaderTable() {
+    // কলামগুলোর নির্দিষ্ট মাপ:
+    // ১ম কলাম: 170 px (নিচের MONTH 85 + ADMISSIBLE 85)
+    // ২য় কলাম: 305 px (BASIC 75 + D.P 55 + S.P 50 + D.A 65 + H.R.A 60)
+    // ৩য় কলাম: 175 px (M.A 50 + GROSS 70 + C.P.F 55 -> P.TAX ও G.P.F এর মাঝের দাগ পর্যন্ত)
+    // ৪র্থ কলাম: 270 px (P.TAX 55 + G.P.F 60 + I.TAX 55 + NET 70 + REMARKS 85 = 325 - margin)
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1.2),
       columnWidths: const {
-        0: FixedColumnWidth(170), // ১ নং: MONTH (85) + ADMISSIBLE (85) = 170
-        1: FixedColumnWidth(305), // ২ নং: BASIC (75) + D.P/IR (55) + S.P (50) + D.A (65) + H.R.A (60) = 305
-        2: FixedColumnWidth(120), // ৩ নং: M.A (50) + GROSS (70) = 120
-        3: FixedColumnWidth(325), // বাকি অংশ: C.P.F (55) + P.TAX (55) + G.P.F (60) + I.TAX (55) + NET (70) + REMARKS (85) - padding
+        0: FixedColumnWidth(170), 
+        1: FixedColumnWidth(305), 
+        2: FixedColumnWidth(175), // P.TAX ও G.P.F-এর মাঝের দাগ পর্যন্ত প্রসারিত
+        3: FixedColumnWidth(270), // মোট 920 px (নিচের টেবিলের সাথে হুবহু সমান)
       },
       children: [
         TableRow(
@@ -524,6 +528,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                     ),
                   ),
                   const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                  // 28.02.2018 এর ইনপুট বক্স
                   Expanded(
                     child: InkWell(
                       onTap: () => _selectDate(toDateController, isToDate: true),
@@ -548,18 +553,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
           ],
         ),
-        // ৪, ৫ ও ৬ নং সমাধান: ৫ নম্বর রো-এর সুনির্দিষ্ট বিন্যাস
+        // সমাধান ১, ২, ৩ ও ৪: ৫ নম্বর সারির চূড়ান্ত বিন্যাস
         TableRow(
           children: [
             _headerCell("SCALE ADMISSIBLE:"),
-            // ৪ নং সমাধান: S.P ও D.A-এর মাঝের দাগ (180px) বরাবর ভাগ করে ১ম টি Basic Pay Input এবং ২য় টি GRADE PAY: লেবেল
+            // BASIC PAY: লেখা এবং ঠিক ওপরের 28.02.2018-এর বক্সের সমান ও এক সমান্তরালে Blank Box
             Padding(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  // ঠিক ওপরের 28.02.2018 বক্সের সমান মাপের ইনপুট বক্স
                   SizedBox(
-                    width: 105,
+                    width: 135,
                     child: TextField(
                       controller: basicPayAdmController,
                       textAlign: TextAlign.center,
@@ -577,27 +584,32 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       },
                     ),
                   ),
-                  const Spacer(),
-                  const Text("GRADE PAY:", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 4),
                 ],
               ),
             ),
-            // ৫ নং সমাধান: বর্তমান Box-টিতে শুধু Blank Box থাকবে Grade Pay-এর Value ইনপুট করার জন্য
+            // ১ নং সমাধান: GRADE PAY: লেখাটি H.S. CODE:-এর নিচের বক্সে থাকবে এবং তার পাশে Blank Box
             Padding(
-              padding: const EdgeInsets.all(3),
-              child: _centerTextField(gradePayAdmController),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  const Text("GRADE PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: _centerTextField(gradePayAdmController),
+                  ),
+                ],
+              ),
             ),
-            // ৬ নং সমাধান: 103280-এর নিচের বক্সে LEVEL: ও Blank Box এবং CELL: ও Blank Box
+            // ৩ নং সমাধান: LEVEL: ও CELL: এবং তাদের Blank Box দুটি নিয়ে ডান প্রান্ত পর্যন্ত প্রসারিত
             Padding(
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   const Text("LEVEL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 38, child: _centerTextField(levelAdmController)),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 45, child: _centerTextField(levelAdmController)),
+                  const Spacer(),
                   const Text("CELL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 38, child: _centerTextField(cellAdmController)),
+                  SizedBox(width: 45, child: _centerTextField(cellAdmController)),
                 ],
               ),
             ),
@@ -1123,7 +1135,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         ),
         pw.Table(
           border: const pw.TableBorder(
-            top: pw.BorderSide(color: PdfColors.black, width: 0.8),
             bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
             left: pw.BorderSide(color: PdfColors.black, width: 0.8),
             right: pw.BorderSide(color: PdfColors.black, width: 0.8),
@@ -1287,7 +1298,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           _pCondSummary(sh.hasAnyInput, sh.totMa, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totGross, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totCpf, isBold: true),
-          _pCondSummary(sh.hasAnyInput, sh.totPtax, isBold: true),
+          _pCondSummary(sh.totPtax != 0, sh.totPtax, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totGpf, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totItax, isBold: true),
           _pCondSummary(sh.hasAnyInput, sh.totNet, isBold: true),
@@ -1630,6 +1641,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
 
+                    // SCALE ADMISSIBLE রো
                     pw.Table(
                       border: const pw.TableBorder(
                         top: pw.BorderSide(color: PdfColors.black, width: 0.8),
