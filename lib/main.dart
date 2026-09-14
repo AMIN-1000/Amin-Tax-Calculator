@@ -482,20 +482,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // স্ক্রিনশটের নির্দেশনানুযায়ী সম্পূর্ণ সমান্তরাল ও নিখুঁত হেডার টেবিল
+  // ১, ২ ও ৩ নং সমাধান অনুযায়ী সম্পূর্ণ নিখুঁত হেডার টেবিল
   Widget _buildHeaderTable() {
-    // কলামগুলোর নির্দিষ্ট পিক্সেল মাপ:
+    // নির্ভুল গাণিতিক পিক্সেল বিস্তার:
     // কলাম ১: 170 px (MONTH 85 + ADMISSIBLE 85)
-    // কলাম ২: 305 px (BASIC 75 + D.P 55 + S.P 50 + D.A 65 + H.R.A 60)
-    // কলাম ৩: 175 px (M.A 50 + GROSS 70 + C.P.F 55 -> P.TAX ও G.P.F এর মাঝের দাগ পর্যন্ত)
-    // কলাম ৪: 270 px (P.TAX 55 + G.P.F 60 + I.TAX 55 + NET 70 + REMARKS 85 - মার্জিন = 920 px)
+    // কলাম ২: 355 px (১ নং সমাধান: M.A ও GROSS এর মাঝের দাগ পর্যন্ত)
+    // কলাম ৩: 240 px (২ নং সমাধান: GROSS 70 + C.P.F 55 + P.TAX 55 + G.P.F 60 -> G.P.F ও I.TAX এর মাঝের দাগ পর্যন্ত)
+    // কলাম ৪: 210 px (৩ নং সমাধান: I.TAX 55 + NET 70 + REMARKS 85 -> নিচের টেবিলের শেষ প্রান্ত 975 px পর্যন্ত)
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1.2),
       columnWidths: const {
         0: FixedColumnWidth(170), 
-        1: FixedColumnWidth(305), 
-        2: FixedColumnWidth(175), // P.TAX ও G.P.F এর মাঝের উল্লম্ব দাগ বরাবর
-        3: FixedColumnWidth(270), // নিচের টেবিলের শেষ প্রান্ত (920 px) পর্যন্ত
+        1: FixedColumnWidth(355), // ১ নং: M.A ও GROSS-এর মাঝের দাগ বরাবর
+        2: FixedColumnWidth(240), // ২ নং: G.P.F ও I.TAX-এর মাঝের দাগ বরাবর
+        3: FixedColumnWidth(210), // ৩ নং: নিচের টেবিলের শেষ প্রান্ত পর্যন্ত (মোট ৯৭৫ px)
       },
       children: [
         TableRow(
@@ -529,7 +529,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   ),
                   const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                   // 28.02.2018 এর ইনপুট বক্স
-                  Expanded(
+                  SizedBox(
+                    width: 155,
                     child: InkWell(
                       onTap: () => _selectDate(toDateController, isToDate: true),
                       child: IgnorePointer(child: _centerTextField(toDateController)),
@@ -553,19 +554,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
             Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
           ],
         ),
-        // ৫ নম্বর সারি: আপনার নির্দেশিত পরিবর্তনসমূহ
+        // ৫ নম্বর সারি
         TableRow(
           children: [
             _headerCell("SCALE ADMISSIBLE:"),
-            // BASIC PAY: এবং ওপরের 28.02.2018-এর বক্সের সাথে সমান্তরাল Blank Box
+            // BASIC PAY: এবং ওপরের 28.02.2018-এর বক্সের সাথে এক সুতোয় সমান্তরাল Blank Box
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   const Spacer(),
+                  // ঠিক ওপরের 28.02.2018 বক্সের সমান ও এক সমান্তরালে ইনপুট বক্স
                   SizedBox(
-                    width: 135,
+                    width: 155,
                     child: TextField(
                       controller: basicPayAdmController,
                       textAlign: TextAlign.center,
@@ -586,7 +588,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ১ নং সমাধান: GRADE PAY: লেখাটি H.S. CODE:-এর নিচে এবং তার মান ইনপুটের বক্সটি ডানপাশে পূর্ণ প্রসারিত
+            // ২ নম্বর কলামের পরের ৩ নম্বর কলাম: GRADE PAY: এবং তার মান বসানোর ব্ল্যাঙ্ক বক্স
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -599,12 +601,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // ২ ও ৩ নং সমাধান: LEVEL: ও CELL: এবং তাদের Blank Box দুটি সমান ভাগে বিভক্ত হয়ে ডান প্রান্ত পর্যন্ত প্রসারিত
+            // ৪ নম্বর কলাম: LEVEL: ও CELL: সমানভাবে বিভক্ত হয়ে ডান প্রান্ত পর্যন্ত
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
-                  // LEVEL অংশ (সমান ভাগ)
                   Expanded(
                     child: Row(
                       children: [
@@ -614,8 +615,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // CELL অংশ (সমান ভাগ)
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Row(
                       children: [
@@ -1422,7 +1422,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
   );
 
-  // ---------------- LANDSCAPE FINAL SHEET PDF (সম্পূর্ণ অপরিবর্তিত) ----------------
+  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
   Future<void> _printFinalSheet() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
