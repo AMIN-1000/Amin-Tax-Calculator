@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - Amin_18Years_Calculator
+      - Amin_Arrear_Calculator
   workflow_dispatch:
 
 jobs:
@@ -29,6 +31,12 @@ jobs:
 
       - name: Generate App Icons
         run: dart run flutter_launcher_icons
+
+      - name: Clean Build Cache
+        run: flutter clean
+
+      - name: Re-fetch Dependencies
+        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --android-skip-build-dependency-validation
