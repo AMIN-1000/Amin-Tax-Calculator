@@ -275,7 +275,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // প্রথম মাসের ইনপুট পরিবর্তন অনুযায়ী নিচের সব মাস স্বয়ংক্রিয়ভাবে সাজানোর মেথড
   void _updateMonthsFromFirst(YearSheet sh, String input) {
     sh.firstMonthCtrl.text = input;
     if (input.trim().isEmpty) return;
@@ -530,6 +529,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
     ),
+    onChanged: (_) => setState(() {}),
   );
 
   Widget _centerTextField(TextEditingController ctrl) => TextField(
@@ -541,6 +541,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
     ),
+    onChanged: (_) => setState(() {}),
   );
 
   Widget _buildScaleRow() {
@@ -570,6 +571,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 hintStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.normal),
                 border: InputBorder.none,
               ),
+              onChanged: (_) => setState(() {}),
             ),
           ),
         ],
@@ -885,6 +887,23 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   }
 
   // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  // নিচের টেবিলের কলামগুলোর নির্দিষ্ট পয়েন্ট মাপ:
+  static const double pColMonth   = 49.0;
+  static const double pColAdm     = 51.0;
+  static const double pColBasic   = 43.0; 
+  static const double pColDp      = 30.0;
+  static const double pColSp      = 28.0;
+  static const double pColDa      = 38.0;
+  static const double pColHra     = 36.0;
+  static const double pColMa      = 28.0;
+  static const double pColGross   = 43.0; 
+  static const double pColCpf     = 30.0;
+  static const double pColPtax    = 30.0;
+  static const double pColGpf     = 34.0;
+  static const double pColItax    = 30.0;
+  static const double pColNet     = 43.0;
+  static const double pColRemarks = 53.0; 
+
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -897,8 +916,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
           theme: theme,
           margin: const pw.EdgeInsets.only(
             top: 45.4,
-            left: 22.7,
-            right: 22.7,
+            left: 24.5,
+            right: 24.5,
             bottom: 28.3,
           ),
           build: (pw.Context context) => pw.Column(
@@ -908,7 +927,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12.0)),
               ),
               pw.SizedBox(height: 4),
-              _buildPdfHeader(sh.periodText),
+              // ১, ২ ও ৩ নম্বর সমাধান অনুযায়ী নিখুঁত হেডার
+              _buildPdfHeaderAligned(),
               pw.SizedBox(height: 3),
               _buildPdfScale(),
               pw.SizedBox(height: 3),
@@ -944,60 +964,128 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  pw.Widget _buildPdfHeader(String periodText) {
+  // Portrait PDF-এর সমান্তরাল হেডার
+  pw.Widget _buildPdfHeaderAligned() {
+    const double hRowH = 14.5;
+
+    // কলামগুলোর নির্দিষ্ট মাপ:
+    // কলাম ১: NAME OF THE INSTITUTION:
+    const double wH1 = pColMonth + pColAdm + pColBasic; // 143.0 pt
+    // কলাম ২: KUMARPUKUR HIGH SCHOOL (GROSS ও C.P.F এর মাঝের দাগ পর্যন্ত)
+    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; // 203.0 pt
+    // কলাম ৩: INDEX NO: (I.TAX ও NET এর মাঝের দাগ পর্যন্ত)
+    const double wH3 = pColCpf + pColPtax + pColGpf + pColItax; // 124.0 pt
+    // কলাম ৪: B3-083 (একদম ডান প্রান্ত NET ও REMARKS পর্যন্ত)
+    const double wH4 = pColNet + pColRemarks; // 96.0 pt (মোট ৫৪৬ pt)
+
+    // ARREAR FOR THE PERIOD বক্স ৩ ভাগে বিভক্ত করার মাপ (নিচের টেবিলের সমান্তরালে):
+    // ১ম দাগ: S.P ও D.A এর মাঝে (wBasic + wDp)
+    const double wDate1 = pColDp + pColSp; // 58.0 pt
+    // ২য় দাগ: H.R.A ও M.A এর মাঝে
+    const double wDate2 = pColDa + pColHra; // 74.0 pt
+    // ৩য় দাগ: শেষ পর্যন্ত
+    const double wDate3 = pColMa + pColGross; // 71.0 pt
+
+    // হেডারের লাইভ ইনপুট মান
+    final fromDateStr = fromDateController.text.trim();
+    final toDateStr = toDateController.text.trim();
+
     return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+      border: const pw.TableBorder(
+        top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+      ),
       columnWidths: const {
-        0: pw.FlexColumnWidth(2.5),
-        1: pw.FlexColumnWidth(3.5),
-        2: pw.FlexColumnWidth(2.0),
-        3: pw.FlexColumnWidth(2.0),
+        0: pw.FixedColumnWidth(wH1),
+        1: pw.FixedColumnWidth(wH2), // GROSS ও C.P.F এর মাঝ বরাবর
+        2: pw.FixedColumnWidth(wH3), // I.TAX ও NET এর মাঝ বরাবর
+        3: pw.FixedColumnWidth(wH4), // ডান প্রান্ত পর্যন্ত
       },
       children: [
         pw.TableRow(children: [
-          _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValLeftCell(instController.text),
-          _pdfHCell("INDEX NO :"), _pdfValCenterCell(indexController.text),
+          _pdfHCell("NAME OF THE INSTITUTION:", height: hRowH),
+          _pdfValLeftCell(instController.text, height: hRowH),
+          _pdfHCell("INDEX NO :", height: hRowH),
+          _pdfValCenterCell(indexController.text, height: hRowH),
         ]),
         pw.TableRow(children: [
-          _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValLeftCell(empNameController.text),
-          _pdfHCell("DESIGNATION:"), _pdfValCenterCell(desigController.text),
+          _pdfHCell("NAME OF THE EMPLOYEE:", height: hRowH),
+          _pdfValLeftCell(empNameController.text, height: hRowH),
+          _pdfHCell("DESIGNATION:", height: hRowH),
+          _pdfValCenterCell(desigController.text, height: hRowH),
         ]),
+        // ৩ ভাগে বিভক্ত ARREAR FOR THE PERIOD
         pw.TableRow(children: [
-          _pdfHCell("ARREAR FOR THE PERIOD:"),
-          pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3.5),
-            child: pw.Center(child: pw.Text(periodText, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold))),
+          _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
+          pw.Container(
+            height: hRowH,
+            child: pw.Table(
+              border: const pw.TableBorder(
+                verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+              ),
+              columnWidths: const {
+                0: pw.FixedColumnWidth(wDate1), // ১ম দাগ: S.P ও D.A এর মাঝে
+                1: pw.FixedColumnWidth(wDate2), // ২য় দাগ: H.R.A ও M.A এর মাঝে
+                2: pw.FixedColumnWidth(wDate3), // শেষ তারিখের ঘর
+              },
+              children: [
+                pw.TableRow(children: [
+                  pw.Container(
+                    height: hRowH,
+                    alignment: pw.Alignment.center,
+                    child: pw.Text(fromDateStr, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Container(
+                    height: hRowH,
+                    alignment: pw.Alignment.center,
+                    child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Container(
+                    height: hRowH,
+                    alignment: pw.Alignment.center,
+                    child: pw.Text(toDateStr, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                  ),
+                ]),
+              ],
+            ),
           ),
-          _pdfHCell("EMPLOYEE ID:"), _pdfValCenterCell(empIdController.text),
+          _pdfHCell("EMPLOYEE ID:", height: hRowH),
+          _pdfValCenterCell(empIdController.text, height: hRowH),
         ]),
         pw.TableRow(children: [
-          _pdfHCell("IN TERMS OF ORDER NO.:"), _pdfValLeftCell(orderNoController.text),
-          _pdfHCell("H.S. CODE:"), _pdfValCenterCell(hsCodeController.text),
+          _pdfHCell("IN TERMS OF ORDER NO.:", height: hRowH),
+          _pdfValLeftCell(orderNoController.text, height: hRowH),
+          _pdfHCell("H.S. CODE:", height: hRowH),
+          _pdfValCenterCell(hsCodeController.text, height: hRowH),
         ]),
       ],
     );
   }
 
-  pw.Widget _pdfHCell(String t) => pw.Container(
+  pw.Widget _pdfHCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
     color: PdfColors.grey300,
-    padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _pdfValLeftCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
     alignment: pw.Alignment.centerLeft,
     child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
   );
 
-  pw.Widget _pdfValLeftCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
-    child: pw.Align(
-      alignment: pw.Alignment.centerLeft,
-      child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-    ),
-  );
-
-  pw.Widget _pdfValCenterCell(String t) => pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 3.5),
-    child: pw.Center(
-      child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
-    ),
+  pw.Widget _pdfValCenterCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
   );
 
   pw.Widget _buildPdfScale() {
@@ -1339,7 +1427,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               ),
               pw.SizedBox(height: 5),
 
-              // 1. Header Table
+              // Header Table
               pw.Container(
                 width: totalSheetWidth,
                 decoration: const pw.BoxDecoration(
@@ -1464,7 +1552,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
               ),
 
-              // 2. Middle & Lower Section
+              // Middle & Lower Section
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
