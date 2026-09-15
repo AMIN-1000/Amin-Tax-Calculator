@@ -184,6 +184,7 @@ class YearSheet {
   String sheetTitle;
   String periodText;
   List<MonthEntry> records;
+  TextEditingController firstMonthController = TextEditingController();
 
   final balBasicCtrl = TextEditingController();
   final balDpCtrl = TextEditingController();
@@ -204,7 +205,11 @@ class YearSheet {
     required this.sheetTitle,
     required this.periodText,
     required this.records,
-  });
+  }) {
+    if (records.isNotEmpty) {
+      firstMonthController.text = records.first.monthName;
+    }
+  }
 
   bool get hasAnyInput => records.any((r) => r.hasAny);
 
@@ -263,7 +268,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   final hsCodeController = TextEditingController(text: "103280");
   final empNameController = TextEditingController(text: "SANJOY SAHA");
   final desigController = TextEditingController(text: "A.T.");
-  final fromDateController = TextEditingController(text: "01.03.2013");
+  final fromDateController = TextEditingController(text: "01.07.2013");
   final toDateController = TextEditingController(text: "28.02.2018");
   final empIdController = TextEditingController(text: "EYM08650");
   final orderNoController = TextEditingController(text: "437-SE(P&B)/SL/5S-408/19,   Date. 13.12.2019.");
@@ -289,15 +294,16 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    _initSheetsFromDate();
+    _initDefaultSheets();
     _tabController = TabController(length: sheets.length, vsync: this);
   }
 
-  void _initSheetsFromDate() {
+  void _initDefaultSheets() {
     sheets.clear();
-    DateTime start = _parseDate(fromDateController.text) ?? DateTime(2013, 3, 1);
+    // ডিফল্টভাবে শিটগুলো তৈরি
+    int baseStartYear = 2013;
     for (int i = 0; i < 5; i++) {
-      DateTime sheetStart = DateTime(start.year + i, start.month, 1);
+      DateTime sheetStart = DateTime(baseStartYear + i, 3, 1);
       sheets.add(_createYearSheetForDate(sheetStart));
     }
     _recalculateAllDaRates();
@@ -343,6 +349,47 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
+  // ম্যানুয়ালি প্রথম ঘরে মাস লিখলে (যেমন: March,13 বা July,13) পুরো শিটের মাসগুলো ফেব্রুয়ারি পর্যন্ত অটো সাজানো
+  void _updateMonthsFromFirstCell(YearSheet sh, String input) {
+    String clean = input.trim();
+    if (clean.isEmpty) return;
+
+    final parts = clean.split(RegExp(r'[,.\s-_/]+'));
+    if (parts.isEmpty) return;
+
+    String mNamePart = parts[0].toLowerCase();
+    int mIndex = -1;
+    for (int i = 0; i < monthNames.length; i++) {
+      if (monthNames[i].toLowerCase().startsWith(mNamePart)) {
+        mIndex = i + 1;
+        break;
+      }
+    }
+    if (mIndex == -1) return;
+
+    int yr = sh.startYear;
+    if (parts.length > 1) {
+      int? parsedYr = int.tryParse(parts[1]);
+      if (parsedYr != null) {
+        if (parsedYr < 100) {
+          yr = 2000 + parsedYr;
+        } else {
+          yr = parsedYr;
+        }
+      }
+    }
+
+    DateTime cur = DateTime(yr, mIndex, 1);
+    for (int i = 0; i < sh.records.length; i++) {
+      String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
+      sh.records[i].monthName = mStr;
+      sh.records[i].monthDate = DateTime(cur.year, cur.month, 1);
+      cur = DateTime(cur.year, cur.month + 1, 1);
+    }
+
+    _applyAdmissibleBasicPay();
+  }
+
   void _recalculateAllDaRates() {
     double currentRate = 0.38;
     for (var sh in sheets) {
@@ -360,7 +407,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     }
   }
 
-  // Basic Pay ইনপুট হলে Pay Matrix থেকে GP, Level ও Cell অটো-পপুলেশন
   void _onBasicPayChanged(String val) {
     String cleanVal = val.trim();
     int? basic = int.tryParse(cleanVal);
@@ -387,21 +433,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   void _applyAdmissibleBasicPay() {
     String basicVal = basicPayAdmController.text.trim();
-    DateTime? toLimit = _parseDate(toDateController.text);
-    DateTime? fromLimit = _parseDate(fromDateController.text);
-
     for (var sh in sheets) {
       for (var r in sh.records) {
-        if (basicVal.isNotEmpty && toLimit != null && fromLimit != null) {
-          DateTime startOfMonth = DateTime(r.monthDate.year, r.monthDate.month, 1);
-          DateTime endOfMonth = DateTime(r.monthDate.year, r.monthDate.month + 1, 0);
-
-          if (!endOfMonth.isBefore(fromLimit) && !startOfMonth.isAfter(toLimit)) {
-            r.admBasic.text = basicVal;
-          } else {
-            r.admBasic.clear();
-          }
-        } else if (basicVal.isEmpty) {
+        if (basicVal.isNotEmpty) {
+          r.admBasic.text = basicVal;
+        } else {
           r.admBasic.clear();
         }
       }
@@ -411,7 +447,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   void _addNewSheet() {
     DateTime nextStart;
     if (sheets.isEmpty) {
-      nextStart = _parseDate(fromDateController.text) ?? DateTime(2013, 3, 1);
+      nextStart = DateTime(2013, 3, 1);
     } else {
       nextStart = DateTime(sheets.last.endYear, 3, 1);
     }
@@ -442,26 +478,20 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
   double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
 
-  Future<void> _selectDate(TextEditingController controller, {bool isFromDate = false, bool isToDate = false}) async {
+  // তারিখের সাথে আর কোনো মাস পরিবর্তনের সম্পর্ক নেই, শুধুই তারিখ টেক্সট হিসেবে বসবে
+  Future<void> _selectDate(TextEditingController controller) async {
     DateTime initial = _parseDate(controller.text) ?? DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2035),
+      firstDate: DateTime(1990),
+      lastDate: DateTime(2040),
     );
     if (picked != null) {
       String day = picked.day.toString().padLeft(2, '0');
       String month = picked.month.toString().padLeft(2, '0');
       setState(() {
         controller.text = "$day.$month.${picked.year}";
-        if (isFromDate) {
-          _initSheetsFromDate();
-          _tabController.dispose();
-          _tabController = TabController(length: sheets.length, vsync: this);
-        } else if (isToDate) {
-          _applyAdmissibleBasicPay();
-        }
       });
     }
   }
@@ -607,7 +637,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => _selectDate(fromDateController, isFromDate: true),
+                      onTap: () => _selectDate(fromDateController),
                       child: IgnorePointer(child: _centerTextField(fromDateController)),
                     ),
                   ),
@@ -615,7 +645,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                   SizedBox(
                     width: 155,
                     child: InkWell(
-                      onTap: () => _selectDate(toDateController, isToDate: true),
+                      onTap: () => _selectDate(toDateController),
                       child: IgnorePointer(child: _centerTextField(toDateController)),
                     ),
                   ),
@@ -640,7 +670,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         TableRow(
           children: [
             _headerCell("SCALE ADMISSIBLE:"),
-            // BASIC PAY Input (পরিবর্তন হলে Pay Matrix থেকে GP, Level, Cell অটোমেটিক আসবে)
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -669,7 +698,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // GRADE PAY
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -682,7 +710,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ],
               ),
             ),
-            // LEVEL ও CELL
             Padding(
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -768,7 +795,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       },
       children: [
         _buildColumnHeader(),
-        for (var r in sh.records) ..._buildMonthRows(r),
+        for (int i = 0; i < sh.records.length; i++) ..._buildMonthRows(sh, sh.records[i], i),
         _buildTotalRow(sh),
         _buildBalanceRow(sh),
         _buildGrandTotalRow(sh),
@@ -791,15 +818,40 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  List<TableRow> _buildMonthRows(MonthEntry r) {
+  List<TableRow> _buildMonthRows(YearSheet sh, MonthEntry r, int index) {
+    // প্রথম মাসের ঘরটি Editable (টাইপ করা যাবে), আর বাকি ঘরগুলো তার উপর ভিত্তি করে অটোমেটিক শো করবে
+    Widget monthWidget;
+    if (index == 0) {
+      monthWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        alignment: Alignment.centerLeft,
+        child: TextField(
+          controller: sh.firstMonthController,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            border: InputBorder.none,
+          ),
+          onChanged: (val) {
+            setState(() {
+              _updateMonthsFromFirstCell(sh, val);
+            });
+          },
+        ),
+      );
+    } else {
+      monthWidget = Container(
+        padding: const EdgeInsets.only(left: 6, top: 4),
+        alignment: Alignment.topLeft,
+        child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      );
+    }
+
     return [
       TableRow(
         children: [
-          Container(
-            padding: const EdgeInsets.only(left: 6, top: 4),
-            alignment: Alignment.topLeft,
-            child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          ),
+          monthWidget,
           _labelCell("Admissible"),
           _unlockedCell(r.admBasic),
           _unlockedCell(r.admDp),
