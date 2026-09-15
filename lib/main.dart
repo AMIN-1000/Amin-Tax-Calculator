@@ -32,7 +32,7 @@ class ArrearCalculatorApp extends StatelessWidget {
 }
 
 class MonthEntry {
-  final String monthName;
+  String monthName;
   final String fixedRemarks;
   final double daRate;
 
@@ -116,6 +116,7 @@ class YearSheet {
   final String sheetTitle;
   final String periodText;
   final List<MonthEntry> records;
+  final TextEditingController firstMonthCtrl = TextEditingController();
 
   final balBasicCtrl = TextEditingController();
   final balDpCtrl = TextEditingController();
@@ -136,7 +137,11 @@ class YearSheet {
     required this.sheetTitle,
     required this.periodText,
     required this.records,
-  });
+  }) {
+    if (records.isNotEmpty) {
+      firstMonthCtrl.text = records.first.monthName;
+    }
+  }
 
   bool get hasAnyInput => records.any((r) => r.hasAny);
 
@@ -195,8 +200,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   final hsCodeController = TextEditingController(text: "103280");
   final empNameController = TextEditingController(text: "SANJOY SAHA");
   final desigController = TextEditingController(text: "A.T.");
-  final fromDateController = TextEditingController(text: "01.03.2013");
-  final toDateController = TextEditingController(text: "28.02.2018");
+  final fromDateController = TextEditingController(text: "01.07.2013");
+  final toDateController = TextEditingController(text: "30.06.2018");
   final empIdController = TextEditingController(text: "EYM08650");
   final orderNoController = TextEditingController(text: "118-SE/S/10M-29/16 Date: 06.02.2018.");
   final scaleController = TextEditingController();
@@ -208,6 +213,11 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   late TabController _tabController;
   List<YearSheet> sheets = [];
+
+  final List<String> monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
   @override
   void initState() {
@@ -263,6 +273,34 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       periodText: "01.03.$startY TO 28.02.$endY",
       records: mList,
     );
+  }
+
+  // প্রথম মাসের ইনপুট পরিবর্তন অনুযায়ী নিচের সব মাস স্বয়ংক্রিয়ভাবে সাজানোর মেথড
+  void _updateMonthsFromFirst(YearSheet sh, String input) {
+    sh.firstMonthCtrl.text = input;
+    if (input.trim().isEmpty) return;
+
+    try {
+      final parts = input.replaceAll(' ', '').split(',');
+      if (parts.length == 2) {
+        String mPart = parts[0].toLowerCase();
+        int? yPart = int.tryParse(parts[1]);
+        if (yPart != null) {
+          int fullYear = yPart < 100 ? (2000 + yPart) : yPart;
+          int mIndex = monthNames.indexWhere((m) => m.toLowerCase().startsWith(mPart));
+
+          if (mIndex != -1) {
+            DateTime cur = DateTime(fullYear, mIndex + 1, 1);
+            for (int i = 0; i < sh.records.length; i++) {
+              String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
+              sh.records[i].monthName = mStr;
+              cur = DateTime(cur.year, cur.month + 1, 1);
+            }
+            setState(() {});
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   void _addNewSheet() {
@@ -564,7 +602,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         },
         children: [
           _buildColumnHeader(),
-          for (var r in sh.records) ..._buildMonthRows(r),
+          for (int i = 0; i < sh.records.length; i++) ..._buildMonthRows(sh, sh.records[i], i == 0),
           _buildTotalRow(sh),
           _buildBalanceRow(sh),
           _buildGrandTotalRow(sh),
@@ -588,14 +626,27 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  List<TableRow> _buildMonthRows(MonthEntry r) {
+  List<TableRow> _buildMonthRows(YearSheet sh, MonthEntry r, bool isFirstMonth) {
     return [
       TableRow(
         children: [
           Container(
-            padding: const EdgeInsets.only(left: 6, top: 4),
-            alignment: Alignment.topLeft,
-            child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            alignment: Alignment.center,
+            child: isFirstMonth
+                ? TextField(
+                    controller: sh.firstMonthCtrl,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 0.8)),
+                    ),
+                    onSubmitted: (val) => _updateMonthsFromFirst(sh, val),
+                    onChanged: (val) => _updateMonthsFromFirst(sh, val),
+                  )
+                : Text(r.monthName, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           ),
           _labelCell("Admissible"),
           _unlockedCell(r.admBasic),
@@ -795,7 +846,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         _condSummaryCell(sh.grandSp != 0, sh.grandSp, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandDa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandHra, isBold: true),
-        _condSummaryCell(sh.hasAnyInput, sh.grandMa, isBold: true),
+        _condSummaryCell(sh.grandMa != 0, sh.grandMa, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
         _condSummaryCell(sh.grandCpf != 0, sh.grandCpf, isBold: true),
         _condSummaryCell(sh.hasAnyInput, sh.grandPtax, isBold: true),
@@ -905,7 +956,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
       children: [
         pw.TableRow(children: [
           _pdfHCell("NAME OF THE INSTITUTION:"), _pdfValLeftCell(instController.text),
-          _pdfHCell("INDEX NO:"), _pdfValCenterCell(indexController.text),
+          _pdfHCell("INDEX NO :"), _pdfValCenterCell(indexController.text),
         ]),
         pw.TableRow(children: [
           _pdfHCell("NAME OF THE EMPLOYEE:"), _pdfValLeftCell(empNameController.text),
@@ -1194,7 +1245,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
     const double rowH = 14.25; 
 
-    // বামদিকের কলামের মাপ
     const double wBasic = 67.5;
     const double wDp = 67.5;
     const double wDa = 73.0;
@@ -1205,23 +1255,22 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     
     const double wInRs = 46.0;
 
-    // ডানদিকের ৪টি কলামের সুনির্দিষ্ট মাপ
     const double wPtax = 63.0;
     const double wGpf = 60.0;
     const double wOthers = 60.0;
     const double wNet = 67.0;
 
-    const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; // 250.0 pt
-    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; // 500.0 pt
-    const double bottomSectionWidth = wInRs + rightTotalWidth; // 296.0 pt
-    const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; // 796.0 pt
+    const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; 
+    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; 
+    const double bottomSectionWidth = wInRs + rightTotalWidth; 
+    const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; 
 
-    const double headerLeftWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf + wInRs; // 546.0 pt
-    const double headerRightWidth = rightTotalWidth; // 250.0 pt
+    const double headerLeftWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf + wInRs; 
+    const double headerRightWidth = rightTotalWidth; 
 
     const headerLeftColWidths = {
-      0: pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
-      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), // 411.0 pt
+      0: pw.FixedColumnWidth(wBasic + wDp), 
+      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), 
     };
 
     const headerRight4Cols = {
@@ -1232,9 +1281,9 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     const dateRowColWidths = {
-      0: pw.FixedColumnWidth(wDa + wHra),          // 146.0 pt
-      1: pw.FixedColumnWidth(wMa + wGross),        // 146.0 pt
-      2: pw.FixedColumnWidth(wCpf + wInRs),        // 119.0 pt
+      0: pw.FixedColumnWidth(wDa + wHra),          
+      1: pw.FixedColumnWidth(wMa + wGross),        
+      2: pw.FixedColumnWidth(wCpf + wInRs),        
     };
 
     const table2LeftCols = {
@@ -1255,14 +1304,14 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     };
 
     const actualClaimRowWidths = {
-      0: pw.FixedColumnWidth(wPtax + wGpf), // 123.0 pt
-      1: pw.FixedColumnWidth(wOthers),      // 60.0 pt
-      2: pw.FixedColumnWidth(wNet),         // 67.0 pt
+      0: pw.FixedColumnWidth(wPtax + wGpf), 
+      1: pw.FixedColumnWidth(wOthers),      
+      2: pw.FixedColumnWidth(wNet),         
     };
 
     const double receiptBoxHeight = 49.5; 
     const double reasonBoxHeight = 35.2;  
-    const double inRsTallBoxHeight = rowH * 6; // 85.5 pt
+    const double inRsTallBoxHeight = rowH * 6; 
     const double certificateBoxHeight = 165.0;
     const double inWordsBoxHeight = 47.0;
 
@@ -1304,7 +1353,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 child: pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    // বামদিকের টেবিল সেকশন
                     pw.Container(
                       width: headerLeftWidth,
                       child: pw.Table(
@@ -1365,7 +1413,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                       ),
                     ),
 
-                    // ডানদিকের টেবিল সেকশন
                     pw.Container(
                       width: headerRightWidth,
                       child: pw.Column(
@@ -1406,7 +1453,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 ),
               ),
 
-              // মাঝের ফাঁকা রো
               pw.Container(
                 height: rowH,
                 width: totalSheetWidth,
@@ -1501,14 +1547,13 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                               ),
                               pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
                               
-                              // REASON OF ARREAR Row
                               pw.Table(
                                 border: const pw.TableBorder(
                                   verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
                                 ),
                                 columnWidths: {
-                                  0: const pw.FixedColumnWidth(wBasic + wDp), // 135.0 pt
-                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), // 365.0 pt
+                                  0: const pw.FixedColumnWidth(wBasic + wDp), 
+                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), 
                                 },
                                 children: [
                                   pw.TableRow(
@@ -1762,7 +1807,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                             pw.TableRow(children: [
                               pw.Container(
                                 height: inWordsBoxHeight,
-                                alignment: pw.Alignment.center, // IN WORDS: Center Aligned
+                                alignment: pw.Alignment.center,
                                 child: pw.Text(
                                   "IN WORDS:",
                                   textAlign: pw.TextAlign.center,
