@@ -2,826 +2,2246 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'dart:math';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  runApp(const TaxCalculatorApp());
+  runApp(const ArrearCalculatorApp());
 }
 
-class TaxCalculatorApp extends StatelessWidget {
-  const TaxCalculatorApp({super.key});
+class ArrearCalculatorApp extends StatelessWidget {
+  const ArrearCalculatorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Amin Tax Calculator",
+      title: 'Amin Arrear Calculator',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A237E),
-          foregroundColor: Colors.white,
+        primarySwatch: Colors.teal,
+        useMaterial3: true,
+        textTheme: GoogleFonts.barlowSemiCondensedTextTheme(
+          Theme.of(context).textTheme,
+        ).apply(
+          bodyColor: Colors.black,
+          displayColor: Colors.black,
         ),
       ),
-      home: const TaxHomeScreen(),
-      debugShowCheckedModeBanner: false,
+      home: const ArrearHomePage(),
     );
   }
 }
 
-class TaxHomeScreen extends StatefulWidget {
-  const TaxHomeScreen({super.key});
+// ---------------- ROPA-19 PAY MATRIX DATABASE ----------------
+class PayMatrixInfo {
+  final int gradePay;
+  final int level;
+  final int cell;
 
-  @override
-  State<TaxHomeScreen> createState() => _TaxHomeScreenState();
+  PayMatrixInfo({required this.gradePay, required this.level, required this.cell});
 }
 
-class _TaxHomeScreenState extends State<TaxHomeScreen>
-    with SingleTickerProviderStateMixin {
+class Ropa19Data {
+  static final List<int> gradePays = [
+    1700, 1800, 1900, 2100, 2300, 2600, 2900, 3200, 3600, 3900, 4100, 4400, 4600, 4700, 4800, 5400
+  ];
+
+  static final List<List<int>> matrix = [
+    // L-1 (GP 1700)
+    [17000, 17500, 18000, 18500, 19100, 19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600],
+    // L-2 (GP 1800)
+    [17600, 18100, 18600, 19200, 19800, 20400, 21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200],
+    // L-3 (GP 1900)
+    [18800, 19400, 20000, 20600, 21200, 21800, 22500, 23200, 23900, 24600, 25300, 26100, 26900, 27700, 28500, 29400, 30300, 31200, 32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700],
+    // L-4 (GP 2100)
+    [19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500],
+    // L-5 (GP 2300)
+    [21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000],
+    // L-6 (GP 2600)
+    [22700, 23400, 24100, 24800, 25500, 26300, 27100, 27900, 28700, 29600, 30500, 31400, 32300, 33300, 34300, 35300, 36400, 37500, 38600, 39800, 41000, 42200, 43500, 44800, 46100, 47500, 48900, 50400, 51900, 53500, 55100, 56800, 58500],
+    // L-7 (GP 2900)
+    [24700, 25400, 26200, 27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900],
+    // L-8 (GP 3200)
+    [27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900, 65800, 67800, 69800],
+    // L-9 (GP 3600)
+    [28900, 29800, 30700, 31600, 32500, 33500, 34500, 35500, 36600, 37700, 38800, 40000, 41200, 42400, 43700, 45000, 46400, 47800, 49200, 50700, 52200, 53800, 55400, 57100, 58800, 60600, 62400, 64300, 66200, 68200, 70200, 72300, 74500],
+    // L-10 (GP 3900)
+    [32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700, 50200, 51700, 53300, 54900, 56500, 58200, 59900, 61700, 63600, 65500, 67500, 69500, 71600, 73700, 75900, 78200, 80500, 82900],
+    // L-11 (GP 4100)
+    [33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100],
+    // L-12 (GP 4400)
+    [35800, 36900, 38000, 39100, 40300, 41500, 42700, 44000, 45300, 46700, 48100, 49500, 51000, 52500, 54100, 55700, 57400, 59100, 60900, 62700, 64600, 66500, 68500, 70600, 72700, 74900, 77100, 79400, 81800, 84300, 86800, 89400, 92100],
+    // L-13 (GP 4600)
+    [37100, 38200, 39300, 40500, 41700, 43000, 44300, 45600, 47000, 48400, 49900, 51400, 52900, 54500, 56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500],
+    // L-14 (GP 4700)
+    [39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100, 88700, 91400, 94100, 96900, 99800, 102800],
+    // L-15 (GP 4800)
+    [42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000, 55600, 57300, 59000, 60800, 62600, 64500, 66400, 68400, 70500, 72600, 74800, 77000, 79300, 81700, 84200, 86700, 89300, 92000, 94800, 97600, 100500, 103500, 106600, 109800],
+    // L-16 (GP 5400)
+    [56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500, 98400, 101400, 104400, 107500, 110700, 114000, 117400, 120900, 124500, 128200, 132000, 136000, 140100, 144300],
+  ];
+
+  static PayMatrixInfo? lookup(int basic) {
+    for (int l = 0; l < matrix.length; l++) {
+      for (int c = 0; c < matrix[l].length; c++) {
+        if (matrix[l][c] == basic) {
+          return PayMatrixInfo(
+            gradePay: gradePays[l],
+            level: l + 1,
+            cell: c + 1,
+          );
+        }
+      }
+    }
+    return null;
+  }
+}
+
+class MonthEntry {
+  String monthName;
+  DateTime monthDate;
+  double daRate;
+
+  TextEditingController admBasic = TextEditingController();
+  TextEditingController admDp = TextEditingController();
+  TextEditingController admSp = TextEditingController();
+  TextEditingController admCpf = TextEditingController();
+  TextEditingController admPtax = TextEditingController();
+  TextEditingController admGpf = TextEditingController();
+  TextEditingController admItax = TextEditingController();
+
+  TextEditingController drwBasic = TextEditingController();
+  TextEditingController drwDp = TextEditingController();
+  TextEditingController drwSp = TextEditingController();
+  TextEditingController drwCpf = TextEditingController();
+  TextEditingController drwPtax = TextEditingController();
+  TextEditingController drwGpf = TextEditingController();
+  TextEditingController drwItax = TextEditingController();
+
+  TextEditingController remarksCtrl = TextEditingController();
+
+  MonthEntry({
+    required this.monthName,
+    required this.monthDate,
+    this.daRate = 0.38,
+    String initialRemarks = '',
+  }) {
+    remarksCtrl.text = initialRemarks;
+  }
+
+  double _val(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
+  bool _hasInput(TextEditingController c) => c.text.trim().isNotEmpty && double.tryParse(c.text.trim()) != null;
+
+  bool get hasAdm => _hasInput(admBasic);
+  bool get hasDrw => _hasInput(drwBasic);
+  bool get hasAny => hasAdm || hasDrw;
+
+  // ---------------- ADMISSIBLE CALCULATIONS ----------------
+  double get aBasic => _val(admBasic);
+  double get aDp => _val(admDp);
+  double get aSp => _val(admSp);
+  double get aDa => hasAdm ? ((aBasic + aDp) * daRate).roundToDouble() : 0;
+  double get aHra => hasAdm ? (((aBasic + aDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
+  double get aMa => hasAdm ? 500 : 0;
+  double get aGross => hasAdm ? (aBasic + aDp + aSp + aDa + aHra + aMa) : 0;
+  double get aCpf => _val(admCpf);
+  double get aPtax => _val(admPtax);
+  double get aGpf => _val(admGpf);
+  double get aItax => _val(admItax);
+  double get aNet => hasAdm ? (aGross - (aCpf + aPtax + aGpf + aItax)) : 0;
+
+  // ---------------- DRAWN CALCULATIONS ----------------
+  double get dBasic => _val(drwBasic);
+  double get dDp => _val(drwDp);
+  double get dSp => _val(drwSp);
+  double get dDa => hasDrw ? ((dBasic + dDp) * daRate).roundToDouble() : 0;
+  double get dHra => hasDrw ? (((dBasic + dDp) * 0.12).clamp(0, 6000)).roundToDouble() : 0;
+  double get dMa => hasDrw ? 500 : 0;
+  double get dGross => hasDrw ? (dBasic + dDp + dSp + dDa + dHra + dMa) : 0;
+  double get dCpf => _val(drwCpf);
+  double get dPtax => _val(drwPtax);
+  double get dGpf => _val(drwGpf);
+  double get dItax => _val(drwItax);
+  double get dNet => hasDrw ? (dGross - (dCpf + dPtax + dGpf + dItax)) : 0;
+
+  // ---------------- DUE CALCULATIONS ----------------
+  double get dueBasic => hasAny ? (aBasic - dBasic) : 0;
+  double get dueDp => hasAny ? (aDp - dDp) : 0;
+  double get dueSp => hasAny ? (aSp - dSp) : 0;
+  double get dueDa => hasAny ? (aDa - dDa) : 0;
+  double get dueHra => hasAny ? (aHra - dHra) : 0;
+  double get dueMa => hasAny ? (aMa - dMa) : 0;
+  double get dueGross => hasAny ? (aGross - dGross) : 0;
+  double get dueCpf => hasAny ? (aCpf - dCpf) : 0;
+  double get duePtax => hasAny ? (aPtax - dPtax) : 0;
+  double get dueGpf => hasAny ? (aGpf - dGpf) : 0;
+  double get dueItax => hasAny ? (aItax - dItax) : 0;
+  double get dueNet => hasAny ? (aNet - dNet) : 0;
+}
+
+class YearSheet {
+  int startYear;
+  int endYear;
+  String sheetTitle;
+  String periodText;
+  List<MonthEntry> records;
+  TextEditingController firstMonthController = TextEditingController();
+
+  final balBasicCtrl = TextEditingController();
+  final balDpCtrl = TextEditingController();
+  final balSpCtrl = TextEditingController();
+  final balDaCtrl = TextEditingController();
+  final balHraCtrl = TextEditingController();
+  final balMaCtrl = TextEditingController();
+  final balGrossCtrl = TextEditingController();
+  final balCpfCtrl = TextEditingController();
+  final balPtaxCtrl = TextEditingController();
+  final balGpfCtrl = TextEditingController();
+  final balItaxCtrl = TextEditingController();
+  final balNetCtrl = TextEditingController();
+
+  YearSheet({
+    required this.startYear,
+    required this.endYear,
+    required this.sheetTitle,
+    required this.periodText,
+    required this.records,
+  }) {
+    if (records.isNotEmpty) {
+      firstMonthController.text = records.first.monthName;
+    }
+  }
+
+  bool get hasAnyInput => records.any((r) => r.hasAny);
+
+  double _bVal(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
+
+  double get balBasic => _bVal(balBasicCtrl);
+  double get balDp => _bVal(balDpCtrl);
+  double get balSp => _bVal(balSpCtrl);
+  double get balDa => _bVal(balDaCtrl);
+  double get balHra => _bVal(balHraCtrl);
+  double get balMa => _bVal(balMaCtrl);
+  double get balGross => _bVal(balGrossCtrl);
+  double get balCpf => _bVal(balCpfCtrl);
+  double get balPtax => _bVal(balPtaxCtrl);
+  double get balGpf => _bVal(balGpfCtrl);
+  double get balItax => _bVal(balItaxCtrl);
+  double get balNet => _bVal(balNetCtrl);
+
+  double get totBasic => records.fold(0, (s, r) => s + r.dueBasic);
+  double get totDp => records.fold(0, (s, r) => s + r.dueDp);
+  double get totSp => records.fold(0, (s, r) => s + r.dueSp);
+  double get totDa => records.fold(0, (s, r) => s + r.dueDa);
+  double get totHra => records.fold(0, (s, r) => s + r.dueHra);
+  double get totMa => records.fold(0, (s, r) => s + r.dueMa);
+  double get totGross => records.fold(0, (s, r) => s + r.dueGross);
+  double get totCpf => records.fold(0, (s, r) => s + r.dueCpf);
+  double get totPtax => records.fold(0, (s, r) => s + r.duePtax);
+  double get totGpf => records.fold(0, (s, r) => s + r.dueGpf);
+  double get totItax => records.fold(0, (s, r) => s + r.dueItax);
+  double get totNet => records.fold(0, (s, r) => s + r.dueNet);
+
+  double get grandBasic => totBasic - balBasic;
+  double get grandDp => totDp - balDp;
+  double get grandSp => totSp - balSp;
+  double get grandDa => totDa - balDa;
+  double get grandHra => totHra - balHra;
+  double get grandMa => totMa - balMa;
+  double get grandGross => totGross - balGross;
+  double get grandCpf => totCpf - balCpf;
+  double get grandPtax => totPtax - balPtax;
+  double get grandGpf => totGpf - balGpf;
+  double get grandItax => totItax - balItax;
+  double get grandNet => totNet - balNet;
+}
+
+class ArrearHomePage extends StatefulWidget {
+  const ArrearHomePage({super.key});
+
+  @override
+  State<ArrearHomePage> createState() => _ArrearHomePageState();
+}
+
+class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStateMixin {
+  final instController = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
+  final indexController = TextEditingController(text: "B3-083");
+  final hsCodeController = TextEditingController(text: "103280");
+  final empNameController = TextEditingController(text: "SANJOY SAHA");
+  final desigController = TextEditingController(text: "A.T.");
+  final fromDateController = TextEditingController(text: "01.07.2013");
+  final toDateController = TextEditingController(text: "28.02.2018");
+  final empIdController = TextEditingController(text: "EYM08650");
+  final orderNoController = TextEditingController(text: "437-SE(P&B)/SL/5S-408/19,   Date. 13.12.2019.");
+
+  final basicPayAdmController = TextEditingController();
+  final gradePayAdmController = TextEditingController();
+  final levelAdmController = TextEditingController();
+  final cellAdmController = TextEditingController();
+
+  final adHoc1Ctrl = TextEditingController();
+  final adHoc2Ctrl = TextEditingController();
+  final adHoc3Ctrl = TextEditingController();
+  final adHoc4Ctrl = TextEditingController();
+
   late TabController _tabController;
-  int _prevTabIndex = 0;
+  List<YearSheet> sheets = [];
 
-  // Header Details
-  final nameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
-  final designationCtrl = TextEditingController(text: "A.T.");
-  final institutionCtrl =
-      TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final empCodeCtrl = TextEditingController(text: "BDFF2107");
-  final panCtrl = TextEditingController(text: "AWUPM0023B");
-  final finYearCtrl = TextEditingController(text: "2025-26");
-  final assessYearCtrl = TextEditingController(text: "2026-27");
-
-  // Inputs
-  final i7GrossSalary = TextEditingController();
-  final i8Arrear = TextEditingController();
-  final i10HRA = TextEditingController();
-
-  final i18GrossRent = TextEditingController();
-  final i19TaxLocalAuth = TextEditingController();
-  final i22HomeLoanInt = TextEditingController();
-
-  final i25BankInt = TextEditingController();
-  final i26FDInt = TextEditingController();
-  final i27OtherSource = TextEditingController();
-
-  final i32_43Total80C = TextEditingController();
-  final i45_56TotalOtherDed = TextEditingController();
-
-  final i68STCG = TextEditingController();
-  final i69LTCG = TextEditingController();
-  final i71TaxPaidJan = TextEditingController();
-  final i72TaxPaidFeb = TextEditingController();
-
-  // ReadOnly Output
-  final totalSalCtrl = TextEditingController();
-  final stdDedCtrl = TextEditingController();
-  final pTaxCtrl = TextEditingController();
-  final netSalCtrl = TextEditingController();
-  final totalHousePropCtrl = TextEditingController();
-  final totalOtherSrcCtrl = TextEditingController();
-  final grossTotalCtrl = TextEditingController();
-
-  final serial10Ctrl = TextEditingController();
-  final totalDedCtrl = TextEditingController();
-
-  final taxableIncomeCtrl = TextEditingController();
-  final taxOnIncomeCtrl = TextEditingController();
-  final rebateCtrl = TextEditingController();
-  final cessCtrl = TextEditingController();
-  final totalTaxCessCtrl = TextEditingController();
-  final finalTaxPayableCtrl = TextEditingController();
-  final statusCtrl = TextEditingController();
+  final List<String> monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _initDefaultSheets();
+    _tabController = TabController(length: sheets.length, vsync: this);
+  }
 
-    _tabController.addListener(() {
-      if (_tabController.index != _prevTabIndex) {
-        _prevTabIndex = _tabController.index;
+  void _initDefaultSheets() {
+    sheets.clear();
+    int baseStartYear = 2013;
+    for (int i = 0; i < 5; i++) {
+      DateTime sheetStart = DateTime(baseStartYear + i, 3, 1);
+      sheets.add(_createYearSheetForDate(sheetStart));
+    }
+    _recalculateAllDaRates();
+    _applyAdmissibleBasicPay();
+  }
 
-        if (_tabController.index == 1) {
-          i32_43Total80C.clear();
-          i45_56TotalOtherDed.clear();
+  DateTime? _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.trim().split('.');
+      if (parts.length == 3) {
+        return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  YearSheet _createYearSheetForDate(DateTime startDate) {
+    List<MonthEntry> mList = [];
+    DateTime cur = startDate;
+
+    for (int i = 0; i < 12; i++) {
+      String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
+      mList.add(MonthEntry(
+        monthName: mStr,
+        monthDate: DateTime(cur.year, cur.month, 1),
+        daRate: 0.38,
+      ));
+      cur = DateTime(cur.year, cur.month + 1, 1);
+    }
+
+    DateTime endDate = DateTime(cur.year, cur.month, 0);
+    String s2Str = (startDate.year % 100).toString().padLeft(2, '0');
+    String e2Str = (endDate.year % 100).toString().padLeft(2, '0');
+    String fromStr = "${startDate.day.toString().padLeft(2, '0')}.${startDate.month.toString().padLeft(2, '0')}.${startDate.year}";
+    String toStr = "${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}";
+
+    return YearSheet(
+      startYear: startDate.year,
+      endYear: endDate.year,
+      sheetTitle: "Sheet ($s2Str-$e2Str)",
+      periodText: "$fromStr TO $toStr",
+      records: mList,
+    );
+  }
+
+  void _updateMonthsFromFirstCell(YearSheet sh, String input) {
+    String clean = input.trim();
+    if (clean.isEmpty) return;
+
+    final parts = clean.split(RegExp(r'[,.\s-_/]+'));
+    if (parts.isEmpty) return;
+
+    String mNamePart = parts[0].toLowerCase();
+    int mIndex = -1;
+    for (int i = 0; i < monthNames.length; i++) {
+      if (monthNames[i].toLowerCase().startsWith(mNamePart)) {
+        mIndex = i + 1;
+        break;
+      }
+    }
+    if (mIndex == -1) return;
+
+    int yr = sh.startYear;
+    if (parts.length > 1) {
+      int? parsedYr = int.tryParse(parts[1]);
+      if (parsedYr != null) {
+        if (parsedYr < 100) {
+          yr = 2000 + parsedYr;
+        } else {
+          yr = parsedYr;
         }
-        i72TaxPaidFeb.clear();
-        calculateTax();
       }
-    });
+    }
+
+    DateTime cur = DateTime(yr, mIndex, 1);
+    for (int i = 0; i < sh.records.length; i++) {
+      String mStr = "${monthNames[cur.month - 1]},${(cur.year % 100).toString().padLeft(2, '0')}";
+      sh.records[i].monthName = mStr;
+      sh.records[i].monthDate = DateTime(cur.year, cur.month, 1);
+      cur = DateTime(cur.year, cur.month + 1, 1);
+    }
+
+    _applyAdmissibleBasicPay();
   }
 
-  double getVal(TextEditingController ctrl) {
-    return double.tryParse(ctrl.text) ?? 0.0;
+  void _recalculateAllDaRates() {
+    double currentRate = 0.38;
+    for (var sh in sheets) {
+      for (var r in sh.records) {
+        String rem = r.remarksCtrl.text.trim();
+        if (rem.isNotEmpty) {
+          String cleaned = rem.replaceAll('%', '').trim();
+          double? parsed = double.tryParse(cleaned);
+          if (parsed != null && parsed > 0) {
+            currentRate = parsed / 100.0;
+          }
+        }
+        r.daRate = currentRate;
+      }
+    }
   }
 
-  void calculateTax() {
-    setState(() {
-      bool isOld = _tabController.index == 0;
+  void _onBasicPayChanged(String val) {
+    String cleanVal = val.trim();
+    int? basic = int.tryParse(cleanVal);
 
-      double i7 = getVal(i7GrossSalary);
-      double i8 = getVal(i8Arrear);
-      double i10 = getVal(i10HRA);
-      double i18 = getVal(i18GrossRent);
-      double i19 = getVal(i19TaxLocalAuth);
-      double i22 = getVal(i22HomeLoanInt);
-      double i25 = getVal(i25BankInt);
-      double i26 = getVal(i26FDInt);
-      double i27 = getVal(i27OtherSource);
-      double total80C = getVal(i32_43Total80C);
-      double totalOtherDed = getVal(i45_56TotalOtherDed);
-      double i68 = getVal(i68STCG);
-      double i69 = getVal(i69LTCG);
-      double i71 = getVal(i71TaxPaidJan);
-      double i72 = getVal(i72TaxPaidFeb);
-
-      double grossSal = i7 + i8;
-      totalSalCtrl.text = grossSal.toStringAsFixed(0);
-
-      double stdDed = isOld
-          ? (grossSal > 50000 ? 50000 : grossSal)
-          : (grossSal > 75000 ? 75000 : grossSal);
-      stdDedCtrl.text = stdDed.toStringAsFixed(0);
-
-      double pTax = 0;
-      if (isOld) {
-        if (grossSal <= 120000)
-          pTax = 0;
-        else if (grossSal <= 180000)
-          pTax = 1320;
-        else if (grossSal <= 300000)
-          pTax = 1560;
-        else if (grossSal <= 480000)
-          pTax = 1800;
-        else
-          pTax = 2400;
-      }
-      pTaxCtrl.text = pTax.toStringAsFixed(0);
-
-      double salIncome = grossSal - stdDed - pTax - i10;
-      netSalCtrl.text = salIncome.toStringAsFixed(0);
-
-      double houseIncome = (i18 - i19) - ((i18 - i19) * 0.3) - i22;
-      totalHousePropCtrl.text = houseIncome.toStringAsFixed(0);
-
-      double otherIncome = i25 + i26 + i27;
-      totalOtherSrcCtrl.text = otherIncome.toStringAsFixed(0);
-
-      double gross = salIncome + houseIncome + otherIncome;
-      grossTotalCtrl.text = gross.toStringAsFixed(0);
-
-      double ded80C = total80C > 150000 ? 150000 : total80C;
-      double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-
-      double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-      serial10Ctrl.text = totalOther.toStringAsFixed(0);
-
-      double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-      totalDedCtrl.text = totalDed.toStringAsFixed(0);
-
-      double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-      if (taxable < 0) taxable = 0;
-      taxableIncomeCtrl.text = taxable.toStringAsFixed(0);
-
-      double tax = 0;
-      if (isOld) {
-        if (taxable > 1000000)
-          tax = (taxable - 1000000) * 0.3 + 112500;
-        else if (taxable > 500000)
-          tax = (taxable - 500000) * 0.2 + 12500;
-        else if (taxable > 250000)
-          tax = (taxable - 250000) * 0.05;
+    if (basic != null) {
+      final info = Ropa19Data.lookup(basic);
+      if (info != null) {
+        gradePayAdmController.text = info.gradePay.toString();
+        levelAdmController.text = info.level.toString();
+        cellAdmController.text = info.cell.toString();
       } else {
-        if (taxable > 2400000)
-          tax = (taxable - 2000000) * 0.3 + 200000;
-        else if (taxable > 2000000)
-          tax = (taxable - 2000000) * 0.25 + 200000;
-        else if (taxable > 1600000)
-          tax = (taxable - 1600000) * 0.2 + 120000;
-        else if (taxable > 1200000)
-          tax = (taxable - 1200000) * 0.15 + 60000;
-        else if (taxable > 800000)
-          tax = (taxable - 800000) * 0.1 + 20000;
-        else if (taxable > 400000)
-          tax = (taxable - 400000) * 0.05;
+        gradePayAdmController.clear();
+        levelAdmController.clear();
+        cellAdmController.clear();
       }
-      taxOnIncomeCtrl.text = tax.toStringAsFixed(0);
+    } else {
+      gradePayAdmController.clear();
+      levelAdmController.clear();
+      cellAdmController.clear();
+    }
 
-      double rebate = isOld
-          ? (taxable <= 500000 ? min(tax, 12500) : 0)
-          : (taxable <= 1200000 ? tax : 0);
-      rebateCtrl.text = rebate.toStringAsFixed(0);
+    _applyAdmissibleBasicPay();
+  }
 
-      double afterRebate = tax - rebate;
-      double cess = (afterRebate * 0.04).roundToDouble();
-      cessCtrl.text = cess.toStringAsFixed(0);
+  void _applyAdmissibleBasicPay() {
+    String basicVal = basicPayAdmController.text.trim();
+    for (var sh in sheets) {
+      for (var r in sh.records) {
+        if (basicVal.isNotEmpty) {
+          r.admBasic.text = basicVal;
+        } else {
+          r.admBasic.clear();
+        }
+      }
+    }
+  }
 
-      double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-      totalTaxCessCtrl.text = totalTax.toStringAsFixed(0);
-
-      double finalTax = totalTax +
-          (i68 * 0.2) +
-          (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-      finalTaxPayableCtrl.text = finalTax.toStringAsFixed(0);
-
-      double totalPaid = i71 + i72;
-      if (totalPaid > finalTax)
-        statusCtrl.text = "REFUNDABLE: ${totalPaid - finalTax}";
-      else if (totalPaid < finalTax)
-        statusCtrl.text = "PAYABLE: ${finalTax - totalPaid}";
-      else
-        statusCtrl.text = "NIL";
+  void _addNewSheet() {
+    DateTime nextStart;
+    if (sheets.isEmpty) {
+      nextStart = DateTime(2013, 3, 1);
+    } else {
+      nextStart = DateTime(sheets.last.endYear, 3, 1);
+    }
+    setState(() {
+      sheets.add(_createYearSheetForDate(nextStart));
+      _recalculateAllDaRates();
+      _applyAdmissibleBasicPay();
+      _tabController.dispose();
+      _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
     });
   }
 
-  Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-    pdf.addPage(_buildRegimePdfPage(true));
-    pdf.addPage(_buildRegimePdfPage(false));
-    await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+  void _removeLastSheet() {
+    if (sheets.length <= 1) return;
+    setState(() {
+      sheets.removeLast();
+      _tabController.dispose();
+      _tabController = TabController(length: sheets.length, vsync: this, initialIndex: sheets.length - 1);
+    });
   }
 
-  pw.Page _buildRegimePdfPage(bool isOld) {
-    bool isActiveRegime = isOld == (_tabController.index == 0);
+  double get allGrandBasic => sheets.fold(0, (s, sh) => s + sh.grandBasic);
+  double get allGrandDp => sheets.fold(0, (s, sh) => s + sh.grandDp);
+  double get allGrandSp => sheets.fold(0, (s, sh) => s + sh.grandSp);
+  double get allGrandDa => sheets.fold(0, (s, sh) => s + sh.grandDa);
+  double get allGrandHra => sheets.fold(0, (s, sh) => s + sh.grandHra);
+  double get allGrandMa => sheets.fold(0, (s, sh) => s + sh.grandMa);
+  double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
+  double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
 
-    double i7 = getVal(i7GrossSalary);
-    double i8 = getVal(i8Arrear);
-    double i10 = getVal(i10HRA);
-    double i18 = getVal(i18GrossRent);
-    double i19 = getVal(i19TaxLocalAuth);
-    double i22 = getVal(i22HomeLoanInt);
-    double i25 = getVal(i25BankInt);
-    double i26 = getVal(i26FDInt);
-    double i27 = getVal(i27OtherSource);
-    double total80C = isOld ? getVal(i32_43Total80C) : 0.0;
-    double totalOtherDed = isOld ? getVal(i45_56TotalOtherDed) : 0.0;
-    double i68 = getVal(i68STCG);
-    double i69 = getVal(i69LTCG);
-    double i71 = getVal(i71TaxPaidJan);
-
-    double grossSal = i7 + i8;
-    double stdDed = isOld
-        ? (grossSal > 50000 ? 50000 : grossSal)
-        : (grossSal > 75000 ? 75000 : grossSal);
-
-    double pTax = 0;
-    if (isOld) {
-      if (grossSal <= 120000)
-        pTax = 0;
-      else if (grossSal <= 180000)
-        pTax = 1320;
-      else if (grossSal <= 300000)
-        pTax = 1560;
-      else if (grossSal <= 480000)
-        pTax = 1800;
-      else
-        pTax = 2400;
-    }
-
-    double salIncome = grossSal - stdDed - pTax - i10;
-
-    double houseIncome30 = (i18 - i19) * 0.3;
-    double houseIncome = (i18 - i19) - houseIncome30 - i22;
-    double otherIncome = i25 + i26 + i27;
-    double gross = salIncome + houseIncome + otherIncome;
-
-    double ded80C = total80C > 150000 ? 150000 : total80C;
-    double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-    double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-    double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-
-    double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-    if (taxable < 0) taxable = 0;
-
-    double tax = 0;
-    if (isOld) {
-      if (taxable > 1000000)
-        tax = (taxable - 1000000) * 0.3 + 112500;
-      else if (taxable > 500000)
-        tax = (taxable - 500000) * 0.2 + 12500;
-      else if (taxable > 250000)
-        tax = (taxable - 250000) * 0.05;
-    } else {
-      if (taxable > 2400000)
-        tax = (taxable - 2000000) * 0.3 + 200000;
-      else if (taxable > 2000000)
-        tax = (taxable - 2000000) * 0.25 + 200000;
-      else if (taxable > 1600000)
-        tax = (taxable - 1600000) * 0.2 + 120000;
-      else if (taxable > 1200000)
-        tax = (taxable - 1200000) * 0.15 + 60000;
-      else if (taxable > 800000)
-        tax = (taxable - 800000) * 0.1 + 20000;
-      else if (taxable > 400000)
-        tax = (taxable - 400000) * 0.05;
-    }
-
-    double rebate = isOld
-        ? (taxable <= 500000 ? min(tax, 12500) : 0)
-        : (taxable <= 1200000 ? tax : 0);
-    double afterRebate = tax - rebate;
-    double cess = (afterRebate * 0.04).roundToDouble();
-    double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-
-    double capitalGainTax =
-        (i68 * 0.2) + (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-    double finalTax = totalTax + capitalGainTax;
-
-    double i72 = 0;
-    if (isActiveRegime) {
-      i72 = getVal(i72TaxPaidFeb);
-    } else {
-      i72 = finalTax - i71;
-      if (i72 < 0) i72 = 0;
-    }
-
-    double totalPaid = i71 + i72;
-    String status = "";
-    if (totalPaid > finalTax)
-      status = "REFUNDABLE: ${totalPaid - finalTax}";
-    else if (totalPaid < finalTax)
-      status = "PAYABLE: ${finalTax - totalPaid}";
-    else
-      status = "NIL";
-
-    String headerTxt = isOld
-        ? ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER OLD REGIME ]'
-        : ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER NEW REGIME ]';
-
-    return pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 40, bottom: 35),
-      build: (pw.Context context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Center(
-                child: pw.Text(headerTxt,
-                    style: pw.TextStyle(
-                        fontSize: 12.5, fontWeight: pw.FontWeight.bold))),
-            pw.SizedBox(height: 12),
-
-            pw.Container(
-                decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.black, width: 0.6)),
-                child: pw.Column(children: [
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE NAME", nameCtrl.text),
-                    _pdfHeaderBox("DESIGNATION", designationCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("INSTITUTION NAME", institutionCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE CODE", empCodeCtrl.text),
-                    _pdfHeaderBox("PAN", panCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("FINANCIAL YEAR", finYearCtrl.text),
-                    _pdfHeaderBox("ASSESSMENT YEAR", assessYearCtrl.text)
-                  ]),
-                ])),
-            pw.SizedBox(height: 8),
-
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.black, width: 0.6),
-              columnWidths: {
-                0: const pw.FixedColumnWidth(28),
-                1: const pw.FlexColumnWidth(),
-                2: const pw.FixedColumnWidth(70),
-              },
-              children: [
-                _buildPdfRow("Sl", "Description", "Amount", isHeader: true),
-                _buildPdfRow("1", "Gross Salary (a)", i7.toStringAsFixed(0)),
-                _buildPdfRow("", "Arrear (b)", i8.toStringAsFixed(0)),
-                _buildPdfRow("", "Total (a+b)", grossSal.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow("2", "Less: Standard Deduction u/s 16(1a)",
-                    stdDed.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "", "Less: Professional Tax", pTax.toStringAsFixed(0)),
-                _buildPdfRow("", "Less: House Rent Allowance u/s 10(13A)",
-                    i10.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "3",
-                    "Income chargeable under 'Salary'",
-                    salIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow(
-                    "4", "Gross Rent Received (a)", i18.toStringAsFixed(0)),
-                _buildPdfRow("", "Tax paid to local authorities (b)",
-                    i19.toStringAsFixed(0)),
-                _buildPdfRow("", "30% Standard Deduction on Net Rent",
-                    houseIncome30.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "",
-                    "Interest Payable on Borrowed Cap u/s 24(b)",
-                    i22.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "5",
-                    "Income Chargeable Under House Property",
-                    houseIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("6", "Interest on Saving Bank / FD / Others",
-                    otherIncome.toStringAsFixed(0)),
-                _buildPdfRow("7", "Gross total income (3+5+6)",
-                    gross.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("8", "Total Deduction u/s 80C",
-                    ded80C.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "9",
-                    "Total Other Deductions (80D/80G/80TTA Etc.)",
-                    totalOther.toStringAsFixed(0)),
-                _buildPdfRow("10", "Total deduction allowed",
-                    totalDed.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("11", "Total taxable income (Rounded off)",
-                    taxable.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow(
-                    "12", "Tax on Taxable Income", tax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "13", "Tax Rebate u/s 87A", rebate.toStringAsFixed(0)),
-                _buildPdfRow("14", "Health & Education Cess @ 4%",
-                    cess.toStringAsFixed(0)),
-                _buildPdfRow("15", "Tax payable (Rounded off)",
-                    totalTax.toStringAsFixed(0)),
-                _buildPdfRow("16", "Capital Gain Tax (Short/Long term)",
-                    capitalGainTax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "17",
-                    "Total Tax payable (incl. Capital Gain)",
-                    finalTax.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("18", "Tax paid upto January",
-                    i71.toStringAsFixed(0)),
-                _buildPdfRow("19", "Tax to be paid in February",
-                    i72.toStringAsFixed(0)),
-                _buildPdfRow("20", "Balance Tax Payable/Refundable",
-                    status,
-                    isBold: true),
-              ],
-            ),
-
-            // --- Signature Section with More Space ---
-            pw.Spacer(),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of Head of the Institution",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 5),
-                    pw.Text(
-                      "With Date & Seal.",
-                      style: pw.TextStyle(
-                          fontSize: 9, fontWeight: pw.FontWeight.bold),
-                    ),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of the Employee",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 14),
-                  ],
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 10),
-          ],
-        );
-      },
+  Future<void> _selectDate(TextEditingController controller) async {
+    DateTime initial = _parseDate(controller.text) ?? DateTime.now();
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1990),
+      lastDate: DateTime(2040),
     );
+    if (picked != null) {
+      String day = picked.day.toString().padLeft(2, '0');
+      String month = picked.month.toString().padLeft(2, '0');
+      setState(() {
+        controller.text = "$day.$month.${picked.year}";
+      });
+    }
   }
 
-  pw.Widget _pdfHeaderBox(String title, String value) {
-    return pw.Expanded(
-        child: pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 5),
-            decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
-            child: pw.RichText(
-                text: pw.TextSpan(children: [
-              pw.TextSpan(
-                  text: "$title: ",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
-            ]))));
-  }
+  static String numberToWordsIndian(int number) {
+    if (number <= 0) return "";
 
-  pw.TableRow _buildPdfRow(String sl, String desc, String amt,
-      {bool isHeader = false, bool isBold = false}) {
-    return pw.TableRow(
-        decoration:
-            isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
-        children: [
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 4),
-              child: pw.Text(sl,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(desc,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(amt,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-        ]);
-  }
+    final units = [
+      "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+      "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+      "Seventeen", "Eighteen", "Nineteen"
+    ];
+    final tens = [
+      "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+    ];
 
-  Widget _buildExcelRow(
-      String slNo, String title, TextEditingController controller,
-      {bool isReadOnly = false}) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: Colors.grey.shade400),
-              left: BorderSide(color: Colors.grey.shade400),
-              right: BorderSide(color: Colors.grey.shade400))),
-      child: Row(
-        children: [
-          Container(
-              width: 35,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                  border: Border(right: BorderSide(color: Colors.grey.shade400))),
-              child: Text(slNo,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 11))),
-          Expanded(
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(title,
-                      style: TextStyle(
-                          fontWeight:
-                              isReadOnly ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12)))),
-          Container(
-            width: 100,
-            decoration: BoxDecoration(
-                color: isReadOnly
-                    ? Colors.grey.shade200
-                    : Colors.amber.shade100,
-                border: Border(
-                    left: BorderSide(color: Colors.grey.shade400))),
-            child: TextField(
-              controller: controller,
-              readOnly: isReadOnly,
-              keyboardType: TextInputType.text,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                  fontWeight: isReadOnly ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                  isDense: true),
-              onChanged: (val) => calculateTax(),
-            ),
-          ),
-        ],
-      ),
-    );
+    String convertLessThanThousand(int n) {
+      List<String> res = [];
+      if (n >= 100) {
+        res.add("${units[n ~/ 100]} Hundred");
+        n %= 100;
+      }
+      if (n >= 20) {
+        res.add(tens[n ~/ 10]);
+        n %= 10;
+      }
+      if (n > 0) {
+        res.add(units[n]);
+      }
+      return res.join(" ");
+    }
+
+    List<String> result = [];
+    int crores = number ~/ 10000000;
+    number %= 10000000;
+    int lakhs = number ~/ 100000;
+    number %= 100000;
+    int thousands = number ~/ 1000;
+    number %= 1000;
+
+    if (crores > 0) {
+      result.add("${convertLessThanThousand(crores)} Crore");
+    }
+    if (lakhs > 0) {
+      result.add("${convertLessThanThousand(lakhs)} Lakh");
+    }
+    if (thousands > 0) {
+      result.add("${convertLessThanThousand(thousands)} Thousand");
+    }
+    if (number > 0) {
+      result.add(convertLessThanThousand(number));
+    }
+
+    return "Rupees ${result.join(" ")} Only.";
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isOld = _tabController.index == 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Amin Tax Calculator"),
+        title: const Text('18Years Arrear Calculator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: false,
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(icon: const Icon(Icons.add_chart), tooltip: 'Add Sheet', onPressed: _addNewSheet),
+          IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Remove Sheet', onPressed: _removeLastSheet),
+          IconButton(icon: const Icon(Icons.picture_as_pdf), tooltip: 'PDF (Portrait)', onPressed: () => _printCalculationSheets()),
+          IconButton(icon: const Icon(Icons.print), tooltip: 'Final Sheet (Landscape)', onPressed: () => _printFinalSheet()),
+        ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.amberAccent,
-          unselectedLabelColor: Colors.white,
-          indicatorColor: Colors.amberAccent,
-          indicatorWeight: 4,
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          onTap: (index) {
-            FocusScope.of(context).unfocus();
-          },
-          tabs: const [Tab(text: 'OLD REGIME'), Tab(text: 'NEW REGIME')],
+          isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.amber,
+          tabs: sheets.map((s) => Tab(text: s.sheetTitle)).toList(),
         ),
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-              onPressed: _generatePdf,
-              tooltip: "Download PDF")
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: sheets.map((sh) => _buildSheetBody(sh)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSheetBody(YearSheet sh) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderTable(),
+                const SizedBox(height: 10),
+                _buildCalculationTable(sh),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildFooterSignatures(),
+          const SizedBox(height: 30),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(5.0),
-        child: Column(
+    );
+  }
+
+  Widget _buildHeaderTable() {
+    return Table(
+      border: TableBorder.all(color: Colors.black, width: 1.2),
+      columnWidths: const {
+        0: FixedColumnWidth(170), 
+        1: FixedColumnWidth(355), 
+        2: FixedColumnWidth(240), 
+        3: FixedColumnWidth(210), 
+      },
+      children: [
+        TableRow(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Column(
-                children: [
-                  Row(children: [
-                    Expanded(
-                        flex: 2,
-                        child: _headerTextField('EMPLOYEE NAME:', nameCtrl)),
-                    Expanded(
-                        flex: 1,
-                        child: _headerTextField('DESIGNATION:', designationCtrl))
-                  ]),
-                  _headerTextField('INSTITUTION NAME:', institutionCtrl),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('EMPLOYEE CODE:', empCodeCtrl)),
-                    Expanded(child: _headerTextField('PAN:', panCtrl))
-                  ]),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('FINANCIAL YEAR:', finYearCtrl)),
-                    Expanded(
-                        child: _headerTextField(
-                            'ASSESSMENT YEAR:', assessYearCtrl))
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Row(
-                children: [
-                  Container(
-                      width: 35,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              right: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Sl",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
-                  const Expanded(
-                      child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: Text("Description",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12)))),
-                  Container(
-                      width: 100,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              left: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Amount",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
-                ],
-              ),
-            ),
-
-            _buildExcelRow("1", "Gross Salary (a)", i7GrossSalary),
-            _buildExcelRow("", "Arrear (b)", i8Arrear),
-            _buildExcelRow("", "Total (a+b)", totalSalCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "2", "Less: Standard Deduction", stdDedCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "", "Less: Professional Tax", pTaxCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "3", "Income chargeable under 'Salary'", netSalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow("4", "Gross Rent Received (a)", i18GrossRent),
-            _buildExcelRow(
-                "", "Tax paid to local authorities (b)", i19TaxLocalAuth),
-            _buildExcelRow(
-                "", "Interest Payable on Borrowed Cap (c)", i22HomeLoanInt),
-            _buildExcelRow("5", "Income Chargeable Under House Property",
-                totalHousePropCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "6", "Interest on Saving Bank (a)", i25BankInt),
-            _buildExcelRow(
-                "", "Interest on Fixed Deposit (b)", i26FDInt),
-            _buildExcelRow("", "Others (c)", i27OtherSource),
-            _buildExcelRow("7", "Income Chargeable Under Head Other Sources",
-                totalOtherSrcCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "8", "Gross total income (3+5+7)", grossTotalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "9", "Total Deduction u/s 80C", i32_43Total80C,
-                isReadOnly: !isOld),
-            _buildExcelRow(
-                "", "Add: 80D/80G etc. (Manual Input)", i45_56TotalOtherDed,
-                isReadOnly: !isOld),
-
-            _buildExcelRow("10",
-                "Total Other Deductions (80D/80G/80TTA Etc.)", serial10Ctrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "11", "Total deduction", totalDedCtrl, isReadOnly: true),
-
-            _buildExcelRow("12", "Total taxable income (Rounded off)",
-                taxableIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "13", "Tax on Taxable Income", taxOnIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "14", "Tax Rebate u/s 87A", rebateCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "15", "Health & Education Cess @ 4%", cessCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "16", "Tax payable (Rounded off)", totalTaxCessCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "17", "Short Term Capital Gain", i68STCG),
-            _buildExcelRow(
-                "18", "Long Term Capital Gain", i69LTCG),
-            _buildExcelRow(
-                "19", "Total Tax payable (incl. Capital Gain)",
-                finalTaxPayableCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "20", "Tax paid upto January", i71TaxPaidJan),
-            _buildExcelRow(
-                "21", "Tax to be paid in February", i72TaxPaidFeb),
-            _buildExcelRow(
-                "22", "Balance Tax Payable/Refundable", statusCtrl,
-                isReadOnly: true),
-
-            const SizedBox(height: 30),
+            _headerCell("NAME OF THE INSTITUTION:"),
+            Padding(padding: const EdgeInsets.all(4), child: _leftTextField(instController)),
+            _headerCell("INDEX NO:"),
+            Padding(padding: const EdgeInsets.all(4), child: _centerTextField(indexController)),
           ],
         ),
+        TableRow(
+          children: [
+            _headerCell("NAME OF THE EMPLOYEE:"),
+            Padding(padding: const EdgeInsets.all(4), child: _leftTextField(empNameController)),
+            _headerCell("DESIGNATION:"),
+            Padding(padding: const EdgeInsets.all(4), child: _centerTextField(desigController)),
+          ],
+        ),
+        TableRow(
+          children: [
+            _headerCell("ARREAR FOR THE PERIOD:"),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectDate(fromDateController),
+                      child: IgnorePointer(child: _centerTextField(fromDateController)),
+                    ),
+                  ),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("TO", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                  SizedBox(
+                    width: 155,
+                    child: InkWell(
+                      onTap: () => _selectDate(toDateController),
+                      child: IgnorePointer(child: _centerTextField(toDateController)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _headerCell("EMPLOYEE ID:"),
+            Padding(padding: const EdgeInsets.all(4), child: _centerTextField(empIdController)),
+          ],
+        ),
+        TableRow(
+          children: [
+            _headerCell("IN TERMS OF ORDER NO.:"),
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(padding: const EdgeInsets.all(4), child: _leftTextField(orderNoController)),
+            ),
+            _headerCell("H.S. CODE:"),
+            Padding(padding: const EdgeInsets.all(4), child: _centerTextField(hsCodeController)),
+          ],
+        ),
+        TableRow(
+          children: [
+            _headerCell("SCALE ADMISSIBLE:"),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  const Text("BASIC PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  SizedBox(
+                    width: 155,
+                    child: TextField(
+                      controller: basicPayAdmController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                        border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          _onBasicPayChanged(val);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  const Text("GRADE PAY: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: _centerTextField(gradePayAdmController),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Text("LEVEL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 2),
+                        Expanded(child: _centerTextField(levelAdmController)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Text("CELL: ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 2),
+                        Expanded(child: _centerTextField(cellAdmController)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _headerCell(String t) => Container(
+    color: Colors.grey.shade300,
+    padding: const EdgeInsets.all(6),
+    alignment: Alignment.centerLeft,
+    child: Text(t, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+  );
+
+  Widget _leftTextField(TextEditingController ctrl) => TextField(
+    controller: ctrl,
+    textAlign: TextAlign.left,
+    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+    decoration: const InputDecoration(
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
+    ),
+  );
+
+  Widget _centerTextField(TextEditingController ctrl) => TextField(
+    controller: ctrl,
+    textAlign: TextAlign.center,
+    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+    decoration: const InputDecoration(
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.0)),
+    ),
+    onChanged: (_) => setState(() {}),
+  );
+
+  Widget _buildCalculationTable(YearSheet sh) {
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      border: TableBorder.all(color: Colors.black, width: 1.2),
+      columnWidths: const {
+        0: FixedColumnWidth(85),
+        1: FixedColumnWidth(85),
+        2: FixedColumnWidth(75),
+        3: FixedColumnWidth(55),
+        4: FixedColumnWidth(50),
+        5: FixedColumnWidth(65),
+        6: FixedColumnWidth(60),
+        7: FixedColumnWidth(50),
+        8: FixedColumnWidth(70),
+        9: FixedColumnWidth(55),
+        10: FixedColumnWidth(55),
+        11: FixedColumnWidth(60),
+        12: FixedColumnWidth(55),
+        13: FixedColumnWidth(70),
+        14: FixedColumnWidth(85),
+      },
+      children: [
+        _buildColumnHeader(),
+        for (int i = 0; i < sh.records.length; i++) ..._buildMonthRows(sh, sh.records[i], i),
+        _buildTotalRow(sh),
+        _buildBalanceRow(sh),
+        _buildGrandTotalRow(sh),
+      ],
+    );
+  }
+
+  TableRow _buildColumnHeader() {
+    final headers = [
+      "MONTH", "ADMISSIBLE/\nDRAWN & DUE", "BASIC PAY", "D.P/IR", "S.P",
+      "D.A", "H.R.A", "M.A", "GROSS", "C.P.F", "P.TAX", "G.P.F", "I.TAX", "NET", "REMARKS"
+    ];
+    return TableRow(
+      decoration: BoxDecoration(color: Colors.grey.shade400),
+      children: headers.map((h) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        alignment: Alignment.center,
+        child: Text(h, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9.5)),
+      )).toList(),
+    );
+  }
+
+  List<TableRow> _buildMonthRows(YearSheet sh, MonthEntry r, int index) {
+    Widget monthWidget;
+    if (index == 0) {
+      monthWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        alignment: Alignment.centerLeft,
+        child: TextField(
+          controller: sh.firstMonthController,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            border: InputBorder.none,
+          ),
+          onChanged: (val) {
+            setState(() {
+              _updateMonthsFromFirstCell(sh, val);
+            });
+          },
+        ),
+      );
+    } else {
+      monthWidget = Container(
+        padding: const EdgeInsets.only(left: 6, top: 4),
+        alignment: Alignment.topLeft,
+        child: Text(r.monthName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      );
+    }
+
+    return [
+      TableRow(
+        children: [
+          monthWidget,
+          _labelCell("Admissible"),
+          _unlockedCell(r.admBasic),
+          _unlockedCell(r.admDp),
+          _unlockedCell(r.admSp),
+          _conditionalCalcCell(r.hasAdm, r.aDa),
+          _conditionalCalcCell(r.hasAdm, r.aHra),
+          _conditionalCalcCell(r.hasAdm, r.aMa),
+          _conditionalCalcCell(r.hasAdm, r.aGross, isBold: true),
+          _unlockedCell(r.admCpf),
+          _unlockedCell(r.admPtax),
+          _unlockedCell(r.admGpf),
+          _unlockedCell(r.admItax),
+          _conditionalCalcCell(r.hasAdm, r.aNet, isBold: true),
+          _remarksCell(r.remarksCtrl),
+        ],
+      ),
+      TableRow(
+        children: [
+          _labelCell(""),
+          _labelCell("Drawn"),
+          _unlockedCell(r.drwBasic),
+          _unlockedCell(r.drwDp),
+          _unlockedCell(r.drwSp),
+          _conditionalCalcCell(r.hasDrw, r.dDa),
+          _conditionalCalcCell(r.hasDrw, r.dHra),
+          _conditionalCalcCell(r.hasDrw, r.dMa),
+          _conditionalCalcCell(r.hasDrw, r.dGross, isBold: true),
+          _unlockedCell(r.drwCpf),
+          _unlockedCell(r.drwPtax),
+          _unlockedCell(r.drwGpf),
+          _unlockedCell(r.drwItax),
+          _conditionalCalcCell(r.hasDrw, r.dNet, isBold: true),
+          _labelCell(""),
+        ],
+      ),
+      TableRow(
+        decoration: BoxDecoration(color: Colors.grey.shade200),
+        children: [
+          _labelCell(""),
+          _labelCell("Due", isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueBasic, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueDp, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueSp, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueDa, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueHra, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueMa, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueGross, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueCpf, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.duePtax, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueGpf, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueItax, isBold: true),
+          _conditionalCalcCell(r.hasAny, r.dueNet, isBold: true),
+          _labelCell(""),
+        ],
+      ),
+    ];
+  }
+
+  Widget _remarksCell(TextEditingController ctrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: TextField(
+        controller: ctrl,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          border: InputBorder.none,
+          hintText: "38%",
+          hintStyle: TextStyle(fontSize: 9, color: Colors.grey),
+        ),
+        onChanged: (_) {
+          setState(() {
+            _recalculateAllDaRates();
+          });
+        },
       ),
     );
   }
 
-  Widget _headerTextField(String label, TextEditingController controller) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400, width: 0.5)),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      child: Row(
-        children: [
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 5),
-          Expanded(
-              child: TextField(
-                  controller: controller,
-                  style: const TextStyle(fontSize: 11),
-                  decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero))),
-        ],
+  Widget _unlockedCell(TextEditingController ctrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: TextField(
+        controller: ctrl,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          border: InputBorder.none,
+        ),
+        onChanged: (_) => setState(() {}),
       ),
     );
   }
+
+  Widget _conditionalCalcCell(bool condition, double val, {bool isBold = false}) {
+    return Container(
+      color: isBold ? Colors.transparent : Colors.grey.shade50,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      alignment: Alignment.center,
+      child: Text(
+        condition ? val.round().toString() : "",
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      ),
+    );
+  }
+
+  Widget _labelCell(String t, {bool isBold = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 2),
+      alignment: Alignment.center,
+      child: Text(
+        t,
+        textAlign: TextAlign.center,
+        softWrap: true,
+        style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      ),
+    );
+  }
+
+  Widget _leftLabelCell(String t, {bool isBold = false}) {
+    return Container(
+      padding: const EdgeInsets.only(left: 6, top: 5, bottom: 5),
+      alignment: Alignment.centerLeft,
+      child: Text(t, textAlign: TextAlign.left, style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+    );
+  }
+
+  Widget _condSummaryCell(bool hasInput, double val, {bool isBold = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      alignment: Alignment.center,
+      child: Text(
+        hasInput ? val.round().toString() : "",
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 10, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      ),
+    );
+  }
+
+  TableRow _buildTotalRow(YearSheet sh) {
+    return TableRow(
+      decoration: BoxDecoration(color: Colors.grey.shade300),
+      children: [
+        _leftLabelCell("TOTAL:", isBold: true),
+        _labelCell(""),
+        _condSummaryCell(sh.hasAnyInput, sh.totBasic, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totDp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totSp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totDa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totHra, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totMa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totGross, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totCpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totPtax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totGpf, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totItax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.totNet, isBold: true),
+        _labelCell(""),
+      ],
+    );
+  }
+
+  TableRow _buildBalanceRow(YearSheet sh) {
+    return TableRow(
+      decoration: BoxDecoration(color: Colors.grey.shade300),
+      children: [
+        _leftLabelCell("BALANCE:", isBold: true),
+        _labelCell(""),
+        _unlockedCell(sh.balBasicCtrl),
+        _unlockedCell(sh.balDpCtrl),
+        _unlockedCell(sh.balSpCtrl),
+        _unlockedCell(sh.balDaCtrl),
+        _unlockedCell(sh.balHraCtrl),
+        _unlockedCell(sh.balMaCtrl),
+        _unlockedCell(sh.balGrossCtrl),
+        _unlockedCell(sh.balCpfCtrl),
+        _unlockedCell(sh.balPtaxCtrl),
+        _unlockedCell(sh.balGpfCtrl),
+        _unlockedCell(sh.balItaxCtrl),
+        _unlockedCell(sh.balNetCtrl),
+        _labelCell(""),
+      ],
+    );
+  }
+
+  TableRow _buildGrandTotalRow(YearSheet sh) {
+    return TableRow(
+      decoration: BoxDecoration(color: Colors.grey.shade400),
+      children: [
+        _leftLabelCell("GRAND TOTAL:", isBold: true),
+        _labelCell(""),
+        _condSummaryCell(sh.hasAnyInput, sh.grandBasic, isBold: true),
+        _condSummaryCell(sh.grandDp != 0, sh.grandDp, isBold: true),
+        _condSummaryCell(sh.grandSp != 0, sh.grandSp, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandDa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandHra, isBold: true),
+        _condSummaryCell(sh.grandMa != 0, sh.grandMa, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandGross, isBold: true),
+        _condSummaryCell(sh.grandCpf != 0, sh.grandCpf, isBold: true),
+        _condSummaryCell(sh.grandPtax != 0, sh.grandPtax, isBold: true),
+        _condSummaryCell(sh.grandGpf != 0, sh.grandGpf, isBold: true),
+        _condSummaryCell(sh.grandItax != 0, sh.grandItax, isBold: true),
+        _condSummaryCell(sh.hasAnyInput, sh.grandNet, isBold: true),
+        _labelCell(""),
+      ],
+    );
+  }
+
+  Widget _buildFooterSignatures() {
+    return Column(
+      children: [
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 2),
+              child: Text("Date: ....................", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: const [
+                Text("Verified and found correct.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                SizedBox(height: 25),
+                Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ---------------- PORTRAIT CALCULATION SHEETS PDF ----------------
+  static const double pColMonth   = 49.0;
+  static const double pColAdm     = 51.0;
+  static const double pColBasic   = 43.0; 
+  static const double pColDp      = 30.0;
+  static const double pColSp      = 28.0;
+  static const double pColDa      = 38.0;
+  static const double pColHra     = 36.0;
+  static const double pColMa      = 28.0;
+  static const double pColGross   = 43.0; 
+  static const double pColCpf     = 30.0;
+  static const double pColPtax    = 30.0;
+  static const double pColGpf     = 34.0;
+  static const double pColItax    = 30.0;
+  static const double pColNet     = 43.0;
+  static const double pColRemarks = 53.0; 
+  static const double pTotalTableWidth = 546.0;
+
+  // সমাধান: প্রতিটি পেজেই Main Calculator-এর সঠিক শুরু ও শেষ তারিখ পাঠানো হচ্ছে
+  Future<void> _printCalculationSheets() async {
+    final doc = pw.Document();
+    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
+    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+
+    for (var sh in sheets) {
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          theme: theme,
+          margin: const pw.EdgeInsets.only(
+            top: 45.4,
+            left: 24.5,
+            right: 24.5,
+            bottom: 28.3,
+          ),
+          build: (pw.Context context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12.0)),
+              ),
+              pw.SizedBox(height: 4),
+              // Main Calculator এর তারিখ দিয়ে হেডার তৈরি
+              _buildPdfHeaderAligned(fromDateController.text, toDateController.text),
+              pw.Container(
+                width: pTotalTableWidth,
+                height: 7.0,
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                ),
+              ),
+              _buildPdfTableAligned(sh),
+              pw.SizedBox(height: 5.0),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 2),
+                    child: pw.Text("Date: ....................", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text("Verified and found correct.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      pw.SizedBox(height: 48.0),
+                      pw.Text("Signature of Secretary/Administrator/D.D.O. with Seal.", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: 'Calculation_Sheet.pdf',
+    );
+  }
+
+  // হেডার অংশে সরাসরি Main Calculator-এর সঠিক ফ্রম ও টু ডেট বসানো
+  pw.Widget _buildPdfHeaderAligned(String fromDate, String toDate) {
+    const double hRowH = 14.5;
+    const double wH1 = pColMonth + pColAdm + pColBasic; 
+    const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; 
+    const double wH3 = pColCpf + pColPtax + pColGpf; 
+    const double wH4 = pColItax + pColNet + pColRemarks; 
+
+    const double wDate1 = pColDp + pColSp; 
+    const double wDate2 = pColDa + pColHra; 
+    const double wDate3 = pColMa + pColGross; 
+
+    const double wB1 = pColDp + pColSp; 
+    const double wB2 = pColDa; 
+    const double wB3 = pColHra + pColMa; 
+    const double wB4 = pColGross; 
+    const double wB5 = pColCpf + pColPtax; 
+    const double wB6 = pColGpf; 
+    const double wB7 = pColItax + pColNet; 
+    const double wB8 = pColRemarks; 
+
+    return pw.Column(
+      children: [
+        pw.Table(
+          border: const pw.TableBorder(
+            top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+          ),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(wH1),
+            1: pw.FixedColumnWidth(wH2),
+            2: pw.FixedColumnWidth(wH3),
+            3: pw.FixedColumnWidth(wH4),
+          },
+          children: [
+            pw.TableRow(children: [
+              _pdfHCell("NAME OF THE INSTITUTION:", height: hRowH),
+              _pdfValLeftCell(instController.text, height: hRowH),
+              _pdfHCell("INDEX NO:", height: hRowH),
+              _pdfValCenterCell(indexController.text, height: hRowH),
+            ]),
+            pw.TableRow(children: [
+              _pdfHCell("NAME OF THE EMPLOYEE:", height: hRowH),
+              _pdfValLeftCell(empNameController.text, height: hRowH),
+              _pdfHCell("DESIGNATION:", height: hRowH),
+              _pdfValCenterCell(desigController.text, height: hRowH),
+            ]),
+            // Main Calculator এর Same Date সব PDF পেজেই থাকবে
+            pw.TableRow(children: [
+              _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
+              pw.Container(
+                height: hRowH,
+                child: pw.Table(
+                  border: const pw.TableBorder(
+                    verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                  columnWidths: const {
+                    0: pw.FixedColumnWidth(wDate1),
+                    1: pw.FixedColumnWidth(wDate2),
+                    2: pw.FixedColumnWidth(wDate3),
+                  },
+                  children: [
+                    pw.TableRow(children: [
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(fromDate, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Container(
+                        height: hRowH,
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(toDate, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                      ),
+                    ]),
+                  ],
+                ),
+              ),
+              _pdfHCell("EMPLOYEE ID:", height: hRowH),
+              _pdfValCenterCell(empIdController.text, height: hRowH),
+            ]),
+            pw.TableRow(children: [
+              _pdfHCell("IN TERMS OF ORDER NO.:", height: hRowH),
+              _pdfValLeftCell(orderNoController.text, height: hRowH),
+              _pdfHCell("H.S. CODE:", height: hRowH),
+              _pdfValCenterCell(hsCodeController.text, height: hRowH),
+            ]),
+          ],
+        ),
+        pw.Table(
+          border: const pw.TableBorder(
+            top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+            verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+          ),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(wH1),
+            1: pw.FixedColumnWidth(wB1),
+            2: pw.FixedColumnWidth(wB2),
+            3: pw.FixedColumnWidth(wB3),
+            4: pw.FixedColumnWidth(wB4),
+            5: pw.FixedColumnWidth(wB5),
+            6: pw.FixedColumnWidth(wB6),
+            7: pw.FixedColumnWidth(wB7),
+            8: pw.FixedColumnWidth(wB8),
+          },
+          children: [
+            pw.TableRow(children: [
+              _pdfHCell("SCALE ADMISSIBLE:", height: hRowH),
+              _pdfHCellCenter("BASIC PAY:", height: hRowH),
+              _pdfValCenterCell(basicPayAdmController.text, height: hRowH),
+              _pdfHCellCenter("GRADE PAY:", height: hRowH),
+              _pdfValCenterCell(gradePayAdmController.text, height: hRowH),
+              _pdfHCellCenter("LEVEL:", height: hRowH),
+              _pdfValCenterCell(levelAdmController.text, height: hRowH),
+              _pdfHCellCenter("CELL:", height: hRowH),
+              _pdfValCenterCell(cellAdmController.text, height: hRowH),
+            ]),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _pdfHCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _pdfHCellCenter(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.3, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _pdfValLeftCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _pdfValCenterCell(String t, {double height = 14.0}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+  );
+
+  pw.Widget _buildPdfTableAligned(YearSheet sh) {
+    const colWidths = {
+      0: pw.FixedColumnWidth(pColMonth),
+      1: pw.FixedColumnWidth(pColAdm),
+      2: pw.FixedColumnWidth(pColBasic),
+      3: pw.FixedColumnWidth(pColDp),
+      4: pw.FixedColumnWidth(pColSp),
+      5: pw.FixedColumnWidth(pColDa),
+      6: pw.FixedColumnWidth(pColHra),
+      7: pw.FixedColumnWidth(pColMa),
+      8: pw.FixedColumnWidth(pColGross),
+      9: pw.FixedColumnWidth(pColCpf),
+      10: pw.FixedColumnWidth(pColPtax),
+      11: pw.FixedColumnWidth(pColGpf),
+      12: pw.FixedColumnWidth(pColItax),
+      13: pw.FixedColumnWidth(pColNet),
+      14: pw.FixedColumnWidth(pColRemarks),
+    };
+
+    final headers = [
+      "MONTH", "ADMISSIBLE/\nDRAWN & DUE", "BASIC PAY", "D.P/IR", "S.P",
+      "D.A", "H.R.A", "M.A", "GROSS", "C.P.F", "P.TAX", "G.P.F", "I.TAX", "NET", "REMARKS"
+    ];
+
+    List<pw.TableRow> rows = [];
+
+    rows.add(
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.grey400),
+        children: headers.map((h) => pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.5),
+          alignment: pw.Alignment.center,
+          child: pw.Text(h, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: pw.FontWeight.bold)),
+        )).toList(),
+      ),
+    );
+
+    for (var r in sh.records) {
+      rows.add(
+        pw.TableRow(
+          children: [
+            _pCleanCell(r.monthName, alignLeft: true),
+            _pCell("Admissible"),
+            _pCondNum(r.hasAdm, r.aBasic), _pCondNum(r.hasAdm, r.aDp), _pCondNum(r.hasAdm, r.aSp),
+            _pCondNum(r.hasAdm, r.aDa), _pCondNum(r.hasAdm, r.aHra), _pCondNum(r.hasAdm, r.aMa),
+            _pCondNum(r.hasAdm, r.aGross), _pCondNum(r.hasAdm, r.aCpf),
+            _pCondNum(r.admPtax.text.trim().isNotEmpty, r.aPtax),
+            _pCondNum(r.hasAdm, r.aGpf), _pCondNum(r.hasAdm, r.aItax), _pCondNum(r.hasAdm, r.aNet),
+            _pCleanCell(r.remarksCtrl.text),
+          ],
+        ),
+      );
+
+      rows.add(
+        pw.TableRow(
+          children: [
+            _pCleanCell(""),
+            _pCell("Drawn"),
+            _pCondNum(r.hasDrw, r.dBasic), _pCondNum(r.hasDrw, r.dDp), _pCondNum(r.hasDrw, r.dSp),
+            _pCondNum(r.hasDrw, r.dDa), _pCondNum(r.hasDrw, r.dHra), _pCondNum(r.hasDrw, r.dMa),
+            _pCondNum(r.hasDrw, r.dGross), _pCondNum(r.hasDrw, r.dCpf),
+            _pCondNum(r.drwPtax.text.trim().isNotEmpty, r.dPtax),
+            _pCondNum(r.hasDrw, r.dGpf), _pCondNum(r.hasDrw, r.dItax), _pCondNum(r.hasDrw, r.dNet),
+            _pCleanCell(""),
+          ],
+        ),
+      );
+
+      rows.add(
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          children: [
+            _pCleanCell(""),
+            _pCell("Due", isBold: true),
+            _pCondNum(r.hasAny, r.dueBasic, isBold: true), _pCondNum(r.hasAny, r.dueDp, isBold: true), _pCondNum(r.hasAny, r.dueSp, isBold: true),
+            _pCondNum(r.hasAny, r.dueDa, isBold: true), _pCondNum(r.hasAny, r.dueHra, isBold: true), _pCondNum(r.hasAny, r.dueMa, isBold: true),
+            _pCondNum(r.hasAny, r.dueGross, isBold: true), _pCondNum(r.hasAny, r.dueCpf, isBold: true),
+            _pCondNum(r.duePtax != 0, r.duePtax, isBold: true),
+            _pCondNum(r.hasAny, r.dueGpf, isBold: true), _pCondNum(r.hasAny, r.dueItax, isBold: true), _pCondNum(r.hasAny, r.dueNet, isBold: true),
+            _pCleanCell(""),
+          ],
+        ),
+      );
+    }
+
+    rows.add(
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+        children: [
+          _pLeftSummaryCell("TOTAL:", isBold: true),
+          _pCell(""),
+          _pCondSummary(sh.hasAnyInput, sh.totBasic, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totDp, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totSp, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totDa, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totHra, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totMa, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totGross, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totCpf, isBold: true),
+          _pCondSummary(sh.totPtax != 0, sh.totPtax, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totGpf, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totItax, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.totNet, isBold: true),
+          _pCell(""),
+        ],
+      ),
+    );
+
+    rows.add(
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+        children: [
+          _pLeftSummaryCell("BALANCE:", isBold: true),
+          _pCell(""),
+          _pCondSummary(sh.balBasic != 0, sh.balBasic, isBold: true),
+          _pCondSummary(sh.balDp != 0, sh.balDp, isBold: true),
+          _pCondSummary(sh.balSp != 0, sh.balSp, isBold: true),
+          _pCondSummary(sh.balDa != 0, sh.balDa, isBold: true),
+          _pCondSummary(sh.balHra != 0, sh.balHra, isBold: true),
+          _pCondSummary(sh.balMa != 0, sh.balMa, isBold: true),
+          _pCondSummary(sh.balGross != 0, sh.balGross, isBold: true),
+          _pCondSummary(sh.balCpf != 0, sh.balCpf, isBold: true),
+          _pCondSummary(sh.balPtax != 0, sh.balPtax, isBold: true),
+          _pCondSummary(sh.balGpf != 0, sh.balGpf, isBold: true),
+          _pCondSummary(sh.balItax != 0, sh.balItax, isBold: true),
+          _pCondSummary(sh.balNet != 0, sh.balNet, isBold: true),
+          _pCell(""),
+        ],
+      ),
+    );
+
+    rows.add(
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.grey400),
+        children: [
+          _pLeftSummaryCell("GRAND TOTAL:", isBold: true),
+          _pCell(""),
+          _pCondSummary(sh.hasAnyInput, sh.grandBasic, isBold: true),
+          _pCondSummary(sh.grandDp != 0, sh.grandDp, isBold: true),
+          _pCondSummary(sh.grandSp != 0, sh.grandSp, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.grandDa, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.grandHra, isBold: true),
+          _pCondSummary(sh.grandMa != 0, sh.grandMa, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.grandGross, isBold: true),
+          _pCondSummary(sh.grandCpf != 0, sh.grandCpf, isBold: true),
+          _pCondSummary(sh.grandPtax != 0, sh.grandPtax, isBold: true),
+          _pCondSummary(sh.grandGpf != 0, sh.grandGpf, isBold: true),
+          _pCondSummary(sh.grandItax != 0, sh.grandItax, isBold: true),
+          _pCondSummary(sh.hasAnyInput, sh.grandNet, isBold: true),
+          _pCell(""),
+        ],
+      ),
+    );
+
+    return pw.Table(
+      border: const pw.TableBorder(
+        top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+        verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+      ),
+      columnWidths: colWidths,
+      children: rows,
+    );
+  }
+
+  pw.Widget _pCleanCell(String text, {bool alignLeft = false}) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 3.4),
+      alignment: alignLeft ? pw.Alignment.topLeft : pw.Alignment.topCenter,
+      child: pw.Text(
+        text,
+        textAlign: alignLeft ? pw.TextAlign.left : pw.TextAlign.center,
+        softWrap: true,
+        style: pw.TextStyle(
+          fontSize: alignLeft ? 6.0 : 5.6,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  pw.Widget _pCell(String t, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
+  pw.Widget _pLeftSummaryCell(String t, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.only(left: 3, top: 3.4, bottom: 3.4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
+  pw.Widget _pCondNum(bool condition, double val, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
+    alignment: pw.Alignment.center,
+    child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
+  pw.Widget _pCondSummary(bool condition, double val, {bool isBold = false}) => pw.Container(
+    padding: const pw.EdgeInsets.symmetric(vertical: 3.4),
+    alignment: pw.Alignment.center,
+    child: pw.Text(condition ? val.round().toString() : "", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 5.6, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+
+  // ---------------- LANDSCAPE FINAL SHEET PDF ----------------
+  Future<void> _printFinalSheet() async {
+    final doc = pw.Document();
+    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
+    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+
+    final adHocTotal = (double.tryParse(adHoc1Ctrl.text) ?? 0) + (double.tryParse(adHoc2Ctrl.text) ?? 0) + (double.tryParse(adHoc3Ctrl.text) ?? 0) + (double.tryParse(adHoc4Ctrl.text) ?? 0);
+    final actClaim = allGrandNet - adHocTotal;
+    final inWordsText = actClaim > 0 ? numberToWordsIndian(actClaim.round()) : "";
+
+    const double rowH = 14.25;
+
+    const double wBasic = 67.5;
+    const double wDp = 67.5;
+    const double wDa = 73.0;
+    const double wHra = 73.0;
+    const double wMa = 73.0;
+    const double wGross = 73.0;
+    const double wCpf = 73.0;
+    
+    const double wInRs = 46.0;
+
+    const double wPtax = 63.0;
+    const double wGpf = 60.0;
+    const double wOthers = 60.0;
+    const double wNet = 67.0;
+
+    const double rightTotalWidth = wPtax + wGpf + wOthers + wNet; 
+    const double leftBoxWidth = wBasic + wDp + wDa + wHra + wMa + wGross + wCpf; 
+    const double bottomSectionWidth = wInRs + rightTotalWidth; 
+    const double totalSheetWidth = leftBoxWidth + bottomSectionWidth; 
+
+    const double scaleTitleWidth = wBasic + wDp; 
+
+    const double fBox1 = wDa + wHra; 
+    const double fBox2 = wMa;  
+    const double fBox3 = wGross + wCpf; 
+    const double fBox4 = wInRs; 
+    const double fBox5 = wPtax; 
+    const double fBox6 = wGpf;  
+    const double fBox7 = wOthers; 
+    const double fBox8 = wNet;  
+
+    const headerLeftWidth = totalSheetWidth - rightTotalWidth; 
+    const headerRightWidth = rightTotalWidth; 
+
+    const headerLeftColWidths = {
+      0: pw.FixedColumnWidth(wBasic + wDp), 
+      1: pw.FixedColumnWidth(headerLeftWidth - (wBasic + wDp)), 
+    };
+
+    const headerRight4Cols = {
+      0: pw.FixedColumnWidth(wPtax),
+      1: pw.FixedColumnWidth(wGpf),
+      2: pw.FixedColumnWidth(wOthers),
+      3: pw.FixedColumnWidth(wNet),
+    };
+
+    const dateRowColWidths = {
+      0: pw.FixedColumnWidth(wDa + wHra),          
+      1: pw.FixedColumnWidth(wMa + wGross),        
+      2: pw.FixedColumnWidth(wCpf + wInRs),        
+    };
+
+    const table2LeftCols = {
+      0: pw.FixedColumnWidth(wBasic),
+      1: pw.FixedColumnWidth(wDp),
+      2: pw.FixedColumnWidth(wDa),
+      3: pw.FixedColumnWidth(wHra),
+      4: pw.FixedColumnWidth(wMa),
+      5: pw.FixedColumnWidth(wGross),
+      6: pw.FixedColumnWidth(wCpf),
+    };
+
+    const right4ColWidths = {
+      0: pw.FixedColumnWidth(wPtax),
+      1: pw.FixedColumnWidth(wGpf),
+      2: pw.FixedColumnWidth(wOthers),
+      3: pw.FixedColumnWidth(wNet),
+    };
+
+    const actualClaimRowWidths = {
+      0: pw.FixedColumnWidth(wPtax + wGpf), 
+      1: pw.FixedColumnWidth(wOthers),      
+      2: pw.FixedColumnWidth(wNet),         
+    };
+
+    const double receiptBoxHeight = 49.5; 
+    const double reasonBoxHeight = 35.2;  
+    const double inRsTallBoxHeight = rowH * 6; 
+    const double certificateBoxHeight = 165.0;
+    const double inWordsBoxHeight = 47.0;
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        theme: theme,
+        margin: const pw.EdgeInsets.only(
+          top: 56.7,   
+          left: 22.7,  
+          right: 22.7, 
+          bottom: 34.0 
+        ),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.SizedBox(width: 50),
+                  pw.Text("ANNEXURE - 1 (CONTINUED)", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13)),
+                  pw.Text("Final Page", style: const pw.TextStyle(fontSize: 9)),
+                ],
+              ),
+              pw.SizedBox(height: 5),
+
+              pw.Container(
+                width: totalSheetWidth,
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Container(
+                          width: headerLeftWidth,
+                          child: pw.Table(
+                            border: const pw.TableBorder(
+                              top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                              verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                            ),
+                            columnWidths: headerLeftColWidths,
+                            children: [
+                              pw.TableRow(children: [
+                                _finalHCell("NAME OF THE INSTITUTION:", height: rowH),
+                                _finalValCell(instController.text, height: rowH, alignLeft: true),
+                              ]),
+                              pw.TableRow(children: [
+                                _finalHCell("NAME OF THE EMPLOYEE:", height: rowH),
+                                _finalValCell(empNameController.text, height: rowH, alignLeft: true),
+                              ]),
+                              pw.TableRow(children: [
+                                _finalHCell("ARREAR FOR THE PERIOD:", height: rowH),
+                                pw.Container(
+                                  height: rowH,
+                                  child: pw.Table(
+                                    border: const pw.TableBorder(
+                                      verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                    ),
+                                    columnWidths: dateRowColWidths,
+                                    children: [
+                                      pw.TableRow(children: [
+                                        pw.Container(
+                                          height: rowH,
+                                          alignment: pw.Alignment.center,
+                                          child: pw.Text(fromDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                        ),
+                                        pw.Container(
+                                          height: rowH,
+                                          alignment: pw.Alignment.center,
+                                          child: pw.Text("TO", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                        ),
+                                        pw.Container(
+                                          height: rowH,
+                                          alignment: pw.Alignment.center,
+                                          child: pw.Text(toDateController.text, style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                        ),
+                                      ]),
+                                    ],
+                                  ),
+                                ),
+                              ]),
+                              pw.TableRow(children: [
+                                _finalHCell("IN TERMS OF ORDER NO.:", height: rowH),
+                                _finalValCell(orderNoController.text, height: rowH, alignLeft: true),
+                              ]),
+                            ],
+                          ),
+                        ),
+                        pw.Container(
+                          width: headerRightWidth,
+                          child: pw.Column(
+                            children: [
+                              pw.Table(
+                                border: const pw.TableBorder(
+                                  top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  horizontalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                ),
+                                columnWidths: headerRight4Cols,
+                                children: [
+                                  pw.TableRow(children: [
+                                    _finalHCell("INDEX NO.:", height: rowH),
+                                    _finalValCell(indexController.text, height: rowH),
+                                    _finalHCell("H.S. CODE:", height: rowH),
+                                    _finalValCell(hsCodeController.text, height: rowH),
+                                  ]),
+                                  pw.TableRow(children: [
+                                    _finalHCell("DESIGNATION:", height: rowH),
+                                    _finalValCell(desigController.text, height: rowH),
+                                    _finalHCell("EMPLOYEE ID:", height: rowH),
+                                    _finalValCell(empIdController.text, height: rowH),
+                                  ]),
+                                ],
+                              ),
+                              pw.Container(
+                                height: rowH * 2,
+                                width: headerRightWidth,
+                                decoration: const pw.BoxDecoration(
+                                  border: pw.Border(
+                                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                    bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    pw.Table(
+                      border: const pw.TableBorder(
+                        top: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                        verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                      ),
+                      columnWidths: {
+                        0: const pw.FixedColumnWidth(scaleTitleWidth),
+                        1: const pw.FixedColumnWidth(fBox1),
+                        2: const pw.FixedColumnWidth(fBox2),
+                        3: const pw.FixedColumnWidth(fBox3),
+                        4: const pw.FixedColumnWidth(fBox4),
+                        5: const pw.FixedColumnWidth(fBox5),
+                        6: const pw.FixedColumnWidth(fBox6),
+                        7: const pw.FixedColumnWidth(fBox7),
+                        8: const pw.FixedColumnWidth(fBox8),
+                      },
+                      children: [
+                        pw.TableRow(
+                          children: [
+                            _finalHCell("SCALE ADMISSIBLE:", height: rowH),
+                            _finalHCellCenter("BASIC PAY:", height: rowH),
+                            _finalValCell(basicPayAdmController.text, height: rowH),
+                            _finalHCellCenter("GRADE PAY:", height: rowH),
+                            _finalValCell(gradePayAdmController.text, height: rowH),
+                            _finalHCellCenter("LEVEL:", height: rowH),
+                            _finalValCell(levelAdmController.text, height: rowH),
+                            _finalHCellCenter("CELL:", height: rowH),
+                            _finalValCell(cellAdmController.text, height: rowH),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              pw.Container(
+                height: rowH,
+                width: totalSheetWidth,
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    left: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                    right: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                  ),
+                ),
+              ),
+
+              // Middle & Lower Section
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(
+                    width: leftBoxWidth,
+                    child: pw.Column(
+                      children: [
+                        pw.Table(
+                          border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                          children: [
+                            pw.TableRow(
+                              decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                              children: [
+                                pw.Container(
+                                  height: rowH,
+                                  width: leftBoxWidth,
+                                  alignment: pw.Alignment.center,
+                                  child: pw.Text("ARREAR DUE ON ACCOUNT OF:", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                            pw.TableRow(
+                              children: [
+                                pw.Table(
+                                  border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                  columnWidths: table2LeftCols,
+                                  children: [
+                                    pw.TableRow(
+                                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                                      children: [
+                                        _finalValCell("BASIC PAY", height: rowH, isBold: true),
+                                        _finalValCell("D.P/IR/S.P", height: rowH, isBold: true),
+                                        _finalValCell("D.A", height: rowH, isBold: true),
+                                        _finalValCell("H.R.A", height: rowH, isBold: true),
+                                        _finalValCell("M.A", height: rowH, isBold: true),
+                                        _finalValCell("GROSS", height: rowH, isBold: true),
+                                        _finalValCell("C.P.F/G.P.F", height: rowH, isBold: true),
+                                      ],
+                                    ),
+                                    pw.TableRow(
+                                      children: List.generate(7, (_) => _finalValCell("", height: rowH)),
+                                    ),
+                                    pw.TableRow(
+                                      children: [
+                                        _finalValCell(allGrandBasic.round().toString(), height: rowH),
+                                        _finalValCell((allGrandDp + allGrandSp).round().toString(), height: rowH),
+                                        _finalValCell(allGrandDa.round().toString(), height: rowH),
+                                        _finalValCell(allGrandHra.round().toString(), height: rowH),
+                                        _finalValCell(allGrandMa.round().toString(), height: rowH),
+                                        _finalValCell(allGrandGross.round().toString(), height: rowH),
+                                        _finalValCell("0", height: rowH),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        pw.Container(
+                          width: leftBoxWidth,
+                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Container(
+                                height: receiptBoxHeight,
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                                alignment: pw.Alignment.centerLeft,
+                                child: pw.Column(
+                                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                                  children: [
+                                    pw.Text("Date of receipt of 1st Grant-in-Aid by the School:", style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(height: 2),
+                                    pw.Text("Lump Grant w.e.f under salary deficit Scheme.", style: const pw.TextStyle(fontSize: 6.8)),
+                                  ],
+                                ),
+                              ),
+                              pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                              
+                              pw.Table(
+                                border: const pw.TableBorder(
+                                  verticalInside: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                ),
+                                columnWidths: {
+                                  0: const pw.FixedColumnWidth(wBasic + wDp), 
+                                  1: const pw.FixedColumnWidth(leftBoxWidth - (wBasic + wDp)), 
+                                },
+                                children: [
+                                  pw.TableRow(
+                                    children: [
+                                      pw.Container(
+                                        height: reasonBoxHeight,
+                                        padding: const pw.EdgeInsets.symmetric(horizontal: 5),
+                                        alignment: pw.Alignment.centerLeft,
+                                        child: pw.Text(
+                                          "REASON OF ARREAR :",
+                                          style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                        ),
+                                      ),
+                                      pw.Container(
+                                        height: reasonBoxHeight,
+                                        alignment: pw.Alignment.center,
+                                        child: pw.Text(
+                                          "FOR LATE APPROVAL",
+                                          style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              pw.Divider(color: PdfColors.black, thickness: 0.8, height: 0.8),
+                              pw.Container(
+                                height: certificateBoxHeight,
+                                padding: const pw.EdgeInsets.all(5),
+                                child: pw.Column(
+                                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    pw.Text("CERTIFIED THAT :-", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                    pw.Text("1. The amount claimed in this bill was not drawn before.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("2. The office copy agrees with the fair copy of the bill.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("3. The claim has been preferred with reference to Acquittance Roll & other office records.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("4. Necessary notes have been kept in the O/C of bills from which it was omitted in order to avoid double payment in future.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("5. The incumbent has not enjoyed any E.O.L. during the period of arrear claimed or has enjoyed E.O.L. in the months of as stated in the remark column.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("6. Income Tax, G.P.F. if any will be deducted and deposited through challan.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("7. The admissibility of the arrear claim has been checked with reference to Govt. Orders.", style: const pw.TextStyle(fontSize: 6.7)),
+                                    pw.Text("8. All relevant records and found in order.", style: const pw.TextStyle(fontSize: 6.7)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  pw.Container(
+                    width: bottomSectionWidth,
+                    child: pw.Column(
+                      children: [
+                        pw.Row(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Container(
+                              width: wInRs,
+                              height: (rowH * 4) + inRsTallBoxHeight,
+                              decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                              child: pw.Column(
+                                children: [
+                                  pw.Container(
+                                    height: rowH,
+                                    width: wInRs,
+                                    color: PdfColors.grey300,
+                                    alignment: pw.Alignment.center,
+                                    decoration: const pw.BoxDecoration(
+                                      border: pw.Border(
+                                        bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
+                                      ),
+                                    ),
+                                    child: pw.Text("IN RS.", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                  ),
+                                  pw.Container(
+                                    height: (rowH * 3) + inRsTallBoxHeight - 0.8,
+                                    width: wInRs,
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            pw.Container(
+                              width: rightTotalWidth,
+                              child: pw.Column(
+                                children: [
+                                  pw.Table(
+                                    border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                    children: [
+                                      pw.TableRow(
+                                        decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                                        children: [
+                                          pw.Container(
+                                            height: rowH,
+                                            width: rightTotalWidth,
+                                            alignment: pw.Alignment.center,
+                                            child: pw.Text("TO BE CREDITED TO:", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                      pw.TableRow(
+                                        children: [
+                                          pw.Table(
+                                            border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                            columnWidths: right4ColWidths,
+                                            children: [
+                                              pw.TableRow(
+                                                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                                                children: [
+                                                  _finalValCell("P.TAX", height: rowH, isBold: true),
+                                                  _finalValCell("G.P.F/C.P.F", height: rowH, isBold: true),
+                                                  _finalValCell("OTHERS", height: rowH, isBold: true),
+                                                  _finalValCell("NET CLAIM", height: rowH, isBold: true),
+                                                ],
+                                              ),
+                                              pw.TableRow(
+                                                children: List.generate(4, (_) => _finalValCell("", height: rowH)),
+                                              ),
+                                              pw.TableRow(
+                                                children: [
+                                                  _finalValCell("0", height: rowH),
+                                                  _finalValCell("0", height: rowH),
+                                                  _finalValCell("0", height: rowH),
+                                                  _finalValCell(allGrandNet.round().toString(), height: rowH),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+
+                                  pw.Table(
+                                    border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                    children: [
+                                      pw.TableRow(
+                                        children: [
+                                          pw.Container(
+                                            height: rowH,
+                                            width: rightTotalWidth,
+                                            alignment: pw.Alignment.center,
+                                            child: pw.Text("LESS ANY AD-HOC PAYMENT MODE:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                      pw.TableRow(
+                                        children: [
+                                          pw.Table(
+                                            border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                            columnWidths: right4ColWidths,
+                                            children: [
+                                              pw.TableRow(children: [
+                                                _finalValCell("1", height: rowH),
+                                                _finalValCell(double.tryParse(adHoc1Ctrl.text) != null && double.parse(adHoc1Ctrl.text) > 0 ? adHoc1Ctrl.text : "", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                              ]),
+                                              pw.TableRow(children: [
+                                                _finalValCell("2", height: rowH),
+                                                _finalValCell(double.tryParse(adHoc2Ctrl.text) != null && double.parse(adHoc2Ctrl.text) > 0 ? adHoc2Ctrl.text : "", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                              ]),
+                                              pw.TableRow(children: [
+                                                _finalValCell("3", height: rowH),
+                                                _finalValCell(double.tryParse(adHoc3Ctrl.text) != null && double.parse(adHoc3Ctrl.text) > 0 ? adHoc3Ctrl.text : "", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                              ]),
+                                              pw.TableRow(children: [
+                                                _finalValCell("4", height: rowH),
+                                                _finalValCell(double.tryParse(adHoc4Ctrl.text) != null && double.parse(adHoc4Ctrl.text) > 0 ? adHoc4Ctrl.text : "", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                                _finalValCell("", height: rowH),
+                                              ]),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      pw.TableRow(
+                                        children: [
+                                          pw.Table(
+                                            border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                                            columnWidths: actualClaimRowWidths,
+                                            children: [
+                                              pw.TableRow(children: [
+                                                pw.Container(
+                                                  height: rowH,
+                                                  padding: const pw.EdgeInsets.only(left: 4),
+                                                  alignment: pw.Alignment.centerLeft,
+                                                  child: pw.Text("ACTUAL CLAIM:", style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold)),
+                                                ),
+                                                _finalValCell(adHocTotal > 0 ? adHocTotal.round().toString() : "0", height: rowH),
+                                                _finalValCell(actClaim.round().toString(), height: rowH, isBold: true),
+                                              ]),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        pw.Container(
+                          height: rowH,
+                          width: bottomSectionWidth,
+                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                        ),
+
+                        pw.Table(
+                          border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                          columnWidths: {
+                            0: pw.FixedColumnWidth(wInRs + wPtax + wGpf + wOthers), 
+                            1: const pw.FixedColumnWidth(wNet),                     
+                          },
+                          children: [
+                            pw.TableRow(children: [
+                              pw.Container(
+                                height: rowH + 2,
+                                padding: const pw.EdgeInsets.only(left: 4),
+                                alignment: pw.Alignment.centerLeft,
+                                child: pw.Text("PASSED FOR RS.:", style: pw.TextStyle(fontSize: 7.2, fontWeight: pw.FontWeight.bold)),
+                              ),
+                              _finalValCell(actClaim.round().toString(), height: rowH + 2, isBold: true),
+                            ]),
+                          ],
+                        ),
+
+                        pw.Container(
+                          height: rowH,
+                          width: bottomSectionWidth,
+                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.black, width: 0.8)),
+                        ),
+
+                        pw.Table(
+                          border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
+                          columnWidths: {
+                            0: const pw.FixedColumnWidth(wInRs),         
+                            1: pw.FixedColumnWidth(rightTotalWidth),      
+                          },
+                          children: [
+                            pw.TableRow(children: [
+                              pw.Container(
+                                height: inWordsBoxHeight,
+                                alignment: pw.Alignment.center,
+                                child: pw.Text(
+                                  "IN WORDS:",
+                                  textAlign: pw.TextAlign.center,
+                                  style: pw.TextStyle(fontSize: 6.8, fontWeight: pw.FontWeight.bold),
+                                ),
+                              ),
+                              pw.Container(
+                                height: inWordsBoxHeight,
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                                alignment: pw.Alignment.centerLeft,
+                                child: pw.Text(
+                                  inWordsText,
+                                  softWrap: true,
+                                  style: const pw.TextStyle(fontSize: 6.8),
+                                ),
+                              ),
+                            ]),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 20.0 * PdfPageFormat.mm),
+
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text("Signature of Secretary/Administrator/D.D.O.", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Signature of D.I./A.D.I. of Schools (S.E.)", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("A.D./D.O.(Accounts)", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: 'Final_Sheet.pdf',
+      format: PdfPageFormat.a4.landscape,
+    );
+  }
+
+  static pw.Widget _finalHCell(String t, {required double height}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: pw.Alignment.centerLeft,
+    child: pw.Text(t, style: pw.TextStyle(fontSize: 7.0, fontWeight: pw.FontWeight.bold)),
+  );
+
+  static pw.Widget _finalHCellCenter(String t, {required double height}) => pw.Container(
+    height: height,
+    color: PdfColors.grey300,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+    alignment: pw.Alignment.center,
+    child: pw.Text(t, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold)),
+  );
+
+  static pw.Widget _finalValCell(String t, {required double height, bool isBold = false, bool alignLeft = false}) => pw.Container(
+    height: height,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+    alignment: alignLeft ? pw.Alignment.centerLeft : pw.Alignment.center,
+    child: pw.Text(t, textAlign: alignLeft ? pw.TextAlign.left : pw.TextAlign.center, style: pw.TextStyle(fontSize: 7.2, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
 }
