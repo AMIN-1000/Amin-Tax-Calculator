@@ -300,7 +300,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
 
   void _initDefaultSheets() {
     sheets.clear();
-    // ডিফল্টভাবে শিটগুলো তৈরি
     int baseStartYear = 2013;
     for (int i = 0; i < 5; i++) {
       DateTime sheetStart = DateTime(baseStartYear + i, 3, 1);
@@ -349,7 +348,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  // ম্যানুয়ালি প্রথম ঘরে মাস লিখলে (যেমন: March,13 বা July,13) পুরো শিটের মাসগুলো ফেব্রুয়ারি পর্যন্ত অটো সাজানো
   void _updateMonthsFromFirstCell(YearSheet sh, String input) {
     String clean = input.trim();
     if (clean.isEmpty) return;
@@ -478,7 +476,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   double get allGrandGross => sheets.fold(0, (s, sh) => s + sh.grandGross);
   double get allGrandNet => sheets.fold(0, (s, sh) => s + sh.grandNet);
 
-  // তারিখের সাথে আর কোনো মাস পরিবর্তনের সম্পর্ক নেই, শুধুই তারিখ টেক্সট হিসেবে বসবে
   Future<void> _selectDate(TextEditingController controller) async {
     DateTime initial = _parseDate(controller.text) ?? DateTime.now();
     DateTime? picked = await showDatePicker(
@@ -819,7 +816,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   }
 
   List<TableRow> _buildMonthRows(YearSheet sh, MonthEntry r, int index) {
-    // প্রথম মাসের ঘরটি Editable (টাইপ করা যাবে), আর বাকি ঘরগুলো তার উপর ভিত্তি করে অটোমেটিক শো করবে
     Widget monthWidget;
     if (index == 0) {
       monthWidget = Container(
@@ -1110,6 +1106,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
   static const double pColRemarks = 53.0; 
   static const double pTotalTableWidth = 546.0;
 
+  // সমাধান: প্রতিটি পেজেই Main Calculator-এর সঠিক শুরু ও শেষ তারিখ পাঠানো হচ্ছে
   Future<void> _printCalculationSheets() async {
     final doc = pw.Document();
     final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
@@ -1133,7 +1130,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
                 child: pw.Text("ANNEXURE - 1", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12.0)),
               ),
               pw.SizedBox(height: 4),
-              _buildPdfHeaderAligned(sh.periodText),
+              // Main Calculator এর তারিখ দিয়ে হেডার তৈরি
+              _buildPdfHeaderAligned(fromDateController.text, toDateController.text),
               pw.Container(
                 width: pTotalTableWidth,
                 height: 7.0,
@@ -1176,7 +1174,8 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     );
   }
 
-  pw.Widget _buildPdfHeaderAligned(String periodText) {
+  // হেডার অংশে সরাসরি Main Calculator-এর সঠিক ফ্রম ও টু ডেট বসানো
+  pw.Widget _buildPdfHeaderAligned(String fromDate, String toDate) {
     const double hRowH = 14.5;
     const double wH1 = pColMonth + pColAdm + pColBasic; 
     const double wH2 = pColDp + pColSp + pColDa + pColHra + pColMa + pColGross; 
@@ -1186,16 +1185,6 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
     const double wDate1 = pColDp + pColSp; 
     const double wDate2 = pColDa + pColHra; 
     const double wDate3 = pColMa + pColGross; 
-
-    String fromDate = fromDateController.text;
-    String toDate = toDateController.text;
-    if (periodText.contains(" TO ")) {
-      final parts = periodText.split(" TO ");
-      if (parts.length == 2) {
-        fromDate = parts[0].trim();
-        toDate = parts[1].trim();
-      }
-    }
 
     const double wB1 = pColDp + pColSp; 
     const double wB2 = pColDa; 
@@ -1236,6 +1225,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
               _pdfHCell("DESIGNATION:", height: hRowH),
               _pdfValCenterCell(desigController.text, height: hRowH),
             ]),
+            // Main Calculator এর Same Date সব PDF পেজেই থাকবে
             pw.TableRow(children: [
               _pdfHCell("ARREAR FOR THE PERIOD:", height: hRowH),
               pw.Container(
@@ -1283,6 +1273,7 @@ class _ArrearHomePageState extends State<ArrearHomePage> with TickerProviderStat
         ),
         pw.Table(
           border: const pw.TableBorder(
+            top: pw.BorderSide(color: PdfColors.black, width: 0.8),
             bottom: pw.BorderSide(color: PdfColors.black, width: 0.8),
             left: pw.BorderSide(color: PdfColors.black, width: 0.8),
             right: pw.BorderSide(color: PdfColors.black, width: 0.8),
