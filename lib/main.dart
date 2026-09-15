@@ -14,7 +14,7 @@ class ArrearCalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '18Years Arrear Calculator',
+      title: 'Amin Arrear Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.teal,
