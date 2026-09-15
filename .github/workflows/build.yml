@@ -25,18 +25,13 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Generate App Icons
         run: dart run flutter_launcher_icons
-
-      - name: Clean Build Cache
-        run: flutter clean
-
-      - name: Re-fetch Dependencies
-        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --android-skip-build-dependency-validation
