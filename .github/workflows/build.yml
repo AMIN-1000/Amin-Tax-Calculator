@@ -2,27 +2,30 @@ name: Build Flutter APK
 
 on:
   push:
-    branches: [ main, Amin-Arrear-Calculator ]
+    branches:
+      - main
+      - Amin_18Years_Calculator
+      - Amin_Arrear_Calculator
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'zulu'
           java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       - name: Install Dependencies
         run: flutter pub get
@@ -30,11 +33,11 @@ jobs:
       - name: Generate App Icons
         run: dart run flutter_launcher_icons
 
-      - name: Build Release APK
+      - name: Build APK
         run: flutter build apk --release --android-skip-build-dependency-validation
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Amin-Arrear-Calculator-APK
+          name: "Amin Arrear Calculator APK"
           path: build/app/outputs/flutter-apk/app-release.apk
