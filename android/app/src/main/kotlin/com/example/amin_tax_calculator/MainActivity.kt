@@ -1,4 +1,4 @@
-package com.example.amin_18years_calculator
+package com.amin.arrear_calculator
 
 import io.flutter.embedding.android.FlutterActivity
 
