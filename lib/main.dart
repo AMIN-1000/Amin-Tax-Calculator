@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const EighteenYearsBenefitApp());
@@ -19,9 +18,6 @@ class EighteenYearsBenefitApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
         useMaterial3: true,
-        textTheme: GoogleFonts.barlowSemiCondensedTextTheme(
-          Theme.of(context).textTheme,
-        ),
       ),
       home: const EighteenYearsHomePage(),
     );
@@ -86,13 +82,11 @@ class Ropa19Data {
 
     if (curLevel == -1) return null;
 
-    // ১. একই লেভেলে ১টি ইনক্রিমেন্ট যোগ
     int nextCellInLevel = curCell + 1;
     int afterIncrBasic = (nextCellInLevel <= matrix[curLevel - 1].length)
         ? matrix[curLevel - 1][nextCellInLevel - 1]
         : currentBasic;
 
-    // ২. পরবর্তী উচ্চতর লেভেলে (Next Level) ফিক্সেশন
     int nextLevel = curLevel + 1;
     int revisedBasic = afterIncrBasic;
     int nextLvlCell = 1;
@@ -128,30 +122,24 @@ class EighteenYearsHomePage extends StatefulWidget {
 }
 
 class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
-  // প্রতিষ্ঠানের তথ্য
   final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
   final instAddressCtrl = TextEditingController(text: "P.O.: MAKHALGACHHA, P.S.: HASNABAD,\nDIST. NORTH 24 PARGANAS, PIN.743422");
 
-  // কর্মচারীর তথ্য
   final empNameDesigCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL,  (A.T.)");
   final empSubjectCtrl = TextEditingController(text: "Arabic (Pass)");
   final firstJoiningCtrl = TextEditingController(text: "19.05.2005, Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
   final firstJoinDateOnlyCtrl = TextEditingController(text: "19.05.2005");
 
-  // ১৮ বছর পূর্তি ও অপশন ডেট
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
   final optionDateCtrl = TextEditingController(text: "01.07.2023");
   final effectDateCtrl = TextEditingController(text: "01.07.2023");
   final nextIncrDateCtrl = TextEditingController(text: "01.07.2024");
 
-  // অফিসিয়াল চিঠি প্রেরণের ঠিকানা (Forwarding)
   final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools, Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
   final diOfficeNameCtrl = TextEditingController(text: "North 24 Parganas");
 
-  // বেসিক পে ইনপুট
   final basicPayCtrl = TextEditingController(text: "58600");
 
-  // গণনাকৃত ফলাফল
   int curLevel = 11;
   int curCell = 20;
   int afterIncrBasic = 60400;
@@ -332,15 +320,15 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ১. FIXATION STATEMENT PDF (স্কুলের প্যাডের নিচের অংশের জন্য হুবহু ফরম্যাট)
+  // ১. FIXATION STATEMENT PDF
   // =========================================================================
   Future<void> _printFixationPdf() async {
     final doc = pw.Document();
-    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
-    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+    final theme = pw.ThemeData.withFont(
+      base: pw.Font.helvetica(),
+      bold: pw.Font.helveticaBold(),
+    );
 
-    // স্কুলের প্যাডের ওপরের অংশ বাদ দিয়ে মার্জিন সেট
-    // topMargin: 170.0 pt (~60 mm) ঠিক Ref. No. ও Date এর নিচের লাইন থেকে শুরু করার জন্য
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -355,14 +343,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // হেডিং
               pw.Text(
                 "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.0),
               ),
               pw.SizedBox(height: 12),
 
-              // ১ থেকে ১১ নম্বর পয়েন্ট
               _pdfStatementRow("1. Name of Institution with Address", ": ${instNameCtrl.text}\n  ${instAddressCtrl.text}"),
               _pdfStatementRow("2. Name & Designation of the Employee", ": ${empNameDesigCtrl.text}"),
               _pdfStatementRow("3. Date of First Joining with Approval No. & Date", ": ${firstJoiningCtrl.text}"),
@@ -383,7 +369,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
               pw.Spacer(),
 
-              // সাক্ষর অংশ
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -436,19 +421,21 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF (স্কুলের প্যাডের নিচের অংশের জন্য হুবহু চিঠির ফরম্যাট)
+  // ২. FORWARDING LETTER PDF
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
-    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
-    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+    final theme = pw.ThemeData.withFont(
+      base: pw.Font.helvetica(),
+      bold: pw.Font.helveticaBold(),
+    );
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 170.0, // স্কুলের প্যাডের হেডারের অংশটুকু নিখুঁতভাবে ফাঁকা রাখা হলো
+          top: 170.0,
           left: 45.0,
           right: 45.0,
           bottom: 30.0,
@@ -461,7 +448,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.5)),
               pw.SizedBox(height: 15),
 
-              // Subject
               pw.Center(
                 child: pw.Text(
                   "Sub: Submission of papers regarding 18 years benefit asper G.O.No.437-SE(P&B)/SL/5S-408/1, Dated- 13/12/2019.",
@@ -474,7 +460,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.5)),
               pw.SizedBox(height: 6),
 
-              // Body Paragraph 1
               pw.Text(
                 "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of ${empNameDesigCtrl.text}, assistant teacher of the school in ${empSubjectCtrl.text} who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} since his date of first joining ${firstJoinDateOnlyCtrl.text} without any break.",
                 style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
@@ -482,7 +467,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 8),
 
-              // Body Paragraph 2
               pw.Text(
                 "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
                 style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
@@ -493,7 +477,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.5)),
               pw.SizedBox(height: 10),
 
-              // Signature Right Aligned
               pw.Align(
                 alignment: pw.Alignment.centerRight,
                 child: pw.Padding(
@@ -506,7 +489,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 9.0)),
               pw.SizedBox(height: 6),
 
-              // Enclosures
               pw.Text("Enclosures:", style: const pw.TextStyle(fontSize: 9.0)),
               pw.SizedBox(height: 4),
               _pdfEnclosureItem("1. Forwarding Letter"),
