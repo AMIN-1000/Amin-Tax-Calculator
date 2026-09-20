@@ -2,798 +2,280 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'dart:math';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  runApp(const TaxCalculatorApp());
+  runApp(const EighteenYearsBenefitApp());
 }
 
-class TaxCalculatorApp extends StatelessWidget {
-  const TaxCalculatorApp({super.key});
+class EighteenYearsBenefitApp extends StatelessWidget {
+  const EighteenYearsBenefitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Amin Tax Calculator",
+      title: '18 Years Benefit Calculator',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A237E),
-          foregroundColor: Colors.white,
+        primarySwatch: Colors.teal,
+        useMaterial3: true,
+        textTheme: GoogleFonts.barlowSemiCondensedTextTheme(
+          Theme.of(context).textTheme,
         ),
       ),
-      home: const TaxHomeScreen(),
-      debugShowCheckedModeBanner: false,
+      home: const EighteenYearsHomePage(),
     );
   }
 }
 
-class TaxHomeScreen extends StatefulWidget {
-  const TaxHomeScreen({super.key});
+// ---------------- ROPA-19 PAY MATRIX DATABASE ----------------
+class Ropa19Data {
+  static final List<int> gradePays = [
+    1700, 1800, 1900, 2100, 2300, 2600, 2900, 3200, 3600, 3900, 4100, 4400, 4600, 4700, 4800, 5400
+  ];
 
-  @override
-  State<TaxHomeScreen> createState() => _TaxHomeScreenState();
+  static final List<List<int>> matrix = [
+    // L-1 (GP 1700)
+    [17000, 17500, 18000, 18500, 19100, 19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600],
+    // L-2 (GP 1800)
+    [17600, 18100, 18600, 19200, 19800, 20400, 21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200],
+    // L-3 (GP 1900)
+    [18800, 19400, 20000, 20600, 21200, 21800, 22500, 23200, 23900, 24600, 25300, 26100, 26900, 27700, 28500, 29400, 30300, 31200, 32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700],
+    // L-4 (GP 2100)
+    [19700, 20300, 20900, 21500, 22100, 22800, 23500, 24200, 24900, 25600, 26400, 27200, 28000, 28800, 29700, 30600, 31500, 32400, 33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500],
+    // L-5 (GP 2300)
+    [21000, 21600, 22200, 22900, 23600, 24300, 25000, 25800, 26600, 27400, 28200, 29000, 29900, 30800, 31700, 32700, 33700, 34700, 35700, 36800, 37900, 39000, 40200, 41400, 42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000],
+    // L-6 (GP 2600)
+    [22700, 23400, 24100, 24800, 25500, 26300, 27100, 27900, 28700, 29600, 30500, 31400, 32300, 33300, 34300, 35300, 36400, 37500, 38600, 39800, 41000, 42200, 43500, 44800, 46100, 47500, 48900, 50400, 51900, 53500, 55100, 56800, 58500],
+    // L-7 (GP 2900)
+    [24700, 25400, 26200, 27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900],
+    // L-8 (GP 3200)
+    [27000, 27800, 28600, 29500, 30400, 31300, 32200, 33200, 34200, 35200, 36300, 37400, 38500, 39700, 40900, 42100, 43400, 44700, 46000, 47400, 48800, 50300, 51800, 53400, 55000, 56700, 58400, 60200, 62000, 63900, 65800, 67800, 69800],
+    // L-9 (GP 3600)
+    [28900, 29800, 30700, 31600, 32500, 33500, 34500, 35500, 36600, 37700, 38800, 40000, 41200, 42400, 43700, 45000, 46400, 47800, 49200, 50700, 52200, 53800, 55400, 57100, 58800, 60600, 62400, 64300, 66200, 68200, 70200, 72300, 74500],
+    // L-10 (GP 3900)
+    [32100, 33100, 34100, 35100, 36200, 37300, 38400, 39600, 40800, 42000, 43300, 44600, 45900, 47300, 48700, 50200, 51700, 53300, 54900, 56500, 58200, 59900, 61700, 63600, 65500, 67500, 69500, 71600, 73700, 75900, 78200, 80500, 82900],
+    // L-11 (GP 4100)
+    [33400, 34400, 35400, 36500, 37600, 38700, 39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100],
+    // L-12 (GP 4400)
+    [35800, 36900, 38000, 39100, 40300, 41500, 42700, 44000, 45300, 46700, 48100, 49500, 51000, 52500, 54100, 55700, 57400, 59100, 60900, 62700, 64600, 66500, 68500, 70600, 72700, 74900, 77100, 79400, 81800, 84300, 86800, 89400, 92100],
+    // L-13 (GP 4600)
+    [37100, 38200, 39300, 40500, 41700, 43000, 44300, 45600, 47000, 48400, 49900, 51400, 52900, 54500, 56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500],
+    // L-14 (GP 4700)
+    [39900, 41100, 42300, 43600, 44900, 46200, 47600, 49000, 50500, 52000, 53600, 55200, 56900, 58600, 60400, 62200, 64100, 66000, 68000, 70000, 72100, 74300, 76500, 78800, 81200, 83600, 86100, 88700, 91400, 94100, 96900, 99800, 102800],
+    // L-15 (GP 4800)
+    [42600, 43900, 45200, 46600, 48000, 49400, 50900, 52400, 54000, 55600, 57300, 59000, 60800, 62600, 64500, 66400, 68400, 70500, 72600, 74800, 77000, 79300, 81700, 84200, 86700, 89300, 92000, 94800, 97600, 100500, 103500, 106600, 109800],
+    // L-16 (GP 5400)
+    [56100, 57800, 59500, 61300, 63100, 65000, 67000, 69000, 71100, 73200, 75400, 77700, 80000, 82400, 84900, 87400, 90000, 92700, 95500, 98400, 101400, 104400, 107500, 110700, 114000, 117400, 120900, 124500, 128200, 132000, 136000, 140100, 144300],
+  ];
+
+  static Map<String, dynamic>? calculate18YearsFixation(int currentBasic) {
+    int curLevel = -1;
+    int curCell = -1;
+
+    for (int l = 0; l < matrix.length; l++) {
+      for (int c = 0; c < matrix[l].length; c++) {
+        if (matrix[l][c] == currentBasic) {
+          curLevel = l + 1;
+          curCell = c + 1;
+          break;
+        }
+      }
+      if (curLevel != -1) break;
+    }
+
+    if (curLevel == -1) return null;
+
+    // ১. একই লেভেলে ১টি ইনক্রিমেন্ট যোগ
+    int nextCellInLevel = curCell + 1;
+    int afterIncrBasic = (nextCellInLevel <= matrix[curLevel - 1].length)
+        ? matrix[curLevel - 1][nextCellInLevel - 1]
+        : currentBasic;
+
+    // ২. পরবর্তী উচ্চতর লেভেলে (Next Level) ফিক্সেশন
+    int nextLevel = curLevel + 1;
+    int revisedBasic = afterIncrBasic;
+    int nextLvlCell = 1;
+
+    if (nextLevel <= matrix.length) {
+      for (int c = 0; c < matrix[nextLevel - 1].length; c++) {
+        if (matrix[nextLevel - 1][c] >= afterIncrBasic) {
+          revisedBasic = matrix[nextLevel - 1][c];
+          nextLvlCell = c + 1;
+          break;
+        }
+      }
+    }
+
+    return {
+      'curLevel': curLevel,
+      'curCell': curCell,
+      'afterIncrBasic': afterIncrBasic,
+      'afterIncrCell': nextCellInLevel,
+      'nextLevel': nextLevel,
+      'nextLvlCell': nextLvlCell,
+      'revisedBasic': revisedBasic,
+    };
+  }
 }
 
-class _TaxHomeScreenState extends State<TaxHomeScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _prevTabIndex = 0;
+// ---------------- MAIN HOME PAGE ----------------
+class EighteenYearsHomePage extends StatefulWidget {
+  const EighteenYearsHomePage({super.key});
 
-  // Header Details
-  final nameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
-  final designationCtrl = TextEditingController(text: "A.T.");
-  final institutionCtrl =
-      TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final empCodeCtrl = TextEditingController(text: "BDFF2107");
-  final panCtrl = TextEditingController(text: "AWUPM0023B");
-  final finYearCtrl = TextEditingController(text: "2025-26");
-  final assessYearCtrl = TextEditingController(text: "2026-27");
+  @override
+  State<EighteenYearsHomePage> createState() => _EighteenYearsHomePageState();
+}
 
-  // Inputs
-  final i7GrossSalary = TextEditingController();
-  final i8Arrear = TextEditingController();
-  final i10HRA = TextEditingController();
+class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
+  // প্রতিষ্ঠানের তথ্য
+  final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
+  final instAddressCtrl = TextEditingController(text: "P.O.: MAKHALGACHHA, P.S.: HASNABAD,\nDIST. NORTH 24 PARGANAS, PIN.743422");
 
-  final i18GrossRent = TextEditingController();
-  final i19TaxLocalAuth = TextEditingController();
-  final i22HomeLoanInt = TextEditingController();
+  // কর্মচারীর তথ্য
+  final empNameDesigCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL,  (A.T.)");
+  final empSubjectCtrl = TextEditingController(text: "Arabic (Pass)");
+  final firstJoiningCtrl = TextEditingController(text: "19.05.2005, Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
+  final firstJoinDateOnlyCtrl = TextEditingController(text: "19.05.2005");
 
-  final i25BankInt = TextEditingController();
-  final i26FDInt = TextEditingController();
-  final i27OtherSource = TextEditingController();
+  // ১৮ বছর পূর্তি ও অপশন ডেট
+  final completionDateCtrl = TextEditingController(text: "18.05.2023");
+  final optionDateCtrl = TextEditingController(text: "01.07.2023");
+  final effectDateCtrl = TextEditingController(text: "01.07.2023");
+  final nextIncrDateCtrl = TextEditingController(text: "01.07.2024");
 
-  final i32_43Total80C = TextEditingController();
-  final i45_56TotalOtherDed = TextEditingController();
+  // অফিসিয়াল চিঠি প্রেরণের ঠিকানা (Forwarding)
+  final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools, Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
+  final diOfficeNameCtrl = TextEditingController(text: "North 24 Parganas");
 
-  final i68STCG = TextEditingController();
-  final i69LTCG = TextEditingController();
-  final i71TaxPaidJan = TextEditingController();
-  final i72TaxPaidFeb = TextEditingController();
+  // বেসিক পে ইনপুট
+  final basicPayCtrl = TextEditingController(text: "58600");
 
-  // ReadOnly Output
-  final totalSalCtrl = TextEditingController();
-  final stdDedCtrl = TextEditingController();
-  final pTaxCtrl = TextEditingController();
-  final netSalCtrl = TextEditingController();
-  final totalHousePropCtrl = TextEditingController();
-  final totalOtherSrcCtrl = TextEditingController();
-  final grossTotalCtrl = TextEditingController();
-
-  final serial10Ctrl = TextEditingController();
-  final totalDedCtrl = TextEditingController();
-
-  final taxableIncomeCtrl = TextEditingController();
-  final taxOnIncomeCtrl = TextEditingController();
-  final rebateCtrl = TextEditingController();
-  final cessCtrl = TextEditingController();
-  final totalTaxCessCtrl = TextEditingController();
-  final finalTaxPayableCtrl = TextEditingController();
-  final statusCtrl = TextEditingController();
+  // গণনাকৃত ফলাফল
+  int curLevel = 11;
+  int curCell = 20;
+  int afterIncrBasic = 60400;
+  int afterIncrCell = 21;
+  int nextLevel = 12;
+  int nextLvlCell = 19;
+  int revisedBasic = 60900;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _performCalculation(basicPayCtrl.text);
+  }
 
-    _tabController.addListener(() {
-      if (_tabController.index != _prevTabIndex) {
-        _prevTabIndex = _tabController.index;
-
-        if (_tabController.index == 1) {
-          i32_43Total80C.clear();
-          i45_56TotalOtherDed.clear();
-        }
-        i72TaxPaidFeb.clear();
-        calculateTax();
+  void _performCalculation(String val) {
+    int? basic = int.tryParse(val.trim());
+    if (basic != null) {
+      final res = Ropa19Data.calculate18YearsFixation(basic);
+      if (res != null) {
+        setState(() {
+          curLevel = res['curLevel'];
+          curCell = res['curCell'];
+          afterIncrBasic = res['afterIncrBasic'];
+          afterIncrCell = res['afterIncrCell'];
+          nextLevel = res['nextLevel'];
+          nextLvlCell = res['nextLvlCell'];
+          revisedBasic = res['revisedBasic'];
+        });
       }
-    });
-  }
-
-  double getVal(TextEditingController ctrl) {
-    return double.tryParse(ctrl.text) ?? 0.0;
-  }
-
-  void calculateTax() {
-    setState(() {
-      bool isOld = _tabController.index == 0;
-
-      double i7 = getVal(i7GrossSalary);
-      double i8 = getVal(i8Arrear);
-      double i10 = getVal(i10HRA);
-      double i18 = getVal(i18GrossRent);
-      double i19 = getVal(i19TaxLocalAuth);
-      double i22 = getVal(i22HomeLoanInt);
-      double i25 = getVal(i25BankInt);
-      double i26 = getVal(i26FDInt);
-      double i27 = getVal(i27OtherSource);
-      double total80C = getVal(i32_43Total80C);
-      double totalOtherDed = getVal(i45_56TotalOtherDed);
-      double i68 = getVal(i68STCG);
-      double i69 = getVal(i69LTCG);
-      double i71 = getVal(i71TaxPaidJan);
-      double i72 = getVal(i72TaxPaidFeb);
-
-      double grossSal = i7 + i8;
-      totalSalCtrl.text = grossSal.toStringAsFixed(0);
-
-      double stdDed = isOld
-          ? (grossSal > 50000 ? 50000 : grossSal)
-          : (grossSal > 75000 ? 75000 : grossSal);
-      stdDedCtrl.text = stdDed.toStringAsFixed(0);
-
-      double pTax = 0;
-      if (isOld) {
-        if (grossSal <= 120000)
-          pTax = 0;
-        else if (grossSal <= 180000)
-          pTax = 1320;
-        else if (grossSal <= 300000)
-          pTax = 1560;
-        else if (grossSal <= 480000)
-          pTax = 1800;
-        else
-          pTax = 2400;
-      }
-      pTaxCtrl.text = pTax.toStringAsFixed(0);
-
-      double salIncome = grossSal - stdDed - pTax - i10;
-      netSalCtrl.text = salIncome.toStringAsFixed(0);
-
-      double houseIncome = (i18 - i19) - ((i18 - i19) * 0.3) - i22;
-      totalHousePropCtrl.text = houseIncome.toStringAsFixed(0);
-
-      double otherIncome = i25 + i26 + i27;
-      totalOtherSrcCtrl.text = otherIncome.toStringAsFixed(0);
-
-      double gross = salIncome + houseIncome + otherIncome;
-      grossTotalCtrl.text = gross.toStringAsFixed(0);
-
-      double ded80C = total80C > 150000 ? 150000 : total80C;
-      double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-
-      double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-      serial10Ctrl.text = totalOther.toStringAsFixed(0);
-
-      double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-      totalDedCtrl.text = totalDed.toStringAsFixed(0);
-
-      double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-      if (taxable < 0) taxable = 0;
-      taxableIncomeCtrl.text = taxable.toStringAsFixed(0);
-
-      double tax = 0;
-      if (isOld) {
-        if (taxable > 1000000)
-          tax = (taxable - 1000000) * 0.3 + 112500;
-        else if (taxable > 500000)
-          tax = (taxable - 500000) * 0.2 + 12500;
-        else if (taxable > 250000)
-          tax = (taxable - 250000) * 0.05;
-      } else {
-        if (taxable > 2400000)
-          tax = (taxable - 2000000) * 0.3 + 200000;
-        else if (taxable > 2000000)
-          tax = (taxable - 2000000) * 0.25 + 200000;
-        else if (taxable > 1600000)
-          tax = (taxable - 1600000) * 0.2 + 120000;
-        else if (taxable > 1200000)
-          tax = (taxable - 1200000) * 0.15 + 60000;
-        else if (taxable > 800000)
-          tax = (taxable - 800000) * 0.1 + 20000;
-        else if (taxable > 400000)
-          tax = (taxable - 400000) * 0.05;
-      }
-      taxOnIncomeCtrl.text = tax.toStringAsFixed(0);
-
-      double rebate = isOld
-          ? (taxable <= 500000 ? min(tax, 12500) : 0)
-          : (taxable <= 1200000 ? tax : 0);
-      rebateCtrl.text = rebate.toStringAsFixed(0);
-
-      double afterRebate = tax - rebate;
-      double cess = (afterRebate * 0.04).roundToDouble();
-      cessCtrl.text = cess.toStringAsFixed(0);
-
-      double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-      totalTaxCessCtrl.text = totalTax.toStringAsFixed(0);
-
-      double finalTax = totalTax +
-          (i68 * 0.2) +
-          (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-      finalTaxPayableCtrl.text = finalTax.toStringAsFixed(0);
-
-      double totalPaid = i71 + i72;
-      if (totalPaid > finalTax)
-        statusCtrl.text = "REFUNDABLE: ${totalPaid - finalTax}";
-      else if (totalPaid < finalTax)
-        statusCtrl.text = "PAYABLE: ${finalTax - totalPaid}";
-      else
-        statusCtrl.text = "NIL";
-    });
-  }
-
-  Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-    pdf.addPage(_buildRegimePdfPage(true));
-    pdf.addPage(_buildRegimePdfPage(false));
-    await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
-  }
-
-  pw.Page _buildRegimePdfPage(bool isOld) {
-    bool isActiveRegime = isOld == (_tabController.index == 0);
-
-    double i7 = getVal(i7GrossSalary);
-    double i8 = getVal(i8Arrear);
-    double i10 = getVal(i10HRA);
-    double i18 = getVal(i18GrossRent);
-    double i19 = getVal(i19TaxLocalAuth);
-    double i22 = getVal(i22HomeLoanInt);
-    double i25 = getVal(i25BankInt);
-    double i26 = getVal(i26FDInt);
-    double i27 = getVal(i27OtherSource);
-    double total80C = isOld ? getVal(i32_43Total80C) : 0.0;
-    double totalOtherDed = isOld ? getVal(i45_56TotalOtherDed) : 0.0;
-    double i68 = getVal(i68STCG);
-    double i69 = getVal(i69LTCG);
-    double i71 = getVal(i71TaxPaidJan);
-
-    double grossSal = i7 + i8;
-    double stdDed = isOld
-        ? (grossSal > 50000 ? 50000 : grossSal)
-        : (grossSal > 75000 ? 75000 : grossSal);
-
-    double pTax = 0;
-    if (isOld) {
-      if (grossSal <= 120000)
-        pTax = 0;
-      else if (grossSal <= 180000)
-        pTax = 1320;
-      else if (grossSal <= 300000)
-        pTax = 1560;
-      else if (grossSal <= 480000)
-        pTax = 1800;
-      else
-        pTax = 2400;
     }
-
-    double salIncome = grossSal - stdDed - pTax - i10;
-
-    double houseIncome30 = (i18 - i19) * 0.3;
-    double houseIncome = (i18 - i19) - houseIncome30 - i22;
-    double otherIncome = i25 + i26 + i27;
-    double gross = salIncome + houseIncome + otherIncome;
-
-    double ded80C = total80C > 150000 ? 150000 : total80C;
-    double ded80TTA = isOld ? min(i25, 10000.0) : 0.0;
-    double totalOther = isOld ? (totalOtherDed + ded80TTA) : 0.0;
-    double totalDed = isOld ? (ded80C + totalOther) : 0.0;
-
-    double taxable = ((gross - totalDed) / 10).roundToDouble() * 10;
-    if (taxable < 0) taxable = 0;
-
-    double tax = 0;
-    if (isOld) {
-      if (taxable > 1000000)
-        tax = (taxable - 1000000) * 0.3 + 112500;
-      else if (taxable > 500000)
-        tax = (taxable - 500000) * 0.2 + 12500;
-      else if (taxable > 250000)
-        tax = (taxable - 250000) * 0.05;
-    } else {
-      if (taxable > 2400000)
-        tax = (taxable - 2000000) * 0.3 + 200000;
-      else if (taxable > 2000000)
-        tax = (taxable - 2000000) * 0.25 + 200000;
-      else if (taxable > 1600000)
-        tax = (taxable - 1600000) * 0.2 + 120000;
-      else if (taxable > 1200000)
-        tax = (taxable - 1200000) * 0.15 + 60000;
-      else if (taxable > 800000)
-        tax = (taxable - 800000) * 0.1 + 20000;
-      else if (taxable > 400000)
-        tax = (taxable - 400000) * 0.05;
-    }
-
-    double rebate = isOld
-        ? (taxable <= 500000 ? min(tax, 12500) : 0)
-        : (taxable <= 1200000 ? tax : 0);
-    double afterRebate = tax - rebate;
-    double cess = (afterRebate * 0.04).roundToDouble();
-    double totalTax = ((afterRebate + cess) / 10).roundToDouble() * 10;
-
-    double capitalGainTax =
-        (i68 * 0.2) + (i69 > 125000 ? (i69 - 125000) * 0.125 : 0);
-    double finalTax = totalTax + capitalGainTax;
-
-    double i72 = 0;
-    if (isActiveRegime) {
-      i72 = getVal(i72TaxPaidFeb);
-    } else {
-      i72 = finalTax - i71;
-      if (i72 < 0) i72 = 0;
-    }
-
-    double totalPaid = i71 + i72;
-    String status = "";
-    if (totalPaid > finalTax)
-      status = "REFUNDABLE: ${totalPaid - finalTax}";
-    else if (totalPaid < finalTax)
-      status = "PAYABLE: ${finalTax - totalPaid}";
-    else
-      status = "NIL";
-
-    String headerTxt = isOld
-        ? ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER OLD REGIME ]'
-        : ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER NEW REGIME ]';
-
-    return pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 40, bottom: 35),
-      build: (pw.Context context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            pw.Center(
-                child: pw.Text(headerTxt,
-                    style: pw.TextStyle(
-                        fontSize: 12.5, fontWeight: pw.FontWeight.bold))),
-            pw.SizedBox(height: 12),
-
-            pw.Container(
-                decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.black, width: 0.6)),
-                child: pw.Column(children: [
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE NAME", nameCtrl.text),
-                    _pdfHeaderBox("DESIGNATION", designationCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("INSTITUTION NAME", institutionCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("EMPLOYEE CODE", empCodeCtrl.text),
-                    _pdfHeaderBox("PAN", panCtrl.text)
-                  ]),
-                  pw.Row(children: [
-                    _pdfHeaderBox("FINANCIAL YEAR", finYearCtrl.text),
-                    _pdfHeaderBox("ASSESSMENT YEAR", assessYearCtrl.text)
-                  ]),
-                ])),
-            pw.SizedBox(height: 8),
-
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.black, width: 0.6),
-              columnWidths: {
-                0: const pw.FixedColumnWidth(28),
-                1: const pw.FlexColumnWidth(),
-                2: const pw.FixedColumnWidth(70),
-              },
-              children: [
-                _buildPdfRow("Sl", "Description", "Amount", isHeader: true),
-                _buildPdfRow("1", "Gross Salary (a)", i7.toStringAsFixed(0)),
-                _buildPdfRow("", "Arrear (b)", i8.toStringAsFixed(0)),
-                _buildPdfRow("", "Total (a+b)", grossSal.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow("2", "Less: Standard Deduction u/s 16(1a)",
-                    stdDed.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "", "Less: Professional Tax", pTax.toStringAsFixed(0)),
-                _buildPdfRow("", "Less: House Rent Allowance u/s 10(13A)",
-                    i10.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "3",
-                    "Income chargeable under 'Salary'",
-                    salIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow(
-                    "4", "Gross Rent Received (a)", i18.toStringAsFixed(0)),
-                _buildPdfRow("", "Tax paid to local authorities (b)",
-                    i19.toStringAsFixed(0)),
-                _buildPdfRow("", "30% Standard Deduction on Net Rent",
-                    houseIncome30.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "",
-                    "Interest Payable on Borrowed Cap u/s 24(b)",
-                    i22.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "5",
-                    "Income Chargeable Under House Property",
-                    houseIncome.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("6", "Interest on Saving Bank / FD / Others",
-                    otherIncome.toStringAsFixed(0)),
-                _buildPdfRow("7", "Gross total income (3+5+6)",
-                    gross.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("8", "Total Deduction u/s 80C",
-                    ded80C.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "9",
-                    "Total Other Deductions (80D/80G/80TTA Etc.)",
-                    totalOther.toStringAsFixed(0)),
-                _buildPdfRow("10", "Total deduction allowed",
-                    totalDed.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("11", "Total taxable income (Rounded off)",
-                    taxable.toStringAsFixed(0),
-                    isBold: true),
-                _buildPdfRow(
-                    "12", "Tax on Taxable Income", tax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "13", "Tax Rebate u/s 87A", rebate.toStringAsFixed(0)),
-                _buildPdfRow("14", "Health & Education Cess @ 4%",
-                    cess.toStringAsFixed(0)),
-                _buildPdfRow("15", "Tax payable (Rounded off)",
-                    totalTax.toStringAsFixed(0)),
-                _buildPdfRow("16", "Capital Gain Tax (Short/Long term)",
-                    capitalGainTax.toStringAsFixed(0)),
-                _buildPdfRow(
-                    "17",
-                    "Total Tax payable (incl. Capital Gain)",
-                    finalTax.toStringAsFixed(0),
-                    isBold: true),
-
-                _buildPdfRow("18", "Tax paid upto January",
-                    i71.toStringAsFixed(0)),
-                _buildPdfRow("19", "Tax to be paid in February",
-                    i72.toStringAsFixed(0)),
-                _buildPdfRow("20", "Balance Tax Payable/Refundable",
-                    status,
-                    isBold: true),
-              ],
-            ),
-
-            // --- Signature Section with More Space ---
-            pw.Spacer(),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of Head of the Institution",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 5),
-                    pw.Text(
-                      "With Date & Seal.",
-                      style: pw.TextStyle(
-                          fontSize: 9, fontWeight: pw.FontWeight.bold),
-                    ),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      "Signature of the Employee",
-                      style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 14),
-                  ],
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 10),
-          ],
-        );
-      },
-    );
-  }
-
-  pw.Widget _pdfHeaderBox(String title, String value) {
-    return pw.Expanded(
-        child: pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 5),
-            decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
-            child: pw.RichText(
-                text: pw.TextSpan(children: [
-              pw.TextSpan(
-                  text: "$title: ",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
-            ]))));
-  }
-
-  pw.TableRow _buildPdfRow(String sl, String desc, String amt,
-      {bool isHeader = false, bool isBold = false}) {
-    return pw.TableRow(
-        decoration:
-            isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
-        children: [
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 4),
-              child: pw.Text(sl,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(desc,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-          pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(vertical: 4.8, horizontal: 5),
-              child: pw.Text(amt,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontWeight:
-                          isHeader || isBold ? pw.FontWeight.bold : null,
-                      fontSize: 8.8))),
-        ]);
-  }
-
-  Widget _buildExcelRow(
-      String slNo, String title, TextEditingController controller,
-      {bool isReadOnly = false}) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: Colors.grey.shade400),
-              left: BorderSide(color: Colors.grey.shade400),
-              right: BorderSide(color: Colors.grey.shade400))),
-      child: Row(
-        children: [
-          Container(
-              width: 35,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                  border: Border(right: BorderSide(color: Colors.grey.shade400))),
-              child: Text(slNo,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 11))),
-          Expanded(
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(title,
-                      style: TextStyle(
-                          fontWeight:
-                              isReadOnly ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12)))),
-          Container(
-            width: 100,
-            decoration: BoxDecoration(
-                color: isReadOnly
-                    ? Colors.grey.shade200
-                    : Colors.amber.shade100,
-                border: Border(
-                    left: BorderSide(color: Colors.grey.shade400))),
-            child: TextField(
-              controller: controller,
-              readOnly: isReadOnly,
-              keyboardType: TextInputType.text,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                  fontWeight: isReadOnly ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                  isDense: true),
-              onChanged: (val) => calculateTax(),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isOld = _tabController.index == 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Amin Tax Calculator"),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.amberAccent,
-          unselectedLabelColor: Colors.white,
-          indicatorColor: Colors.amberAccent,
-          indicatorWeight: 4,
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          onTap: (index) {
-            FocusScope.of(context).unfocus();
-          },
-          tabs: const [Tab(text: 'OLD REGIME'), Tab(text: 'NEW REGIME')],
-        ),
+        title: const Text('18 Years Benefit Fixation & Forwarding', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-              onPressed: _generatePdf,
-              tooltip: "Download PDF")
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Download Fixation Statement PDF',
+            onPressed: () => _printFixationPdf(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.print),
+            tooltip: 'Download Forwarding Letter PDF',
+            onPressed: () => _printForwardingPdf(),
+          ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(5.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Column(
-                children: [
-                  Row(children: [
-                    Expanded(
-                        flex: 2,
-                        child: _headerTextField('EMPLOYEE NAME:', nameCtrl)),
-                    Expanded(
-                        flex: 1,
-                        child: _headerTextField('DESIGNATION:', designationCtrl))
-                  ]),
-                  _headerTextField('INSTITUTION NAME:', institutionCtrl),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('EMPLOYEE CODE:', empCodeCtrl)),
-                    Expanded(child: _headerTextField('PAN:', panCtrl))
-                  ]),
-                  Row(children: [
-                    Expanded(
-                        child: _headerTextField('FINANCIAL YEAR:', finYearCtrl)),
-                    Expanded(
-                        child: _headerTextField(
-                            'ASSESSMENT YEAR:', assessYearCtrl))
-                  ]),
-                ],
-              ),
-            ),
+            _buildCard("School & Employee Information", [
+              _buildInput("Name of Institution", instNameCtrl),
+              _buildInput("Institution Address", instAddressCtrl, maxLines: 2),
+              _buildInput("Name & Designation", empNameDesigCtrl),
+              _buildInput("Subject / Post", empSubjectCtrl),
+              _buildInput("First Joining Approval Details", firstJoiningCtrl, maxLines: 2),
+              _buildInput("First Joining Date", firstJoinDateOnlyCtrl),
+            ]),
             const SizedBox(height: 10),
-
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  border: Border.all(color: Colors.grey.shade600, width: 1.5)),
-              child: Row(
+            _buildCard("18 Years Benefit & Dates", [
+              _buildInput("Date of Completion of 18 Yrs", completionDateCtrl),
+              _buildInput("Date of Option for 18 Yrs Benefit", optionDateCtrl),
+              _buildInput("Date of Effect", effectDateCtrl),
+              _buildInput("Date of Next Increment", nextIncrDateCtrl),
+              _buildInput("Submission to District", diOfficeNameCtrl),
+              _buildInput("Forwarding To Address", toOfficerCtrl, maxLines: 2),
+            ]),
+            const SizedBox(height: 10),
+            _buildCard("Fixation Calculator (ROPA-19)", [
+              Row(
                 children: [
-                  Container(
-                      width: 35,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              right: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Sl",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
-                  const Expanded(
-                      child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: Text("Description",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12)))),
-                  Container(
-                      width: 100,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              left: BorderSide(color: Colors.grey.shade600))),
-                      child: const Text("Amount",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12))),
+                  const Text("Existing Basic Pay: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: basicPayCtrl,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        border: OutlineInputBorder(),
+                        hintText: "Enter Basic",
+                      ),
+                      onChanged: _performCalculation,
+                    ),
+                  ),
                 ],
               ),
+              const Divider(height: 20),
+              _buildSummaryRow("1. Existing Pay Band / Level & Cell:", "Level-$curLevel, Cell-$curCell"),
+              _buildSummaryRow("2. Adding One Increment in Same Level:", "Rs. $afterIncrBasic/- (Level-$curLevel, Cell-$afterIncrCell)"),
+              _buildSummaryRow("3. Fixed at Next Higher Level:", "Rs. $revisedBasic/- (Level-$nextLevel, Cell-$nextLvlCell)"),
+              _buildSummaryRow("4. Revised Basic Pay:", "Rs. $revisedBasic/-"),
+            ]),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text("1. Fixation PDF"),
+                    onPressed: _printFixationPdf,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                    icon: const Icon(Icons.print),
+                    label: const Text("2. Forwarding PDF"),
+                    onPressed: _printForwardingPdf,
+                  ),
+                ),
+              ],
             ),
-
-            _buildExcelRow("1", "Gross Salary (a)", i7GrossSalary),
-            _buildExcelRow("", "Arrear (b)", i8Arrear),
-            _buildExcelRow("", "Total (a+b)", totalSalCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "2", "Less: Standard Deduction", stdDedCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "", "Less: Professional Tax", pTaxCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "3", "Income chargeable under 'Salary'", netSalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow("4", "Gross Rent Received (a)", i18GrossRent),
-            _buildExcelRow(
-                "", "Tax paid to local authorities (b)", i19TaxLocalAuth),
-            _buildExcelRow(
-                "", "Interest Payable on Borrowed Cap (c)", i22HomeLoanInt),
-            _buildExcelRow("5", "Income Chargeable Under House Property",
-                totalHousePropCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "6", "Interest on Saving Bank (a)", i25BankInt),
-            _buildExcelRow(
-                "", "Interest on Fixed Deposit (b)", i26FDInt),
-            _buildExcelRow("", "Others (c)", i27OtherSource),
-            _buildExcelRow("7", "Income Chargeable Under Head Other Sources",
-                totalOtherSrcCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "8", "Gross total income (3+5+7)", grossTotalCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "9", "Total Deduction u/s 80C", i32_43Total80C,
-                isReadOnly: !isOld),
-            _buildExcelRow(
-                "", "Add: 80D/80G etc. (Manual Input)", i45_56TotalOtherDed,
-                isReadOnly: !isOld),
-
-            _buildExcelRow("10",
-                "Total Other Deductions (80D/80G/80TTA Etc.)", serial10Ctrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "11", "Total deduction", totalDedCtrl, isReadOnly: true),
-
-            _buildExcelRow("12", "Total taxable income (Rounded off)",
-                taxableIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "13", "Tax on Taxable Income", taxOnIncomeCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "14", "Tax Rebate u/s 87A", rebateCtrl, isReadOnly: true),
-            _buildExcelRow(
-                "15", "Health & Education Cess @ 4%", cessCtrl,
-                isReadOnly: true),
-            _buildExcelRow(
-                "16", "Tax payable (Rounded off)", totalTaxCessCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "17", "Short Term Capital Gain", i68STCG),
-            _buildExcelRow(
-                "18", "Long Term Capital Gain", i69LTCG),
-            _buildExcelRow(
-                "19", "Total Tax payable (incl. Capital Gain)",
-                finalTaxPayableCtrl,
-                isReadOnly: true),
-
-            _buildExcelRow(
-                "20", "Tax paid upto January", i71TaxPaidJan),
-            _buildExcelRow(
-                "21", "Tax to be paid in February", i72TaxPaidFeb),
-            _buildExcelRow(
-                "22", "Balance Tax Payable/Refundable", statusCtrl,
-                isReadOnly: true),
-
             const SizedBox(height: 30),
           ],
         ),
@@ -801,27 +283,255 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
     );
   }
 
-  Widget _headerTextField(String label, TextEditingController controller) {
-    return Container(
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400, width: 0.5)),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+  Widget _buildCard(String title, List<Widget> children) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.teal)),
+            const Divider(),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInput(String label, TextEditingController ctrl, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: TextField(
+        controller: ctrl,
+        maxLines: maxLines,
+        style: const TextStyle(fontSize: 12),
+        decoration: InputDecoration(
+          labelText: label,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          border: const OutlineInputBorder(),
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 5),
-          Expanded(
-              child: TextField(
-                  controller: controller,
-                  style: const TextStyle(fontSize: 11),
-                  decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero))),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600))),
+          Text(value, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.black87)),
         ],
       ),
+    );
+  }
+
+  // =========================================================================
+  // ১. FIXATION STATEMENT PDF (স্কুলের প্যাডের নিচের অংশের জন্য হুবহু ফরম্যাট)
+  // =========================================================================
+  Future<void> _printFixationPdf() async {
+    final doc = pw.Document();
+    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
+    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+
+    // স্কুলের প্যাডের ওপরের অংশ বাদ দিয়ে মার্জিন সেট
+    // topMargin: 170.0 pt (~60 mm) ঠিক Ref. No. ও Date এর নিচের লাইন থেকে শুরু করার জন্য
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        theme: theme,
+        margin: const pw.EdgeInsets.only(
+          top: 170.0,
+          left: 40.0,
+          right: 40.0,
+          bottom: 30.0,
+        ),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // হেডিং
+              pw.Text(
+                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.0),
+              ),
+              pw.SizedBox(height: 12),
+
+              // ১ থেকে ১১ নম্বর পয়েন্ট
+              _pdfStatementRow("1. Name of Institution with Address", ": ${instNameCtrl.text}\n  ${instAddressCtrl.text}"),
+              _pdfStatementRow("2. Name & Designation of the Employee", ": ${empNameDesigCtrl.text}"),
+              _pdfStatementRow("3. Date of First Joining with Approval No. & Date", ": ${firstJoiningCtrl.text}"),
+              _pdfStatementRow("4. Date of Completion of 18 years continuous and satisfactory service", ": ${completionDateCtrl.text}"),
+              _pdfStatementRow("5. Date of Option for coming under 18 years benefit", ": ${optionDateCtrl.text}"),
+              _pdfStatementRow("6. Existing Basic Pay as on (Date of option for 18 yrs. Benefit)", ": Rs. ${basicPayCtrl.text}/- Level-$curLevel, Cell-$curCell"),
+              _pdfStatementRow("7. Basic Pay after adding one increment in the same level", ": Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell"),
+              _pdfStatementRow("8. Pay to be fixed at next level due to completion of 18 yrs. Service", ": Rs. $revisedBasic/- Level-$nextLevel, Cell-$nextLvlCell"),
+              _pdfStatementRow("9. Revised Basic Pay (Level: .....$nextLevel...... Cell: ...$nextLvlCell..........)", ": Rs. $revisedBasic/-"),
+              _pdfStatementRow("10. Date of Effect", ": ${effectDateCtrl.text}"),
+              _pdfStatementRow("11. Date of Next Increment", ": ${nextIncrDateCtrl.text}"),
+
+              pw.SizedBox(height: 15),
+              pw.Text(
+                "Submitted to the District Inspector of Schools (S.E.), ${diOfficeNameCtrl.text} (Name of District)",
+                style: const pw.TextStyle(fontSize: 9.5),
+              ),
+
+              pw.Spacer(),
+
+              // সাক্ষর অংশ
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 9.0)),
+                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 9.0)),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 9.0)),
+                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 9.0)),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 15),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: '18_Years_Fixation_Statement.pdf',
+    );
+  }
+
+  pw.Widget _pdfStatementRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 260,
+            child: pw.Text(label, style: const pw.TextStyle(fontSize: 9.0)),
+          ),
+          pw.Expanded(
+            child: pw.Text(value, style: pw.TextStyle(fontSize: 9.0, fontWeight: pw.FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // ২. FORWARDING LETTER PDF (স্কুলের প্যাডের নিচের অংশের জন্য হুবহু চিঠির ফরম্যাট)
+  // =========================================================================
+  Future<void> _printForwardingPdf() async {
+    final doc = pw.Document();
+    final customFont = await PdfGoogleFonts.barlowSemiCondensedSemiBold();
+    final theme = pw.ThemeData.withFont(base: customFont, bold: customFont);
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        theme: theme,
+        margin: const pw.EdgeInsets.only(
+          top: 170.0, // স্কুলের প্যাডের হেডারের অংশটুকু নিখুঁতভাবে ফাঁকা রাখা হলো
+          left: 45.0,
+          right: 45.0,
+          bottom: 30.0,
+        ),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("To,", style: const pw.TextStyle(fontSize: 9.5)),
+              pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.5)),
+              pw.SizedBox(height: 15),
+
+              // Subject
+              pw.Center(
+                child: pw.Text(
+                  "Sub: Submission of papers regarding 18 years benefit asper G.O.No.437-SE(P&B)/SL/5S-408/1, Dated- 13/12/2019.",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.SizedBox(height: 15),
+
+              pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.5)),
+              pw.SizedBox(height: 6),
+
+              // Body Paragraph 1
+              pw.Text(
+                "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of ${empNameDesigCtrl.text}, assistant teacher of the school in ${empSubjectCtrl.text} who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} since his date of first joining ${firstJoinDateOnlyCtrl.text} without any break.",
+                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
+                textAlign: pw.TextAlign.justify,
+              ),
+              pw.SizedBox(height: 8),
+
+              // Body Paragraph 2
+              pw.Text(
+                "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
+                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
+                textAlign: pw.TextAlign.justify,
+              ),
+              pw.SizedBox(height: 12),
+
+              pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.5)),
+              pw.SizedBox(height: 10),
+
+              // Signature Right Aligned
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Padding(
+                  padding: const pw.EdgeInsets.only(right: 30),
+                  child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.5)),
+                ),
+              ),
+
+              pw.SizedBox(height: 10),
+              pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 9.0)),
+              pw.SizedBox(height: 6),
+
+              // Enclosures
+              pw.Text("Enclosures:", style: const pw.TextStyle(fontSize: 9.0)),
+              pw.SizedBox(height: 4),
+              _pdfEnclosureItem("1. Forwarding Letter"),
+              _pdfEnclosureItem("2. Application of Incumbent"),
+              _pdfEnclosureItem("3. M.C. Resolution"),
+              _pdfEnclosureItem("4. Fixation form"),
+              _pdfEnclosureItem("5. Option form"),
+              _pdfEnclosureItem("6. Validity of M.C."),
+              _pdfEnclosureItem("7. Non Litigation Certificate"),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => doc.save(),
+      name: '18_Years_Forwarding_Letter.pdf',
+    );
+  }
+
+  pw.Widget _pdfEnclosureItem(String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(left: 6, bottom: 2.5),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 8.5)),
     );
   }
 }
