@@ -644,7 +644,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ["Basic Pay after adding one increment in the same level"],
                 "Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell",
               ),
-              // ৮ নং সিরিয়াল: দ্বিতীয় লাইনে 'yrs. Service' একসাথে রাখা হয়েছে[span_5](start_span)[span_5](end_span)
+              // ৮ নং সিরিয়াল: 'yrs. Service' একই সাথে থাকবে এবং 'Pay'-এর P এর সমান্তরাল থাকবে[span_2](start_span)[span_2](end_span)
               _pdfStatementRow(
                 "8.",
                 [
@@ -751,7 +751,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF
+  // ২. FORWARDING LETTER PDF (সংশোধিত প্যারাগ্রাফ ইনডেন্টেশন সহ)
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
@@ -786,12 +786,10 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // A.D.I Address: ফন্ট সাইজ ২ বাড়িয়ে বোল্ড[span_6](start_span)[span_6](end_span)
               pw.Text("To,", style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold)),
               pw.Text(toOfficerCtrl.text, style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold, lineSpacing: 1.2)),
               pw.SizedBox(height: 12),
 
-              // Sub: এবং Subject লাইন[span_7](start_span)[span_7](end_span)
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -820,35 +818,38 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.8)),
               pw.SizedBox(height: 6),
 
-              // Body Paragraph 1 (Sir, শব্দের সমান্তরালে ইনডেন্টেশন)[span_8](start_span)[span_8](end_span)
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.SizedBox(width: 58.0), // ঠিক ওপরের 'Sir,' শব্দের সমান্তরাল মার্জিন
-                  pw.Expanded(
-                    child: pw.Text(
-                      "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
-                      style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
-                      textAlign: pw.TextAlign.justify,
+              // প্যারাগ্রাফ ১: শুধুমাত্র প্রথম লাইনটি 'Sir,'-এর S-এর সমান্তরালে ইনডেন্ট হবে, বাকি সব বাম মার্জিনে থাকবে[span_3](start_span)[span_3](end_span)
+              pw.RichText(
+                textAlign: pw.TextAlign.justify,
+                text: pw.TextSpan(
+                  style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
+                  children: [
+                    // ঠিক 'Sir,'-এর সমান্তরালে নিয়ে যাওয়ার জন্য সঠিক স্পেসিং[span_4](start_span)[span_4](end_span)
+                    const pw.TextSpan(
+                      text: "                 ", 
                     ),
-                  ),
-                ],
+                    pw.TextSpan(
+                      text: "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
+                    ),
+                  ],
+                ),
               ),
               pw.SizedBox(height: 8),
 
-              // Body Paragraph 2 (Sir, শব্দের সমান্তরালে ইনডেন্টেশন)[span_9](start_span)[span_9](end_span)
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.SizedBox(width: 58.0), // ঠিক ওপরের 'Sir,' শব্দের সমান্তরাল মার্জিন
-                  pw.Expanded(
-                    child: pw.Text(
-                      "So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
-                      style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
-                      textAlign: pw.TextAlign.justify,
+              // প্যারাগ্রাফ ২: শুধুমাত্র প্রথম লাইনটি 'Sir,'-এর S-এর সমান্তরালে ইনডেন্ট হবে, বাকি সব বাম মার্জিনে থাকবে[span_5](start_span)[span_5](end_span)
+              pw.RichText(
+                textAlign: pw.TextAlign.justify,
+                text: pw.TextSpan(
+                  style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
+                  children: [
+                    const pw.TextSpan(
+                      text: "                 ", 
                     ),
-                  ),
-                ],
+                    const pw.TextSpan(
+                      text: "So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
+                    ),
+                  ],
+                ),
               ),
               pw.SizedBox(height: 12),
 
