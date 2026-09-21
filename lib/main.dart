@@ -644,12 +644,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ["Basic Pay after adding one increment in the same level"],
                 "Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell",
               ),
-              // ৮ নং সিরিয়াল: দ্বিতীয় লাইন 'Service' ঠিক ওপরের 'Pay'-এর P এর সমান্তরাল
+              // ৮ নং সিরিয়াল: দ্বিতীয় লাইনে 'yrs. Service' একসাথে রাখা হয়েছে[span_5](start_span)[span_5](end_span)
               _pdfStatementRow(
                 "8.",
                 [
-                  "Pay to be fixed at next level due to completion of 18 yrs.",
-                  "Service",
+                  "Pay to be fixed at next level due to completion of 18",
+                  "yrs. Service",
                 ],
                 "Rs. $revisedBasic/- Level-$nextLevel, Cell-$nextLvlCell",
               ),
@@ -711,14 +711,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     );
   }
 
-  // সিরিয়াল ডিজিটকে আলাদা কলামে রেখে টেক্সটকে নিখুঁত সমান্তরালে বাঁধানোর মেথড
   pw.Widget _pdfStatementRow(String serial, List<String> labelLines, String value) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4.8),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          // সিরিয়াল নম্বর ডিজিট
           pw.SizedBox(
             width: 18,
             child: pw.Text(
@@ -727,7 +725,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               textAlign: pw.TextAlign.left,
             ),
           ),
-          // মূল টেক্সট (দ্বিতীয় লাইনটি প্রথম অক্ষরের ঠিক সমান্তরালে থাকবে)
           pw.SizedBox(
             width: 232,
             child: pw.Column(
@@ -739,10 +736,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               )).toList(),
             ),
           ),
-          // কোলন
           pw.Text(" : ", style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(width: 14),
-          // ডানপাশের মান
           pw.Expanded(
             child: pw.Text(
               value,
@@ -791,12 +786,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // A.D.I Address: ফন্ট সাইজ ২ বাড়িয়ে বোল্ড
+              // A.D.I Address: ফন্ট সাইজ ২ বাড়িয়ে বোল্ড[span_6](start_span)[span_6](end_span)
               pw.Text("To,", style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold)),
               pw.Text(toOfficerCtrl.text, style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold, lineSpacing: 1.2)),
               pw.SizedBox(height: 12),
 
-              // Sub: এবং Subject লাইন (13/12/2019 Submission-এর S-এর সমান্তরালে বামে সারিবদ্ধ)
+              // Sub: এবং Subject লাইন[span_7](start_span)[span_7](end_span)
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -825,19 +820,35 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.8)),
               pw.SizedBox(height: 6),
 
-              // Body Paragraph 1 (I, the [Signatory] of the Institution)
-              pw.Text(
-                "        I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
-                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
-                textAlign: pw.TextAlign.justify,
+              // Body Paragraph 1 (Sir, শব্দের সমান্তরালে ইনডেন্টেশন)[span_8](start_span)[span_8](end_span)
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SizedBox(width: 58.0), // ঠিক ওপরের 'Sir,' শব্দের সমান্তরাল মার্জিন
+                  pw.Expanded(
+                    child: pw.Text(
+                      "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
+                      style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
+                      textAlign: pw.TextAlign.justify,
+                    ),
+                  ),
+                ],
               ),
               pw.SizedBox(height: 8),
 
-              // Body Paragraph 2
-              pw.Text(
-                "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
-                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
-                textAlign: pw.TextAlign.justify,
+              // Body Paragraph 2 (Sir, শব্দের সমান্তরালে ইনডেন্টেশন)[span_9](start_span)[span_9](end_span)
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SizedBox(width: 58.0), // ঠিক ওপরের 'Sir,' শব্দের সমান্তরাল মার্জিন
+                  pw.Expanded(
+                    child: pw.Text(
+                      "So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
+                      style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
+                      textAlign: pw.TextAlign.justify,
+                    ),
+                  ),
+                ],
               ),
               pw.SizedBox(height: 12),
 
