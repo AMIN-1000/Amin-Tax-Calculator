@@ -154,8 +154,14 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     "S.F"
   ];
 
+  // ১. জয়েনিং টাইপ ড্রপ-ডাউন (1st Joining Date vs Current Joining Date)
+  String selectedJoiningType = "1st Joining Date";
+  final List<String> joiningTypeList = ["1st Joining Date", "Current Joining Date"];
+
+  // জয়েনিং ও মেমো সংক্রান্ত ফিল্ড
+  final joinDateCtrl = TextEditingController(text: "19.05.2005");
   final firstJoiningApprovalCtrl = TextEditingController(text: "Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
-  final firstJoinDateCtrl = TextEditingController(text: "19.05.2005");
+  final currentApprovalCtrl = TextEditingController(text: "Memo No. 120/SE, Date: 10.08.2015");
 
   // ১৮ বছর পূর্তি ও অপশন ডেট
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
@@ -182,7 +188,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   void initState() {
     super.initState();
     _performCalculation(basicPayCtrl.text);
-    _calculateAllDates(firstJoinDateCtrl.text);
+    _calculateAllDates(joinDateCtrl.text);
   }
 
   void _calculateAllDates(String joinDateStr) {
@@ -269,6 +275,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isMultipleSchools = (selectedJoiningType == "1st Joining Date");
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('18 Years Benefit Fixation & Forwarding', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -350,13 +358,45 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ],
               ),
               const SizedBox(height: 6),
+
+              // জয়েনিং টাইপ ড্রপ-ডাউন
+              DropdownButtonFormField<String>(
+                value: selectedJoiningType,
+                decoration: const InputDecoration(
+                  labelText: "Joining Service Type",
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  border: OutlineInputBorder(),
+                ),
+                items: joiningTypeList.map((String t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)))).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      selectedJoiningType = val;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 6),
+
+              // জয়েনিং ডেট
               InkWell(
-                onTap: () => _selectDateDialog(firstJoinDateCtrl, isJoining: true),
+                onTap: () => _selectDateDialog(joinDateCtrl, isJoining: true),
                 child: IgnorePointer(
-                  child: _buildInput("1st Joining Date (Auto-calculates 18 Yrs & Option)", firstJoinDateCtrl),
+                  child: _buildInput(
+                    isMultipleSchools ? "1st Joining Date (Auto-calculates 18 Yrs & Option)" : "Current Joining Date (Auto-calculates 18 Yrs & Option)",
+                    joinDateCtrl,
+                  ),
                 ),
               ),
-              _buildInput("1st Joining Approval Memo & Date", firstJoiningApprovalCtrl, maxLines: 2),
+
+              // শর্তসাপেক্ষ Approval Memo ইনপুট বক্স
+              if (isMultipleSchools) ...[
+                _buildInput("1st Joining Approval Memo No. & Date", firstJoiningApprovalCtrl, maxLines: 2),
+                _buildInput("Current Approval Memo No. & Date", currentApprovalCtrl, maxLines: 2),
+              ] else ...[
+                _buildInput("Current Approval Memo No. & Date", currentApprovalCtrl, maxLines: 2),
+              ],
             ]),
             const SizedBox(height: 10),
             _buildCard("18 Years Benefit Dates (Automatically Populated)", [
@@ -482,15 +522,24 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
       bold: pw.Font.helveticaBold(),
     );
 
+    final bool isMultiple = (selectedJoiningType == "1st Joining Date");
     final fullEmpNameDesig = "${empNameCtrl.text}, ($selectedDesignation.)";
-    final fullFirstJoining = "${firstJoinDateCtrl.text}, ${firstJoiningApprovalCtrl.text}";
+
+    // ৩ নং পয়েন্টের ডায়নামিক টেক্সট
+    final String sl3Label = isMultiple
+        ? "3. Date of First Joining with Approval No. & Date"
+        : "3. Date of Joining with Approval No. & Date";
+
+    final String sl3Value = isMultiple
+        ? "${joinDateCtrl.text}, ${firstJoiningApprovalCtrl.text}"
+        : "${joinDateCtrl.text}, ${currentApprovalCtrl.text}";
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 340.0,
+          top: 275.0, // ৫ লাইন পরিমাণ ওপরে তুলে দেওয়া হয়েছে
           left: 40.0,
           right: 40.0,
           bottom: 25.0,
@@ -508,7 +557,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
               _pdfStatementRow("1. Name of the Institution with Address", "${instNameCtrl.text}\n${instAddressCtrl.text}"),
               _pdfStatementRow("2. Name & Designation of the Employee", fullEmpNameDesig),
-              _pdfStatementRow("3. Date of First Joining with Approval No. & Date", fullFirstJoining),
+              _pdfStatementRow(sl3Label, sl3Value),
               _pdfStatementRow("4. Date of Completion of 18 years continuous and satisfactory service", completionDateCtrl.text),
               _pdfStatementRow("5. Date of Option for coming under 18 years benefit", optionDateCtrl.text),
               _pdfStatementRow("6. Existing Basic Pay as on (Date of option for 18 yrs. Benefit)", "Rs. ${basicPayCtrl.text}/- Level-$curLevel, Cell-$curCell"),
@@ -527,6 +576,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
               pw.Spacer(),
 
+              // সিগনেচার অংশ ২ লাইন উপরে তোলা হয়েছে
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -547,7 +597,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                   ),
                 ],
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 25), // ২ লাইন ওপরে তুলতে মার্জিন ব্যালেন্স
             ],
           );
         },
@@ -584,7 +634,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF (নতুন ১৩টি এনক্লোজার সহ)
+  // ২. FORWARDING LETTER PDF
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
@@ -593,15 +643,25 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
       bold: pw.Font.helveticaBold(),
     );
 
+    final bool isMultiple = (selectedJoiningType == "1st Joining Date");
     final fullEmpName = empNameCtrl.text;
-    final fullDesigSubject = "$selectedDesignation. of the school in ${empSubjectCtrl.text} ($selectedCategory)";
+
+    // ১ নং ও ২ নং সমাধান: Forwarding Letter Body Text গঠন
+    String desigSubjectText = "$selectedDesignation. of the school in ${empSubjectCtrl.text} ($selectedCategory)";
+    if (isMultiple && currentApprovalCtrl.text.trim().isNotEmpty) {
+      desigSubjectText += ", vide ${currentApprovalCtrl.text.trim().replaceAll('\n', ', ')}";
+    }
+
+    final String joiningPhrase = isMultiple
+        ? "since his date of first joining ${joinDateCtrl.text}"
+        : "since his date of joining ${joinDateCtrl.text}";
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 340.0, // স্কুলের প্যাডের জন্য ফাঁকা স্পেস
+          top: 275.0, // ৫ লাইন পরিমাণ ওপরে তুলে দেওয়া হয়েছে
           left: 45.0,
           right: 45.0,
           bottom: 20.0,
@@ -629,7 +689,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
               // Body Paragraph 1 (Justified)
               pw.Text(
-                "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $fullDesigSubject who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} since his date of first joining ${firstJoinDateCtrl.text} without any break.",
+                "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
                 style: const pw.TextStyle(fontSize: 8.8, lineSpacing: 1.6),
                 textAlign: pw.TextAlign.justify,
               ),
@@ -643,22 +703,28 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 8),
 
-              pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.0)),
-              pw.SizedBox(height: 4),
-
-              pw.Align(
-                alignment: pw.Alignment.centerRight,
-                child: pw.Padding(
-                  padding: const pw.EdgeInsets.only(right: 25),
-                  child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.0)),
-                ),
+              // Thanking you - herewith এর সমান্তরাল করে ডানপাশে সরানো হয়েছে
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 230),
+                child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.0)),
               ),
+              pw.SizedBox(height: 10),
 
-              pw.SizedBox(height: 4),
-              pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 8.2)),
-              pw.SizedBox(height: 5),
+              // Dated এবং Yours faithfully সমান্তরালভাবে এক লাইনে
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 8.8)),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(right: 25),
+                    child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.0)),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 8),
 
-              // নতুন ১৩টি এনক্লোজার তালিকা
+              // ১৩টি এনক্লোজার তালিকা
               pw.Text("Enclosures:", style: pw.TextStyle(fontSize: 8.2, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 2),
               _pdfEnclosureItem("01. Forwarding Letter"),
