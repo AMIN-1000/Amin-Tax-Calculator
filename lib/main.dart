@@ -142,7 +142,39 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     "Gr-D"
   ];
 
-  final empSubjectCtrl = TextEditingController(text: "Arabic");
+  // WBBSE ও WBCHSE-এর বিশেষ বিষয়গুলোর তালিকা
+  String selectedSubject = "Arabic";
+  final List<String> subjectList = [
+    "Bengali",
+    "English",
+    "Mathematics",
+    "Physical Science",
+    "Life Science",
+    "History",
+    "Geography",
+    "Sanskrit",
+    "Arabic",
+    "Urdu",
+    "Hindi",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Economics",
+    "Political Science",
+    "Philosophy",
+    "Education",
+    "Sociology",
+    "Accountancy",
+    "Business Studies",
+    "Commercial Law",
+    "Computer Science",
+    "Computer Application",
+    "Nutrition",
+    "Work Education",
+    "Physical Education",
+    "Music",
+    "Visual Arts"
+  ];
 
   String selectedCategory = "Pass";
   final List<String> categoryList = [
@@ -154,26 +186,21 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     "S.F"
   ];
 
-  // ১. জয়েনিং টাইপ ড্রপ-ডাউন (1st Joining Date vs Current Joining Date)
   String selectedJoiningType = "1st Joining Date";
   final List<String> joiningTypeList = ["1st Joining Date", "Current Joining Date"];
 
-  // জয়েনিং ও মেমো সংক্রান্ত ফিল্ড
   final joinDateCtrl = TextEditingController(text: "19.05.2005");
   final firstJoiningApprovalCtrl = TextEditingController(text: "Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
   final currentApprovalCtrl = TextEditingController(text: "Memo No. 120/SE, Date: 10.08.2015");
 
-  // ১৮ বছর পূর্তি ও অপশন ডেট
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
   final optionDateCtrl = TextEditingController(text: "01.07.2023");
   final effectDateCtrl = TextEditingController(text: "01.07.2023");
   final nextIncrDateCtrl = TextEditingController(text: "01.07.2024");
 
-  // চিঠি প্রেরণের তথ্য
   final diOfficeNameCtrl = TextEditingController(text: "North 24 Parganas");
   final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools (S.E.), Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
 
-  // বেসিক পে
   final basicPayCtrl = TextEditingController(text: "58600");
 
   int curLevel = 11;
@@ -334,9 +361,23 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               const SizedBox(height: 6),
               Row(
                 children: [
+                  // Subject Dropdown
                   Expanded(
                     flex: 3,
-                    child: _buildInput("Subject", empSubjectCtrl),
+                    child: DropdownButtonFormField<String>(
+                      value: selectedSubject,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: "Subject",
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: subjectList.map((String s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12)))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => selectedSubject = val);
+                      },
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -359,7 +400,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               const SizedBox(height: 6),
 
-              // জয়েনিং টাইপ ড্রপ-ডাউন
               DropdownButtonFormField<String>(
                 value: selectedJoiningType,
                 decoration: const InputDecoration(
@@ -379,7 +419,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               const SizedBox(height: 6),
 
-              // জয়েনিং ডেট
               InkWell(
                 onTap: () => _selectDateDialog(joinDateCtrl, isJoining: true),
                 child: IgnorePointer(
@@ -390,7 +429,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ),
               ),
 
-              // শর্তসাপেক্ষ Approval Memo ইনপুট বক্স
               if (isMultipleSchools) ...[
                 _buildInput("1st Joining Approval Memo No. & Date", firstJoiningApprovalCtrl, maxLines: 2),
                 _buildInput("Current Approval Memo No. & Date", currentApprovalCtrl, maxLines: 2),
@@ -525,7 +563,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     final bool isMultiple = (selectedJoiningType == "1st Joining Date");
     final fullEmpNameDesig = "${empNameCtrl.text}, ($selectedDesignation.)";
 
-    // ৩ নং পয়েন্টের ডায়নামিক টেক্সট
     final String sl3Label = isMultiple
         ? "3. Date of First Joining with Approval No. & Date"
         : "3. Date of Joining with Approval No. & Date";
@@ -539,7 +576,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 275.0, // ৫ লাইন পরিমাণ ওপরে তুলে দেওয়া হয়েছে
+          top: 245.0, // ২ লাইন কমানো হয়েছে (275 -> 245 pt)
           left: 40.0,
           right: 40.0,
           bottom: 25.0,
@@ -550,10 +587,10 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
             children: [
               pw.Text(
                 "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.8),
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.5, lineSpacing: 1.5),
                 textAlign: pw.TextAlign.justify,
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 14),
 
               _pdfStatementRow("1. Name of the Institution with Address", "${instNameCtrl.text}\n${instAddressCtrl.text}"),
               _pdfStatementRow("2. Name & Designation of the Employee", fullEmpNameDesig),
@@ -567,16 +604,15 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _pdfStatementRow("10. Date of Effect", effectDateCtrl.text),
               _pdfStatementRow("11. Date of Next Increment", nextIncrDateCtrl.text),
 
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 14),
               pw.Text(
                 "Submitted to the District Inspector of Schools (S.E.), ${diOfficeNameCtrl.text} (Name of District)",
-                style: const pw.TextStyle(fontSize: 9.0),
+                style: const pw.TextStyle(fontSize: 9.8),
                 textAlign: pw.TextAlign.justify,
               ),
 
               pw.Spacer(),
 
-              // সিগনেচার অংশ ২ লাইন উপরে তোলা হয়েছে
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -584,20 +620,20 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
-                      pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 8.5)),
-                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 8.5)),
+                      pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 9.2)),
+                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 9.2)),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
-                      pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 8.5)),
-                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 8.5)),
+                      pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 9.2)),
+                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 9.2)),
                     ],
                   ),
                 ],
               ),
-              pw.SizedBox(height: 25), // ২ লাইন ওপরে তুলতে মার্জিন ব্যালেন্স
+              pw.SizedBox(height: 20),
             ],
           );
         },
@@ -610,21 +646,27 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     );
   }
 
+  // ৪ নং ও ৮ নং সহ সব লাইনের সমান্তরাল ইন্ডেন্টেশন ও কোলন (:) এর পর ৪ স্পেস ডানে সরানো
   pw.Widget _pdfStatementRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 3.5),
+      padding: const pw.EdgeInsets.symmetric(vertical: 4.8), // লাইন স্পেস বৃদ্ধি
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.SizedBox(
-            width: 255,
-            child: pw.Text(label, style: const pw.TextStyle(fontSize: 8.8)),
+            width: 250,
+            child: pw.Text(
+              label,
+              style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 1.2),
+              textAlign: pw.TextAlign.left,
+            ),
           ),
-          pw.Text(": ", style: pw.TextStyle(fontSize: 8.8, fontWeight: pw.FontWeight.bold)),
+          pw.Text(" : ", style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(width: 14), // কোলন চিহ্ন থেকে ৪ স্পেস ডানপাশে সরানো
           pw.Expanded(
             child: pw.Text(
               value,
-              style: pw.TextStyle(fontSize: 8.8, fontWeight: pw.FontWeight.bold),
+              style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, lineSpacing: 1.3),
               textAlign: pw.TextAlign.left,
             ),
           ),
@@ -646,8 +688,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     final bool isMultiple = (selectedJoiningType == "1st Joining Date");
     final fullEmpName = empNameCtrl.text;
 
-    // ১ নং ও ২ নং সমাধান: Forwarding Letter Body Text গঠন
-    String desigSubjectText = "$selectedDesignation. of the school in ${empSubjectCtrl.text} ($selectedCategory)";
+    String desigSubjectText = "$selectedDesignation. of the school in $selectedSubject ($selectedCategory)";
     if (isMultiple && currentApprovalCtrl.text.trim().isNotEmpty) {
       desigSubjectText += ", vide ${currentApprovalCtrl.text.trim().replaceAll('\n', ', ')}";
     }
@@ -661,7 +702,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 275.0, // ৫ লাইন পরিমাণ ওপরে তুলে দেওয়া হয়েছে
+          top: 245.0, // ২ লাইন কমানো হয়েছে (275 -> 245 pt)
           left: 45.0,
           right: 45.0,
           bottom: 20.0,
@@ -670,63 +711,66 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("To,", style: const pw.TextStyle(fontSize: 9.0)),
-              pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.0)),
-              pw.SizedBox(height: 8),
+              pw.Text("To,", style: const pw.TextStyle(fontSize: 9.8)),
+              pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.8, lineSpacing: 1.2)),
+              pw.SizedBox(height: 12),
 
               // Subject Center Aligned
               pw.Center(
                 child: pw.Text(
                   "Sub: Submission of papers regarding 18 years benefit asper G.O.No.437-SE(P&B)/SL/5S-408/1, Dated- 13/12/2019.",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.8),
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              pw.SizedBox(height: 8),
+              pw.SizedBox(height: 12),
 
-              pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.0)),
-              pw.SizedBox(height: 4),
+              pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.8)),
+              pw.SizedBox(height: 6),
 
-              // Body Paragraph 1 (Justified)
+              // Body Paragraph 1 (Justified + ফন্ট ও লাইন স্পেস বৃদ্ধি)
               pw.Text(
                 "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
-                style: const pw.TextStyle(fontSize: 8.8, lineSpacing: 1.6),
+                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
                 textAlign: pw.TextAlign.justify,
               ),
-              pw.SizedBox(height: 5),
+              pw.SizedBox(height: 8),
 
               // Body Paragraph 2 (Justified)
               pw.Text(
                 "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
-                style: const pw.TextStyle(fontSize: 8.8, lineSpacing: 1.6),
+                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
                 textAlign: pw.TextAlign.justify,
               ),
-              pw.SizedBox(height: 8),
+              pw.SizedBox(height: 12),
 
-              // Thanking you - herewith এর সমান্তরাল করে ডানপাশে সরানো হয়েছে
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(left: 230),
-                child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.0)),
+              // Thanking you - herewith এর ঠিক সোজা সমান্তরাল করে বসানো
+              pw.Align(
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Padding(
+                  padding: const pw.EdgeInsets.only(left: 100),
+                  child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.8)),
+                ),
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 12),
 
               // Dated এবং Yours faithfully সমান্তরালভাবে এক লাইনে
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 8.8)),
+                  pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 9.5)),
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(right: 25),
-                    child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.0)),
+                    child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.8)),
                   ),
                 ],
               ),
-              pw.SizedBox(height: 8),
+              pw.SizedBox(height: 12),
 
               // ১৩টি এনক্লোজার তালিকা
-              pw.Text("Enclosures:", style: pw.TextStyle(fontSize: 8.2, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 2),
+              pw.Text("Enclosures:", style: pw.TextStyle(fontSize: 9.2, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 4),
               _pdfEnclosureItem("01. Forwarding Letter"),
               _pdfEnclosureItem("02. Application of Incumbent"),
               _pdfEnclosureItem("03. M.C/D.D.O Resolution"),
@@ -736,8 +780,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _pdfEnclosureItem("07. Non Litigation Certificate"),
               _pdfEnclosureItem("08. Copy of Approvals"),
               pw.Padding(
-                padding: const pw.EdgeInsets.only(left: 20, bottom: 1.2),
-                child: pw.Text("(For Multiple Schools if any)", style: const pw.TextStyle(fontSize: 7.2)),
+                padding: const pw.EdgeInsets.only(left: 22, bottom: 2.0),
+                child: pw.Text("(For Multiple Schools if any)", style: const pw.TextStyle(fontSize: 7.8)),
               ),
               _pdfEnclosureItem("09. Copy of SSC Recommendation"),
               _pdfEnclosureItem("10. Copy of Service Book"),
@@ -758,8 +802,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   pw.Widget _pdfEnclosureItem(String text) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(left: 4, bottom: 1.2),
-      child: pw.Text(text, style: const pw.TextStyle(fontSize: 7.6)),
+      padding: const pw.EdgeInsets.only(left: 4, bottom: 2.0),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 8.5)),
     );
   }
 }
