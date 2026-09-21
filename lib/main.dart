@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const EighteenYearsBenefitApp());
 }
 
@@ -122,22 +123,51 @@ class EighteenYearsHomePage extends StatefulWidget {
 }
 
 class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
+  // প্রতিষ্ঠানের তথ্য
   final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
   final instAddressCtrl = TextEditingController(text: "P.O.: MAKHALGACHHA, P.S.: HASNABAD,\nDIST. NORTH 24 PARGANAS, PIN.743422");
 
-  final empNameDesigCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL,  (A.T.)");
-  final empSubjectCtrl = TextEditingController(text: "Arabic (Pass)");
-  final firstJoiningCtrl = TextEditingController(text: "19.05.2005, Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
-  final firstJoinDateOnlyCtrl = TextEditingController(text: "19.05.2005");
+  // কর্মচারীর তথ্য
+  final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
+  String selectedDesignation = "A.T";
+  final List<String> designationList = [
+    "H.M",
+    "T.I.C",
+    "A.H.M",
+    "A.T",
+    "CLERK",
+    "Gr-D (Peon)",
+    "Gr-D (Matron)",
+    "Gr-D"
+  ];
+
+  final empSubjectCtrl = TextEditingController(text: "Arabic");
+
+  String selectedCategory = "Pass";
+  final List<String> categoryList = [
+    "P.G",
+    "Hons.",
+    "Pass",
+    "H.S",
+    "M.P",
+    "S.F"
+  ];
+
+  final firstJoiningApprovalCtrl = TextEditingController(text: "Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
+  final firstJoinDateCtrl = TextEditingController(text: "19.05.2005");
+
+  // ১৮ বছর পূর্তি ও অপশন ডেট
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
   final optionDateCtrl = TextEditingController(text: "01.07.2023");
   final effectDateCtrl = TextEditingController(text: "01.07.2023");
   final nextIncrDateCtrl = TextEditingController(text: "01.07.2024");
 
-  final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools, Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
+  // চিঠি প্রেরণের তথ্য
   final diOfficeNameCtrl = TextEditingController(text: "North 24 Parganas");
+  final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools (S.E.), Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
 
+  // বেসিক পে
   final basicPayCtrl = TextEditingController(text: "58600");
 
   int curLevel = 11;
@@ -152,6 +182,43 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   void initState() {
     super.initState();
     _performCalculation(basicPayCtrl.text);
+    _calculateAllDates(firstJoinDateCtrl.text);
+  }
+
+  void _calculateAllDates(String joinDateStr) {
+    try {
+      final parts = joinDateStr.trim().split('.');
+      if (parts.length == 3) {
+        int d = int.parse(parts[0]);
+        int m = int.parse(parts[1]);
+        int y = int.parse(parts[2]);
+
+        DateTime completionDate = DateTime(y + 18, m, d).subtract(const Duration(days: 1));
+
+        String compStr = "${completionDate.day.toString().padLeft(2, '0')}.${completionDate.month.toString().padLeft(2, '0')}.${completionDate.year}";
+        completionDateCtrl.text = compStr;
+
+        String optEffectStr = "";
+        DateTime nextIncrDate;
+
+        bool isBetweenJulyAndJan = (m >= 7 && m <= 12) || (m == 1 && d == 1);
+
+        if (isBetweenJulyAndJan) {
+          int optYear = y + 18;
+          optEffectStr = "${d.toString().padLeft(2, '0')}.${m.toString().padLeft(2, '0')}.$optYear";
+          nextIncrDate = DateTime(optYear + 1, 7, 1);
+        } else {
+          int optYear = (m < 7) ? (y + 18) : (y + 19);
+          optEffectStr = "01.07.$optYear";
+          nextIncrDate = DateTime(optYear + 1, 7, 1);
+        }
+
+        optionDateCtrl.text = optEffectStr;
+        effectDateCtrl.text = optEffectStr;
+        nextIncrDateCtrl.text = "01.07.${nextIncrDate.year}";
+        setState(() {});
+      }
+    } catch (_) {}
   }
 
   void _performCalculation(String val) {
@@ -169,6 +236,34 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           revisedBasic = res['revisedBasic'];
         });
       }
+    }
+  }
+
+  Future<void> _selectDateDialog(TextEditingController ctrl, {bool isJoining = false}) async {
+    DateTime initial = DateTime.now();
+    try {
+      final parts = ctrl.text.trim().split('.');
+      if (parts.length == 3) {
+        initial = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (_) {}
+
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1980),
+      lastDate: DateTime(2045),
+    );
+    if (picked != null) {
+      String day = picked.day.toString().padLeft(2, '0');
+      String month = picked.month.toString().padLeft(2, '0');
+      String formatted = "$day.$month.${picked.year}";
+      setState(() {
+        ctrl.text = formatted;
+        if (isJoining) {
+          _calculateAllDates(formatted);
+        }
+      });
     }
   }
 
@@ -197,21 +292,79 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCard("School & Employee Information", [
+            _buildCard("School Information", [
               _buildInput("Name of Institution", instNameCtrl),
               _buildInput("Institution Address", instAddressCtrl, maxLines: 2),
-              _buildInput("Name & Designation", empNameDesigCtrl),
-              _buildInput("Subject / Post", empSubjectCtrl),
-              _buildInput("First Joining Approval Details", firstJoiningCtrl, maxLines: 2),
-              _buildInput("First Joining Date", firstJoinDateOnlyCtrl),
             ]),
             const SizedBox(height: 10),
-            _buildCard("18 Years Benefit & Dates", [
+            _buildCard("Employee & Designation Details", [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildInput("Employee Name", empNameCtrl),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<String>(
+                      value: selectedDesignation,
+                      decoration: const InputDecoration(
+                        labelText: "Designation",
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: designationList.map((String d) => DropdownMenuItem(value: d, child: Text(d, style: const TextStyle(fontSize: 12)))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => selectedDesignation = val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildInput("Subject", empSubjectCtrl),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: "Category/Scale",
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: categoryList.map((String c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => selectedCategory = val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              InkWell(
+                onTap: () => _selectDateDialog(firstJoinDateCtrl, isJoining: true),
+                child: IgnorePointer(
+                  child: _buildInput("1st Joining Date (Auto-calculates 18 Yrs & Option)", firstJoinDateCtrl),
+                ),
+              ),
+              _buildInput("1st Joining Approval Memo & Date", firstJoiningApprovalCtrl, maxLines: 2),
+            ]),
+            const SizedBox(height: 10),
+            _buildCard("18 Years Benefit Dates (Automatically Populated)", [
               _buildInput("Date of Completion of 18 Yrs", completionDateCtrl),
               _buildInput("Date of Option for 18 Yrs Benefit", optionDateCtrl),
               _buildInput("Date of Effect", effectDateCtrl),
               _buildInput("Date of Next Increment", nextIncrDateCtrl),
-              _buildInput("Submission to District", diOfficeNameCtrl),
+              _buildInput("Submission to District (Name of District)", diOfficeNameCtrl),
               _buildInput("Forwarding To Address", toOfficerCtrl, maxLines: 2),
             ]),
             const SizedBox(height: 10),
@@ -329,15 +482,18 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
       bold: pw.Font.helveticaBold(),
     );
 
+    final fullEmpNameDesig = "${empNameCtrl.text}, ($selectedDesignation.)";
+    final fullFirstJoining = "${firstJoinDateCtrl.text}, ${firstJoiningApprovalCtrl.text}";
+
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 170.0,
+          top: 340.0,
           left: 40.0,
           right: 40.0,
-          bottom: 30.0,
+          bottom: 25.0,
         ),
         build: (pw.Context context) {
           return pw.Column(
@@ -345,26 +501,28 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
             children: [
               pw.Text(
                 "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.0),
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.8),
+                textAlign: pw.TextAlign.justify,
               ),
-              pw.SizedBox(height: 12),
+              pw.SizedBox(height: 10),
 
-              _pdfStatementRow("1. Name of Institution with Address", ": ${instNameCtrl.text}\n  ${instAddressCtrl.text}"),
-              _pdfStatementRow("2. Name & Designation of the Employee", ": ${empNameDesigCtrl.text}"),
-              _pdfStatementRow("3. Date of First Joining with Approval No. & Date", ": ${firstJoiningCtrl.text}"),
-              _pdfStatementRow("4. Date of Completion of 18 years continuous and satisfactory service", ": ${completionDateCtrl.text}"),
-              _pdfStatementRow("5. Date of Option for coming under 18 years benefit", ": ${optionDateCtrl.text}"),
-              _pdfStatementRow("6. Existing Basic Pay as on (Date of option for 18 yrs. Benefit)", ": Rs. ${basicPayCtrl.text}/- Level-$curLevel, Cell-$curCell"),
-              _pdfStatementRow("7. Basic Pay after adding one increment in the same level", ": Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell"),
-              _pdfStatementRow("8. Pay to be fixed at next level due to completion of 18 yrs. Service", ": Rs. $revisedBasic/- Level-$nextLevel, Cell-$nextLvlCell"),
-              _pdfStatementRow("9. Revised Basic Pay (Level: .....$nextLevel...... Cell: ...$nextLvlCell..........)", ": Rs. $revisedBasic/-"),
-              _pdfStatementRow("10. Date of Effect", ": ${effectDateCtrl.text}"),
-              _pdfStatementRow("11. Date of Next Increment", ": ${nextIncrDateCtrl.text}"),
+              _pdfStatementRow("1. Name of the Institution with Address", "${instNameCtrl.text}\n${instAddressCtrl.text}"),
+              _pdfStatementRow("2. Name & Designation of the Employee", fullEmpNameDesig),
+              _pdfStatementRow("3. Date of First Joining with Approval No. & Date", fullFirstJoining),
+              _pdfStatementRow("4. Date of Completion of 18 years continuous and satisfactory service", completionDateCtrl.text),
+              _pdfStatementRow("5. Date of Option for coming under 18 years benefit", optionDateCtrl.text),
+              _pdfStatementRow("6. Existing Basic Pay as on (Date of option for 18 yrs. Benefit)", "Rs. ${basicPayCtrl.text}/- Level-$curLevel, Cell-$curCell"),
+              _pdfStatementRow("7. Basic Pay after adding one increment in the same level", "Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell"),
+              _pdfStatementRow("8. Pay to be fixed at next level due to completion of 18 yrs. Service", "Rs. $revisedBasic/- Level-$nextLevel, Cell-$nextLvlCell"),
+              _pdfStatementRow("9. Revised Basic Pay (Level: .....$nextLevel...... Cell: ...$nextLvlCell..........)", "Rs. $revisedBasic/-"),
+              _pdfStatementRow("10. Date of Effect", effectDateCtrl.text),
+              _pdfStatementRow("11. Date of Next Increment", nextIncrDateCtrl.text),
 
-              pw.SizedBox(height: 15),
+              pw.SizedBox(height: 10),
               pw.Text(
                 "Submitted to the District Inspector of Schools (S.E.), ${diOfficeNameCtrl.text} (Name of District)",
-                style: const pw.TextStyle(fontSize: 9.5),
+                style: const pw.TextStyle(fontSize: 9.0),
+                textAlign: pw.TextAlign.justify,
               ),
 
               pw.Spacer(),
@@ -376,20 +534,20 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
-                      pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 9.0)),
-                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 9.0)),
+                      pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 8.5)),
+                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 8.5)),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
-                      pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 9.0)),
-                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 9.0)),
+                      pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 8.5)),
+                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 8.5)),
                     ],
                   ),
                 ],
               ),
-              pw.SizedBox(height: 15),
+              pw.SizedBox(height: 10),
             ],
           );
         },
@@ -404,16 +562,21 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   pw.Widget _pdfStatementRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 4.5),
+      padding: const pw.EdgeInsets.symmetric(vertical: 3.5),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.SizedBox(
-            width: 260,
-            child: pw.Text(label, style: const pw.TextStyle(fontSize: 9.0)),
+            width: 255,
+            child: pw.Text(label, style: const pw.TextStyle(fontSize: 8.8)),
           ),
+          pw.Text(": ", style: pw.TextStyle(fontSize: 8.8, fontWeight: pw.FontWeight.bold)),
           pw.Expanded(
-            child: pw.Text(value, style: pw.TextStyle(fontSize: 9.0, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text(
+              value,
+              style: pw.TextStyle(fontSize: 8.8, fontWeight: pw.FontWeight.bold),
+              textAlign: pw.TextAlign.left,
+            ),
           ),
         ],
       ),
@@ -421,7 +584,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF
+  // ২. FORWARDING LETTER PDF (নতুন ১৩টি এনক্লোজার সহ)
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
@@ -430,74 +593,91 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
       bold: pw.Font.helveticaBold(),
     );
 
+    final fullEmpName = empNameCtrl.text;
+    final fullDesigSubject = "$selectedDesignation. of the school in ${empSubjectCtrl.text} ($selectedCategory)";
+
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 170.0,
+          top: 340.0, // স্কুলের প্যাডের জন্য ফাঁকা স্পেস
           left: 45.0,
           right: 45.0,
-          bottom: 30.0,
+          bottom: 20.0,
         ),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("To,", style: const pw.TextStyle(fontSize: 9.5)),
-              pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.5)),
-              pw.SizedBox(height: 15),
+              pw.Text("To,", style: const pw.TextStyle(fontSize: 9.0)),
+              pw.Text(toOfficerCtrl.text, style: const pw.TextStyle(fontSize: 9.0)),
+              pw.SizedBox(height: 8),
 
+              // Subject Center Aligned
               pw.Center(
                 child: pw.Text(
                   "Sub: Submission of papers regarding 18 years benefit asper G.O.No.437-SE(P&B)/SL/5S-408/1, Dated- 13/12/2019.",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5),
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.8),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              pw.SizedBox(height: 15),
+              pw.SizedBox(height: 8),
 
-              pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.5)),
-              pw.SizedBox(height: 6),
+              pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.0)),
+              pw.SizedBox(height: 4),
 
+              // Body Paragraph 1 (Justified)
               pw.Text(
-                "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of ${empNameDesigCtrl.text}, assistant teacher of the school in ${empSubjectCtrl.text} who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} since his date of first joining ${firstJoinDateOnlyCtrl.text} without any break.",
-                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
+                "        I, the Teacher in Charge of the school hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $fullDesigSubject who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} since his date of first joining ${firstJoinDateCtrl.text} without any break.",
+                style: const pw.TextStyle(fontSize: 8.8, lineSpacing: 1.6),
+                textAlign: pw.TextAlign.justify,
+              ),
+              pw.SizedBox(height: 5),
+
+              // Body Paragraph 2 (Justified)
+              pw.Text(
+                "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
+                style: const pw.TextStyle(fontSize: 8.8, lineSpacing: 1.6),
                 textAlign: pw.TextAlign.justify,
               ),
               pw.SizedBox(height: 8),
 
-              pw.Text(
-                "        So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
-                style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.0),
-                textAlign: pw.TextAlign.justify,
-              ),
-              pw.SizedBox(height: 12),
-
-              pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.5)),
-              pw.SizedBox(height: 10),
+              pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.0)),
+              pw.SizedBox(height: 4),
 
               pw.Align(
                 alignment: pw.Alignment.centerRight,
                 child: pw.Padding(
-                  padding: const pw.EdgeInsets.only(right: 30),
-                  child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.5)),
+                  padding: const pw.EdgeInsets.only(right: 25),
+                  child: pw.Text("Yours faithfully,", style: const pw.TextStyle(fontSize: 9.0)),
                 ),
               ),
 
-              pw.SizedBox(height: 10),
-              pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 9.0)),
-              pw.SizedBox(height: 6),
-
-              pw.Text("Enclosures:", style: const pw.TextStyle(fontSize: 9.0)),
               pw.SizedBox(height: 4),
-              _pdfEnclosureItem("1. Forwarding Letter"),
-              _pdfEnclosureItem("2. Application of Incumbent"),
-              _pdfEnclosureItem("3. M.C. Resolution"),
-              _pdfEnclosureItem("4. Fixation form"),
-              _pdfEnclosureItem("5. Option form"),
-              _pdfEnclosureItem("6. Validity of M.C."),
-              _pdfEnclosureItem("7. Non Litigation Certificate"),
+              pw.Text("Dated: ....................", style: const pw.TextStyle(fontSize: 8.2)),
+              pw.SizedBox(height: 5),
+
+              // নতুন ১৩টি এনক্লোজার তালিকা
+              pw.Text("Enclosures:", style: pw.TextStyle(fontSize: 8.2, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 2),
+              _pdfEnclosureItem("01. Forwarding Letter"),
+              _pdfEnclosureItem("02. Application of Incumbent"),
+              _pdfEnclosureItem("03. M.C/D.D.O Resolution"),
+              _pdfEnclosureItem("04. Fixation Formula"),
+              _pdfEnclosureItem("05. Option Form"),
+              _pdfEnclosureItem("06. Validity of M.C/D.D.O"),
+              _pdfEnclosureItem("07. Non Litigation Certificate"),
+              _pdfEnclosureItem("08. Copy of Approvals"),
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 20, bottom: 1.2),
+                child: pw.Text("(For Multiple Schools if any)", style: const pw.TextStyle(fontSize: 7.2)),
+              ),
+              _pdfEnclosureItem("09. Copy of SSC Recommendation"),
+              _pdfEnclosureItem("10. Copy of Service Book"),
+              _pdfEnclosureItem("11. Copy of Aquitance Roll"),
+              _pdfEnclosureItem("12. Copy of ROPA-09 & 19"),
+              _pdfEnclosureItem("13. EOL/Non EOL Certificate"),
             ],
           );
         },
@@ -512,8 +692,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   pw.Widget _pdfEnclosureItem(String text) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(left: 6, bottom: 2.5),
-      child: pw.Text(text, style: const pw.TextStyle(fontSize: 8.5)),
+      padding: const pw.EdgeInsets.only(left: 4, bottom: 1.2),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 7.6)),
     );
   }
 }
