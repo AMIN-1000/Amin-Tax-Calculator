@@ -123,11 +123,9 @@ class EighteenYearsHomePage extends StatefulWidget {
 }
 
 class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
-  // প্রতিষ্ঠানের তথ্য
   final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
   final instAddressCtrl = TextEditingController(text: "P.O.: MAKHALGACHHA, P.S.: HASNABAD,\nDIST. NORTH 24 PARGANAS, PIN.743422");
 
-  // কর্মচারীর তথ্য
   final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
   String selectedDesignation = "A.T";
@@ -142,14 +140,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     "Gr-D"
   ];
 
-  // ফরোয়ার্ডিং লেটারে প্রেরকের পদবী
   String selectedSignatory = "Teacher in Charge";
   final List<String> signatoryList = [
     "Headmaster",
     "Teacher in Charge"
   ];
 
-  // বিষয় তালিকা
   String selectedSubject = "Arabic";
   final List<String> subjectList = [
     "Bengali",
@@ -198,8 +194,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   final joinDateCtrl = TextEditingController(text: "19.05.2005");
   final firstJoiningApprovalCtrl = TextEditingController(text: "Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
-  
-  // সংশোধিত মেমো নং ও তারিখ
   final currentApprovalMemoCtrl = TextEditingController(text: "BHT/152/1(1)/G, Date: 13.09.2021");
 
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
@@ -579,8 +573,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     final fullEmpNameDesig = "${empNameCtrl.text}, ($selectedDesignation.)";
 
     final String sl3Label = isMultiple
-        ? "3. Date of First Joining with Approval No. & Date"
-        : "3. Date of Joining with Approval No. & Date";
+        ? "Date of First Joining with Approval No. & Date"
+        : "Date of Joining with Approval No. & Date";
 
     final String sl3Value = isMultiple
         ? "${joinDateCtrl.text}, ${firstJoiningApprovalCtrl.text}"
@@ -608,59 +602,70 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 14),
 
               _pdfStatementRow(
-                ["1. Name of the Institution with Address"],
+                "1.",
+                ["Name of the Institution with Address"],
                 "${instNameCtrl.text}\n${instAddressCtrl.text}",
               ),
               _pdfStatementRow(
-                ["2. Name & Designation of the Employee"],
+                "2.",
+                ["Name & Designation of the Employee"],
                 fullEmpNameDesig,
               ),
               _pdfStatementRow(
+                "3.",
                 [sl3Label],
                 sl3Value,
               ),
-              // ৪ নং সিরিয়াল: দ্বিতীয় লাইন 'satisfactory service' উপরে 'Date'-এর D এর সমান্তরাল
+              // ৪ নং সিরিয়াল: দ্বিতীয় লাইন 'satisfactory service' ঠিক ওপরের 'Date'-এর D এর সমান্তরাল
               _pdfStatementRow(
+                "4.",
                 [
-                  "4. Date of Completion of 18 years continuous and",
+                  "Date of Completion of 18 years continuous and",
                   "satisfactory service",
                 ],
                 completionDateCtrl.text,
               ),
               _pdfStatementRow(
-                ["5. Date of Option for coming under 18 years benefit"],
+                "5.",
+                ["Date of Option for coming under 18 years benefit"],
                 optionDateCtrl.text,
               ),
-              // ৬ নং সিরিয়াল: দ্বিতীয় লাইন 'Benefit)' উপরে 'Existing'-এর E এর সমান্তরাল
+              // ৬ নং সিরিয়াল: দ্বিতীয় লাইন 'Benefit)' ঠিক ওপরের 'Existing'-এর E এর সমান্তরাল
               _pdfStatementRow(
+                "6.",
                 [
-                  "6. Existing Basic Pay as on (Date of option for 18 yrs.",
+                  "Existing Basic Pay as on (Date of option for 18 yrs.",
                   "Benefit)",
                 ],
                 "Rs. ${basicPayCtrl.text}/- Level-$curLevel, Cell-$curCell",
               ),
               _pdfStatementRow(
-                ["7. Basic Pay after adding one increment in the same level"],
+                "7.",
+                ["Basic Pay after adding one increment in the same level"],
                 "Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell",
               ),
-              // ৮ নং সিরিয়াল: দ্বিতীয় লাইন 'Service' উপরে 'Pay'-এর P এর সমান্তরাল
+              // ৮ নং সিরিয়াল: দ্বিতীয় লাইন 'Service' ঠিক ওপরের 'Pay'-এর P এর সমান্তরাল
               _pdfStatementRow(
+                "8.",
                 [
-                  "8. Pay to be fixed at next level due to completion of 18 yrs.",
+                  "Pay to be fixed at next level due to completion of 18 yrs.",
                   "Service",
                 ],
                 "Rs. $revisedBasic/- Level-$nextLevel, Cell-$nextLvlCell",
               ),
               _pdfStatementRow(
-                ["9. Revised Basic Pay (Level: .....$nextLevel...... Cell: ...$nextLvlCell..........)"],
+                "9.",
+                ["Revised Basic Pay (Level: .....$nextLevel...... Cell: ...$nextLvlCell..........)"],
                 "Rs. $revisedBasic/-",
               ),
               _pdfStatementRow(
-                ["10. Date of Effect"],
+                "10.",
+                ["Date of Effect"],
                 effectDateCtrl.text,
               ),
               _pdfStatementRow(
-                ["11. Date of Next Increment"],
+                "11.",
+                ["Date of Next Increment"],
                 nextIncrDateCtrl.text,
               ),
 
@@ -706,15 +711,25 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     );
   }
 
-  // ৪, ৬, ৮ নং পয়েন্টের লাইনগুলোকে সমান্তরাল ইনডেন্টেশনে রাখার মেথড
-  pw.Widget _pdfStatementRow(List<String> labelLines, String value) {
+  // সিরিয়াল ডিজিটকে আলাদা কলামে রেখে টেক্সটকে নিখুঁত সমান্তরালে বাঁধানোর মেথড
+  pw.Widget _pdfStatementRow(String serial, List<String> labelLines, String value) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4.8),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
+          // সিরিয়াল নম্বর ডিজিট
           pw.SizedBox(
-            width: 250,
+            width: 18,
+            child: pw.Text(
+              serial,
+              style: const pw.TextStyle(fontSize: 9.5),
+              textAlign: pw.TextAlign.left,
+            ),
+          ),
+          // মূল টেক্সট (দ্বিতীয় লাইনটি প্রথম অক্ষরের ঠিক সমান্তরালে থাকবে)
+          pw.SizedBox(
+            width: 232,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: labelLines.map((line) => pw.Text(
@@ -724,8 +739,10 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               )).toList(),
             ),
           ),
+          // কোলন
           pw.Text(" : ", style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(width: 14),
+          // ডানপাশের মান
           pw.Expanded(
             child: pw.Text(
               value,
@@ -824,7 +841,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 12),
 
-              // Thanking you - herewith এর ঠিক সোজা সমান্তরাল
+              // Thanking you
               pw.Align(
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Padding(
