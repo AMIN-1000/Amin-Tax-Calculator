@@ -4,6 +4,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 void main() {
+  // নিশ্চিত করে Flutter ইঞ্জিন সম্পূর্ণ বাইন্ড হয়েছে
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const GratuityCalculatorApp());
 }
 
@@ -67,18 +69,48 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   final payableGratuityCtrl = TextEditingController();
   final eligibilityCtrl = TextEditingController();
 
-  static const double maxCeiling = 1200000.0; // West Bengal Gratuity Ceiling
+  static const double maxCeiling = 1200000.0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         calculateGratuity();
       }
     });
-    calculateGratuity();
+
+    // বিল্ড সম্পন্ন হওয়ার পর প্রথম হিসাব চালু হবে, যাতে অ্যাপ ক্র্যাশ না করে
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      calculateGratuity();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    nameCtrl.dispose();
+    designationCtrl.dispose();
+    schoolCtrl.dispose();
+    empCodeCtrl.dispose();
+    dojCtrl.dispose();
+    dorCtrl.dispose();
+    grossYearsCtrl.dispose();
+    grossMonthsCtrl.dispose();
+    eolYearsCtrl.dispose();
+    eolMonthsCtrl.dispose();
+    basicPayCtrl.dispose();
+    dpCtrl.dispose();
+    daCtrl.dispose();
+    netServiceCtrl.dispose();
+    unitsCtrl.dispose();
+    totalEmolumentsCtrl.dispose();
+    calculatedGratuityCtrl.dispose();
+    payableGratuityCtrl.dispose();
+    eligibilityCtrl.dispose();
+    super.dispose();
   }
 
   double getVal(TextEditingController ctrl) {
@@ -90,100 +122,102 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   }
 
   void calculateGratuity() {
-    setState(() {
-      bool isRetiring = _tabController.index == 0;
+    if (!mounted) return;
 
-      int grossY = getIntVal(grossYearsCtrl);
-      int grossM = getIntVal(grossMonthsCtrl);
-      int eolY = getIntVal(eolYearsCtrl);
-      int eolM = getIntVal(eolMonthsCtrl);
+    bool isRetiring = _tabController.index == 0;
 
-      int totalGrossMonths = (grossY * 12) + grossM;
-      int totalEolMonths = (eolY * 12) + eolM;
-      int netTotalMonths = totalGrossMonths - totalEolMonths;
-      if (netTotalMonths < 0) netTotalMonths = 0;
+    int grossY = getIntVal(grossYearsCtrl);
+    int grossM = getIntVal(grossMonthsCtrl);
+    int eolY = getIntVal(eolYearsCtrl);
+    int eolM = getIntVal(eolMonthsCtrl);
 
-      int netYears = netTotalMonths ~/ 12;
-      int remMonths = netTotalMonths % 12;
+    int totalGrossMonths = (grossY * 12) + grossM;
+    int totalEolMonths = (eolY * 12) + eolM;
+    int netTotalMonths = totalGrossMonths - totalEolMonths;
+    if (netTotalMonths < 0) netTotalMonths = 0;
 
-      netServiceCtrl.text = "$netYears Yrs $remMonths Mos";
+    int netYears = netTotalMonths ~/ 12;
+    int remMonths = netTotalMonths % 12;
 
-      // Cap at 33 years
-      int cappedYears = netYears;
-      int cappedMonths = remMonths;
-      if (cappedYears >= 33) {
-        cappedYears = 33;
-        cappedMonths = 0;
+    int cappedYears = netYears;
+    int cappedMonths = remMonths;
+    if (cappedYears >= 33) {
+      cappedYears = 33;
+      cappedMonths = 0;
+    }
+
+    int units = cappedYears * 2;
+    if (cappedYears < 33) {
+      if (cappedMonths >= 3 && cappedMonths <= 8) {
+        units += 1;
+      } else if (cappedMonths >= 9) {
+        units += 2;
       }
+    }
+    if (units > 66) units = 66;
 
-      // Calculate Units of Service:
-      // 3-8 months = 1 unit, 9-12 months = 2 units
-      int units = cappedYears * 2;
-      if (cappedYears < 33) {
-        if (cappedMonths >= 3 && cappedMonths <= 8) {
-          units += 1;
-        } else if (cappedMonths >= 9) {
-          units += 2;
-        }
-      }
-      if (units > 66) units = 66; // Max 66 units for 33 years
-      unitsCtrl.text = units.toString();
+    double basic = getVal(basicPayCtrl);
+    double dp = getVal(dpCtrl);
+    double da = getVal(daCtrl);
+    double emoluments = basic + dp + da;
 
-      // Emoluments
-      double basic = getVal(basicPayCtrl);
-      double dp = getVal(dpCtrl);
-      double da = getVal(daCtrl);
-      double emoluments = basic + dp + da;
-      totalEmolumentsCtrl.text = emoluments.toStringAsFixed(0);
+    double calcGratuity = 0.0;
+    String eligibilityStatus = "";
 
-      double calcGratuity = 0.0;
-
-      if (isRetiring) {
-        // Retiring Gratuity Eligibility: Minimum 1 year
-        if (netYears < 1 && units == 0) {
-          eligibilityCtrl.text = "NOT ELIGIBLE (Min 1 Year Service Required)";
-          calcGratuity = 0.0;
-        } else {
-          eligibilityCtrl.text = "ELIGIBLE FOR RETIRING GRATUITY";
-          if (netYears < 10) {
-            // Less than 10 years: Emoluments * Units / 2
-            calcGratuity = (emoluments * units) / 2.0;
-          } else {
-            // 10 years or more: Emoluments * Units / 4
-            calcGratuity = (emoluments * units) / 4.0;
-          }
-        }
+    if (isRetiring) {
+      if (netYears < 1 && units == 0) {
+        eligibilityStatus = "NOT ELIGIBLE (Min 1 Year Service Required)";
+        calcGratuity = 0.0;
       } else {
-        // Death Gratuity Eligibility: 1 day service
-        eligibilityCtrl.text = "ELIGIBLE FOR DEATH GRATUITY";
-
-        if (netYears < 1) {
-          calcGratuity = emoluments * 2.0;
-        } else if (netYears < 5) {
-          calcGratuity = emoluments * 6.0;
-        } else if (netYears < 11) {
-          calcGratuity = emoluments * 12.0;
-        } else if (netYears < 20) {
-          calcGratuity = emoluments * 20.0;
+        eligibilityStatus = "ELIGIBLE FOR RETIRING GRATUITY";
+        if (netYears < 10) {
+          calcGratuity = (emoluments * units) / 2.0;
         } else {
-          // 20 years or more: Half of Emoluments * Units
-          calcGratuity = (emoluments / 2.0) * units;
+          calcGratuity = (emoluments * units) / 4.0;
         }
       }
+    } else {
+      eligibilityStatus = "ELIGIBLE FOR DEATH GRATUITY";
+      if (netYears < 1) {
+        calcGratuity = emoluments * 2.0;
+      } else if (netYears < 5) {
+        calcGratuity = emoluments * 6.0;
+      } else if (netYears < 11) {
+        calcGratuity = emoluments * 12.0;
+      } else if (netYears < 20) {
+        calcGratuity = emoluments * 20.0;
+      } else {
+        calcGratuity = (emoluments / 2.0) * units;
+      }
+    }
 
+    double finalPayable =
+        calcGratuity > maxCeiling ? maxCeiling : calcGratuity;
+
+    setState(() {
+      netServiceCtrl.text = "$netYears Yrs $remMonths Mos";
+      unitsCtrl.text = units.toString();
+      totalEmolumentsCtrl.text = emoluments.toStringAsFixed(0);
+      eligibilityCtrl.text = eligibilityStatus;
       calculatedGratuityCtrl.text = calcGratuity.toStringAsFixed(0);
-
-      // Max ceiling cap
-      double finalPayable = calcGratuity > maxCeiling ? maxCeiling : calcGratuity;
       payableGratuityCtrl.text = finalPayable.toStringAsFixed(0);
     });
   }
 
   Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-    pdf.addPage(_buildPdfPage(_tabController.index == 0));
-    await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+    try {
+      final pdf = pw.Document();
+      pdf.addPage(_buildPdfPage(_tabController.index == 0));
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error creating PDF: $e")),
+        );
+      }
+    }
   }
 
   pw.Page _buildPdfPage(bool isRetiring) {
@@ -191,9 +225,6 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     String formulaText = "";
 
     int netY = getIntVal(grossYearsCtrl) - getIntVal(eolYearsCtrl);
-    int units = int.tryParse(unitsCtrl.text) ?? 0;
-    double emols = getVal(totalEmolumentsCtrl);
-
     if (isRetiring) {
       if (netY < 10) {
         formulaText = "Emoluments x Units / 2 (Below 10 Yrs)";
@@ -201,11 +232,17 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
         formulaText = "Emoluments x Units / 4 (10 Yrs & Above)";
       }
     } else {
-      if (netY < 1) formulaText = "Emoluments x 2 (Less than 1 Yr)";
-      else if (netY < 5) formulaText = "Emoluments x 6 (1 to <5 Yrs)";
-      else if (netY < 11) formulaText = "Emoluments x 12 (5 to <11 Yrs)";
-      else if (netY < 20) formulaText = "Emoluments x 20 (11 to <20 Yrs)";
-      else formulaText = "(Emoluments / 2) x Units (20 Yrs & Above)";
+      if (netY < 1) {
+        formulaText = "Emoluments x 2 (Less than 1 Yr)";
+      } else if (netY < 5) {
+        formulaText = "Emoluments x 6 (1 to <5 Yrs)";
+      } else if (netY < 11) {
+        formulaText = "Emoluments x 12 (5 to <11 Yrs)";
+      } else if (netY < 20) {
+        formulaText = "Emoluments x 20 (11 to <20 Yrs)";
+      } else {
+        formulaText = "(Emoluments / 2) x Units (20 Yrs & Above)";
+      }
     }
 
     return pw.Page(
@@ -218,19 +255,21 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             pw.Center(
               child: pw.Text(
                 ":-: GRATUITY COMPUTATION SHEET :-:",
-                style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
               ),
             ),
             pw.SizedBox(height: 2),
             pw.Center(
               child: pw.Text(
                 "[ $gratuityType UNDER DCRB RULES ]",
-                style: pw.TextStyle(fontSize: 10.5, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(
+                    fontSize: 10.5, fontWeight: pw.FontWeight.bold),
               ),
             ),
             pw.SizedBox(height: 12),
 
-            // Employee Information Card
+            // Employee Card
             pw.Container(
               decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColors.black, width: 0.6)),
@@ -245,11 +284,13 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   ]),
                   pw.Row(children: [
                     _pdfHeaderBox("EMPLOYEE CODE", empCodeCtrl.text),
-                    _pdfHeaderBox("ELIGIBILITY", eligibilityCtrl.text)
+                    _pdfHeaderBox("STATUS", eligibilityCtrl.text)
                   ]),
                   pw.Row(children: [
                     _pdfHeaderBox("DATE OF JOINING", dojCtrl.text),
-                    _pdfHeaderBox(isRetiring ? "DATE OF RETIREMENT" : "DATE OF DEATH", dorCtrl.text)
+                    _pdfHeaderBox(
+                        isRetiring ? "DATE OF RETIREMENT" : "DATE OF DEATH",
+                        dorCtrl.text)
                   ]),
                 ],
               ),
@@ -265,19 +306,45 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 2: const pw.FixedColumnWidth(110),
               },
               children: [
-                _buildPdfRow("Sl", "Particulars & Description", "Amount / Value", isHeader: true),
-                _buildPdfRow("1", "Gross Total Service (Yrs & Months)", "${grossYearsCtrl.text} Yrs ${grossMonthsCtrl.text} Mos"),
-                _buildPdfRow("2", "Less: Extra Ordinary Leave (EOL / LWP)", "${eolYearsCtrl.text} Yrs ${eolMonthsCtrl.text} Mos"),
-                _buildPdfRow("3", "Net Qualifying Service", netServiceCtrl.text, isBold: true),
-                _buildPdfRow("4", "Total Six-Monthly Units of Service (Max 66)", "${unitsCtrl.text} Units", isBold: true),
-                _buildPdfRow("5", "Last Basic Pay", "Rs. ${getVal(basicPayCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("6", "Dearness Pay (DP)", "Rs. ${getVal(dpCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("7", "Dearness Allowance (DA)", "Rs. ${getVal(daCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("8", "Total Emoluments (Basic + DP + DA)", "Rs. ${totalEmolumentsCtrl.text}", isBold: true),
-                _buildPdfRow("9", "Applicable Rule / Formula", formulaText),
-                _buildPdfRow("10", "Gross Calculated Gratuity", "Rs. ${calculatedGratuityCtrl.text}", isBold: true),
-                _buildPdfRow("11", "Statutory Upper Ceiling Limit", "Rs. ${maxCeiling.toStringAsFixed(0)}"),
-                _buildPdfRow("12", "Net Admissible Gratuity Payable", "Rs. ${payableGratuityCtrl.text}", isBold: true),
+                _buildPdfRow("Sl", "Particulars & Description",
+                    "Amount / Value",
+                    isHeader: true),
+                _buildPdfRow(
+                    "1",
+                    "Gross Total Service",
+                    "${grossYearsCtrl.text} Yrs ${grossMonthsCtrl.text} Mos"),
+                _buildPdfRow(
+                    "2",
+                    "Less: Extra Ordinary Leave (EOL)",
+                    "${eolYearsCtrl.text} Yrs ${eolMonthsCtrl.text} Mos"),
+                _buildPdfRow(
+                    "3", "Net Qualifying Service", netServiceCtrl.text,
+                    isBold: true),
+                _buildPdfRow(
+                    "4",
+                    "Total Six-Monthly Units (Max 66)",
+                    "${unitsCtrl.text} Units",
+                    isBold: true),
+                _buildPdfRow("5", "Last Basic Pay",
+                    "Rs. ${getVal(basicPayCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow("6", "Dearness Pay (DP)",
+                    "Rs. ${getVal(dpCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow("7", "Dearness Allowance (DA)",
+                    "Rs. ${getVal(daCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow(
+                    "8",
+                    "Total Emoluments (Basic+DP+DA)",
+                    "Rs. ${totalEmolumentsCtrl.text}",
+                    isBold: true),
+                _buildPdfRow("9", "Applicable Formula", formulaText),
+                _buildPdfRow("10", "Gross Calculated Gratuity",
+                    "Rs. ${calculatedGratuityCtrl.text}",
+                    isBold: true),
+                _buildPdfRow("11", "Statutory Upper Ceiling",
+                    "Rs. ${maxCeiling.toStringAsFixed(0)}"),
+                _buildPdfRow("12", "Net Admissible Gratuity Payable",
+                    "Rs. ${payableGratuityCtrl.text}",
+                    isBold: true),
               ],
             ),
 
@@ -289,13 +356,15 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ),
               child: pw.Text(
                 "Verified and found correct according to West Bengal Recognized Non-Government Aided Educational Institution Employees (DCRB) Rules.",
-                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey800),
+                style: const pw.TextStyle(
+                    fontSize: 8, color: PdfColors.grey800),
                 textAlign: pw.TextAlign.center,
               ),
             ),
 
             pw.Spacer(),
-            // Signatures
+
+            // Signature Row
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -305,12 +374,14 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   children: [
                     pw.Text(
                       "Signature of Head of the Institution",
-                      style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
                     ),
                     pw.SizedBox(height: 4),
                     pw.Text(
                       "With Date & Seal",
-                      style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                          fontSize: 8.5, fontWeight: pw.FontWeight.bold),
                     ),
                   ],
                 ),
@@ -318,8 +389,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
                     pw.Text(
-                      isRetiring ? "Signature of the Employee" : "Signature of the Nominee / Claimant",
-                      style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold),
+                      isRetiring
+                          ? "Signature of the Employee"
+                          : "Signature of the Nominee / Claimant",
+                      style: pw.TextStyle(
+                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
                     ),
                     pw.SizedBox(height: 14),
                   ],
@@ -344,7 +418,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             children: [
               pw.TextSpan(
                   text: "$title: ",
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 8)),
               pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
             ],
           ),
@@ -364,14 +439,16 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
           child: pw.Text(sl,
               textAlign: pw.TextAlign.center,
               style: pw.TextStyle(
-                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontWeight:
+                      isHeader || isBold ? pw.FontWeight.bold : null,
                   fontSize: 8.5)),
         ),
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
           child: pw.Text(desc,
               style: pw.TextStyle(
-                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontWeight:
+                      isHeader || isBold ? pw.FontWeight.bold : null,
                   fontSize: 8.5)),
         ),
         pw.Padding(
@@ -379,7 +456,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
           child: pw.Text(amt,
               textAlign: pw.TextAlign.right,
               style: pw.TextStyle(
-                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontWeight:
+                      isHeader || isBold ? pw.FontWeight.bold : null,
                   fontSize: 8.5)),
         ),
       ],
@@ -406,7 +484,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 border: Border(right: BorderSide(color: Colors.grey.shade400))),
             child: Text(slNo,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 11)),
           ),
           Expanded(
             child: Padding(
@@ -430,7 +509,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               keyboardType: TextInputType.number,
               textAlign: TextAlign.right,
               style: TextStyle(
-                  fontWeight: isReadOnly ? FontWeight.bold : FontWeight.normal,
+                  fontWeight:
+                      isReadOnly ? FontWeight.bold : FontWeight.normal,
                   fontSize: 13),
               decoration: InputDecoration(
                 hintText: hint,
@@ -455,7 +535,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       child: Row(
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           const SizedBox(width: 4),
           Expanded(
             child: TextField(
@@ -508,7 +589,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
         padding: const EdgeInsets.all(6.0),
         child: Column(
           children: [
-            // Employee Header Information Table
+            // Employee Information
             Container(
               decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade600, width: 1.2)),
@@ -520,7 +601,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                         child: _headerTextField('EMPLOYEE NAME:', nameCtrl)),
                     Expanded(
                         flex: 1,
-                        child: _headerTextField('DESIGNATION:', designationCtrl)),
+                        child:
+                            _headerTextField('DESIGNATION:', designationCtrl)),
                   ]),
                   _headerTextField('INSTITUTION NAME:', schoolCtrl),
                   Row(children: [
@@ -546,14 +628,16 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             Container(
               decoration: BoxDecoration(
                   color: Colors.teal.shade700,
-                  border: Border.all(color: Colors.grey.shade700, width: 1.2)),
+                  border:
+                      Border.all(color: Colors.grey.shade700, width: 1.2)),
               child: Row(
                 children: [
                   Container(
                     width: 35,
                     padding: const EdgeInsets.symmetric(vertical: 7),
                     decoration: const BoxDecoration(
-                        border: Border(right: BorderSide(color: Colors.white38))),
+                        border:
+                            Border(right: BorderSide(color: Colors.white38))),
                     child: const Text("Sl",
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -575,7 +659,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                     width: 130,
                     padding: const EdgeInsets.symmetric(vertical: 7),
                     decoration: const BoxDecoration(
-                        border: Border(left: BorderSide(color: Colors.white38))),
+                        border:
+                            Border(left: BorderSide(color: Colors.white38))),
                     child: const Text("Value / Amount",
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -587,30 +672,25 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ),
             ),
 
-            // Service rows
+            // Rows
             _buildInputRow("1", "Gross Service (Years)", grossYearsCtrl),
             _buildInputRow("2", "Gross Service (Months)", grossMonthsCtrl),
             _buildInputRow("3", "Less: EOL / LWP (Years)", eolYearsCtrl),
             _buildInputRow("4", "Less: EOL / LWP (Months)", eolMonthsCtrl),
             _buildInputRow("5", "Net Qualifying Service", netServiceCtrl,
                 isReadOnly: true),
-            _buildInputRow("6", "Calculated Units of Service (Max 66)",
-                unitsCtrl,
+            _buildInputRow("6", "Calculated Units of Service", unitsCtrl,
                 isReadOnly: true),
-
-            // Emoluments rows
             _buildInputRow("7", "Last Basic Pay (Rs.)", basicPayCtrl),
             _buildInputRow("8", "Dearness Pay - DP (Rs.)", dpCtrl),
             _buildInputRow("9", "Dearness Allowance - DA (Rs.)", daCtrl),
             _buildInputRow("10", "Total Emoluments (Basic+DP+DA)",
                 totalEmolumentsCtrl,
                 isReadOnly: true),
-
-            // Final Outputs
-            _buildInputRow("11", "Calculated Gratuity (Formula Basis)",
+            _buildInputRow("11", "Calculated Gratuity (Formula)",
                 calculatedGratuityCtrl,
                 isReadOnly: true),
-            _buildInputRow("12", "Payable Gratuity (Capped at 12 Lakhs)",
+            _buildInputRow("12", "Payable Gratuity (Max 12 Lakhs)",
                 payableGratuityCtrl,
                 isReadOnly: true),
 
