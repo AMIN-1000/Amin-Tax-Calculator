@@ -42,16 +42,27 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
   // Header Details
   final nameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
-  final designationCtrl = TextEditingController(text: "Assistant Teacher");
   final schoolCtrl =
       TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final empCodeCtrl = TextEditingController(text: "WBED202401");
-  final dojCtrl = TextEditingController(text: "01/04/2000");
-  final dorCtrl = TextEditingController(text: "31/03/2026");
+  final empCodeCtrl = TextEditingController(text: "BDFF2107");
+  final dojCtrl = TextEditingController(text: "19.05.2005");
+  final dorCtrl = TextEditingController(text: "31.07.2039");
+
+  // Designation Dropdown Options
+  final List<String> designationList = [
+    "H.M",
+    "T.I.C",
+    "A.H.M",
+    "A.T",
+    "CLERK",
+    "Gr-D (Peon)",
+    "Gr-D"
+  ];
+  late String selectedDesignation;
 
   // Service Inputs
-  final grossYearsCtrl = TextEditingController(text: "26");
-  final grossMonthsCtrl = TextEditingController(text: "0");
+  final grossYearsCtrl = TextEditingController(text: "34");
+  final grossMonthsCtrl = TextEditingController(text: "2");
   final eolYearsCtrl = TextEditingController(text: "0");
   final eolMonthsCtrl = TextEditingController(text: "0");
 
@@ -61,11 +72,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   final daCtrl = TextEditingController(text: "7700");
 
   // Display Outputs
-  String netServiceText = "26 Yrs 0 Mos";
-  String unitsText = "52";
+  String netServiceText = "34 Yrs 2 Mos";
+  String unitsText = "66";
   String totalEmolumentsText = "62700";
-  String calculatedGratuityText = "815100";
-  String payableGratuityText = "815100";
+  String calculatedGratuityText = "1034550";
+  String payableGratuityText = "1034550";
   String eligibilityText = "ELIGIBLE FOR RETIRING GRATUITY";
 
   static const double maxCeiling = 1200000.0;
@@ -73,6 +84,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   @override
   void initState() {
     super.initState();
+    selectedDesignation = "A.T";
     _tabController = TabController(length: 2, vsync: this);
 
     _tabController.addListener(() {
@@ -88,7 +100,6 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   void dispose() {
     _tabController.dispose();
     nameCtrl.dispose();
-    designationCtrl.dispose();
     schoolCtrl.dispose();
     empCodeCtrl.dispose();
     dojCtrl.dispose();
@@ -235,7 +246,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.symmetric(horizontal: 36, vertical: 36),
+      // School Pad / Letterhead এর জন্য উপরে 130pt ফাঁকা জায়গা রাখা হয়েছে
+      margin: const pw.EdgeInsets.only(left: 36, right: 36, top: 130, bottom: 32),
       build: (pw.Context context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -243,19 +255,17 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             pw.Center(
               child: pw.Text(
                 ":-: GRATUITY COMPUTATION SHEET :-:",
-                style:
-                    pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
               ),
             ),
             pw.SizedBox(height: 2),
             pw.Center(
               child: pw.Text(
                 "[ $gratuityType UNDER DCRB RULES ]",
-                style: pw.TextStyle(
-                    fontSize: 10.5, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
               ),
             ),
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 10),
 
             // Employee Information
             pw.Container(
@@ -265,7 +275,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 children: [
                   pw.Row(children: [
                     _pdfHeaderBox("EMPLOYEE NAME", nameCtrl.text),
-                    _pdfHeaderBox("DESIGNATION", designationCtrl.text)
+                    _pdfHeaderBox("DESIGNATION", selectedDesignation)
                   ]),
                   pw.Row(children: [
                     _pdfHeaderBox("INSTITUTION NAME", schoolCtrl.text)
@@ -283,7 +293,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 ],
               ),
             ),
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 10),
 
             // Computation Table
             pw.Table(
@@ -294,8 +304,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 2: const pw.FixedColumnWidth(110),
               },
               children: [
-                _buildPdfRow("Sl", "Particulars & Description",
-                    "Amount / Value",
+                _buildPdfRow("Sl", "Particulars & Description", "Amount / Value",
                     isHeader: true),
                 _buildPdfRow(
                     "1",
@@ -336,16 +345,15 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ],
             ),
 
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 8),
             pw.Container(
-              padding: const pw.EdgeInsets.all(6),
+              padding: const pw.EdgeInsets.all(5),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey500, width: 0.5),
               ),
               child: pw.Text(
                 "Verified and found correct according to West Bengal Recognized Non-Government Aided Educational Institution Employees (DCRB) Rules.",
-                style: const pw.TextStyle(
-                    fontSize: 8, color: PdfColors.grey800),
+                style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey800),
                 textAlign: pw.TextAlign.center,
               ),
             ),
@@ -363,13 +371,13 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                     pw.Text(
                       "Signature of Head of the Institution",
                       style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
+                          fontSize: 9, fontWeight: pw.FontWeight.bold),
                     ),
                     pw.SizedBox(height: 4),
                     pw.Text(
                       "With Date & Seal",
                       style: pw.TextStyle(
-                          fontSize: 8.5, fontWeight: pw.FontWeight.bold),
+                          fontSize: 8, fontWeight: pw.FontWeight.bold),
                     ),
                   ],
                 ),
@@ -381,14 +389,14 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                           ? "Signature of the Employee"
                           : "Signature of the Nominee / Claimant",
                       style: pw.TextStyle(
-                          fontSize: 9.5, fontWeight: pw.FontWeight.bold),
+                          fontSize: 9, fontWeight: pw.FontWeight.bold),
                     ),
                     pw.SizedBox(height: 14),
                   ],
                 ),
               ],
             ),
-            pw.SizedBox(height: 8),
+            pw.SizedBox(height: 6),
           ],
         );
       },
@@ -398,7 +406,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   pw.Widget _pdfHeaderBox(String title, String value) {
     return pw.Expanded(
       child: pw.Container(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 5),
+        padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
         decoration: pw.BoxDecoration(
             border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
         child: pw.RichText(
@@ -423,30 +431,27 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
           isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
       children: [
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 4),
           child: pw.Text(sl,
               textAlign: pw.TextAlign.center,
               style: pw.TextStyle(
-                  fontWeight:
-                      isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8.5)),
+                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontSize: 8)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 6),
           child: pw.Text(desc,
               style: pw.TextStyle(
-                  fontWeight:
-                      isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8.5)),
+                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontSize: 8)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 6),
           child: pw.Text(amt,
               textAlign: pw.TextAlign.right,
               style: pw.TextStyle(
-                  fontWeight:
-                      isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8.5)),
+                  fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
+                  fontSize: 8)),
         ),
       ],
     );
@@ -588,6 +593,47 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     );
   }
 
+  Widget _headerDropdownField(String label) {
+    return Container(
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400, width: 0.5)),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      child: Row(
+        children: [
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedDesignation,
+                isDense: true,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600),
+                items: designationList.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedDesignation = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isRetiring = _tabController.index == 0;
@@ -623,7 +669,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
         padding: const EdgeInsets.all(6.0),
         child: Column(
           children: [
-            // Employee Information
+            // Employee Information Header
             Container(
               decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade600, width: 1.2)),
@@ -635,8 +681,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                         child: _headerTextField('EMPLOYEE NAME:', nameCtrl)),
                     Expanded(
                         flex: 1,
-                        child:
-                            _headerTextField('DESIGNATION:', designationCtrl)),
+                        child: _headerDropdownField('DESIGNATION:')),
                   ]),
                   _headerTextField('INSTITUTION NAME:', schoolCtrl),
                   Row(children: [
