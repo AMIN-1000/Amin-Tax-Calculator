@@ -6,6 +6,8 @@ on:
       - main
       - Amin_18Years_Calculator
       - Amin_Arrear_Calculator
+      - Amin_18Years_Fixation
+      - Amin_Gratuity_Calculator
   workflow_dispatch:
 
 jobs:
