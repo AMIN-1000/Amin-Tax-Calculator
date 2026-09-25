@@ -48,7 +48,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   final dojCtrl = TextEditingController(text: "19.05.2005");
   final dorCtrl = TextEditingController(text: "31.07.2039");
 
-  // Designation Dropdown Options
+  // Designation Dropdown
   final List<String> designationList = [
     "H.M",
     "T.I.C",
@@ -60,23 +60,21 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   ];
   late String selectedDesignation;
 
-  // Service Inputs
-  final grossYearsCtrl = TextEditingController(text: "34");
-  final grossMonthsCtrl = TextEditingController(text: "2");
+  // Inputs
   final eolYearsCtrl = TextEditingController(text: "0");
   final eolMonthsCtrl = TextEditingController(text: "0");
-
-  // Emoluments Inputs
   final basicPayCtrl = TextEditingController(text: "55000");
   final dpCtrl = TextEditingController(text: "0");
-  final daCtrl = TextEditingController(text: "7700");
 
-  // Display Outputs
-  String netServiceText = "34 Yrs 2 Mos";
-  String unitsText = "66";
-  String totalEmolumentsText = "62700";
-  String calculatedGratuityText = "1034550";
-  String payableGratuityText = "1034550";
+  // Dynamic Display Outputs
+  String grossYearsText = "0";
+  String grossMonthsText = "0";
+  String netServiceText = "0 Yrs 0 Mos";
+  String unitsText = "0";
+  String daAmountText = "0";
+  String totalEmolumentsText = "0";
+  String calculatedGratuityText = "0";
+  String payableGratuityText = "0";
   String eligibilityText = "ELIGIBLE FOR RETIRING GRATUITY";
 
   static const double maxCeiling = 1200000.0;
@@ -89,11 +87,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        calculateGratuity();
+        calculateAll();
       }
     });
 
-    calculateGratuity();
+    calculateAll();
   }
 
   @override
@@ -104,31 +102,65 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     empCodeCtrl.dispose();
     dojCtrl.dispose();
     dorCtrl.dispose();
-    grossYearsCtrl.dispose();
-    grossMonthsCtrl.dispose();
     eolYearsCtrl.dispose();
     eolMonthsCtrl.dispose();
     basicPayCtrl.dispose();
     dpCtrl.dispose();
-    daCtrl.dispose();
     super.dispose();
   }
 
-  double getVal(TextEditingController ctrl) {
+  double _getVal(TextEditingController ctrl) {
     return double.tryParse(ctrl.text.trim()) ?? 0.0;
   }
 
-  int getIntVal(TextEditingController ctrl) {
+  int _getIntVal(TextEditingController ctrl) {
     return int.tryParse(ctrl.text.trim()) ?? 0;
   }
 
-  void calculateGratuity() {
+  // তারিখ পার্স করার হেল্পার মেথড (dd.MM.yyyy অথবা dd/MM/yyyy সাপোর্ট করবে)
+  DateTime? _parseDate(String dateStr) {
+    try {
+      String clean = dateStr.trim().replaceAll('/', '.').replaceAll('-', '.');
+      List<String> parts = clean.split('.');
+      if (parts.length == 3) {
+        int d = int.parse(parts[0]);
+        int m = int.parse(parts[1]);
+        int y = int.parse(parts[2]);
+        return DateTime(y, m, d);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  void calculateAll() {
     bool isRetiring = _tabController.index == 0;
 
-    int grossY = getIntVal(grossYearsCtrl);
-    int grossM = getIntVal(grossMonthsCtrl);
-    int eolY = getIntVal(eolYearsCtrl);
-    int eolM = getIntVal(eolMonthsCtrl);
+    // ১. Joining Date থেকে Retirement/Death Date পর্যন্ত বছর ও মাস স্বয়ংক্রিয় গণনা
+    DateTime? dJoin = _parseDate(dojCtrl.text);
+    DateTime? dEnd = _parseDate(dorCtrl.text);
+
+    int grossY = 0;
+    int grossM = 0;
+
+    if (dJoin != null && dEnd != null && dEnd.isAfter(dJoin)) {
+      int yDiff = dEnd.year - dJoin.year;
+      int mDiff = dEnd.month - dJoin.month;
+      int dayDiff = dEnd.day - dJoin.day;
+
+      if (dayDiff < 0) {
+        mDiff -= 1;
+      }
+      if (mDiff < 0) {
+        yDiff -= 1;
+        mDiff += 12;
+      }
+      grossY = yDiff >= 0 ? yDiff : 0;
+      grossM = mDiff >= 0 ? mDiff : 0;
+    }
+
+    // ২. EOL বিয়োগ
+    int eolY = _getIntVal(eolYearsCtrl);
+    int eolM = _getIntVal(eolMonthsCtrl);
 
     int totalGrossMonths = (grossY * 12) + grossM;
     int totalEolMonths = (eolY * 12) + eolM;
@@ -138,6 +170,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     int netYears = netTotalMonths ~/ 12;
     int remMonths = netTotalMonths % 12;
 
+    // ৩. সর্বোচ্চ ৩৩ বছর বা ৬৬ ইউনিট সিলিং
     int cappedYears = netYears;
     int cappedMonths = remMonths;
     if (cappedYears >= 33) {
@@ -145,6 +178,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       cappedMonths = 0;
     }
 
+    // ৪. Units of Service গণনা: ৩-৮ মাস = ১ ইউনিট, ৯-১২ মাস = ২ ইউনিট
     int units = cappedYears * 2;
     if (cappedYears < 33) {
       if (cappedMonths >= 3 && cappedMonths <= 8) {
@@ -155,11 +189,13 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     }
     if (units > 66) units = 66;
 
-    double basic = getVal(basicPayCtrl);
-    double dp = getVal(dpCtrl);
-    double da = getVal(daCtrl);
+    // ৫. Basic Pay, DP এবং স্বয়ংক্রিয় 12% DA
+    double basic = _getVal(basicPayCtrl);
+    double dp = _getVal(dpCtrl);
+    double da = (basic * 0.12).roundToDouble(); // Basic এর 12%
     double emoluments = basic + dp + da;
 
+    // ৬. Gratuity ফর্মুলা হিসাব
     double calcGratuity = 0.0;
     String status = "";
 
@@ -190,16 +226,19 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       }
     }
 
-    double finalPayable =
-        calcGratuity > maxCeiling ? maxCeiling : calcGratuity;
+    // ৭. সর্বোচ্চ সিলিং ১২,০০,০০০ টাকা
+    double finalPayable = calcGratuity > maxCeiling ? maxCeiling : calcGratuity;
 
     setState(() {
+      grossYearsText = grossY.toString();
+      grossMonthsText = grossM.toString();
       netServiceText = "$netYears Yrs $remMonths Mos";
       unitsText = units.toString();
+      daAmountText = da.toStringAsFixed(0);
       totalEmolumentsText = emoluments.toStringAsFixed(0);
-      eligibilityText = status;
       calculatedGratuityText = calcGratuity.toStringAsFixed(0);
       payableGratuityText = finalPayable.toStringAsFixed(0);
+      eligibilityText = status;
     });
   }
 
@@ -223,7 +262,9 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     String gratuityType = isRetiring ? "RETIRING GRATUITY" : "DEATH GRATUITY";
     String formulaText = "";
 
-    int netY = getIntVal(grossYearsCtrl) - getIntVal(eolYearsCtrl);
+    int netY = int.tryParse(grossYearsText) ?? 0;
+    netY -= _getIntVal(eolYearsCtrl);
+
     if (isRetiring) {
       if (netY < 10) {
         formulaText = "Emoluments x Units / 2 (Below 10 Yrs)";
@@ -246,7 +287,6 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
-      // স্ক্রিনশটের চেয়ে দ্বিগুণ ফাঁকা জায়গা রাখা হয়েছে (top: 240)
       margin: const pw.EdgeInsets.only(left: 36, right: 36, top: 240, bottom: 25),
       build: (pw.Context context) {
         return pw.Column(
@@ -308,45 +348,52 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                     isHeader: true),
                 _buildPdfRow(
                     "1",
-                    "Gross Total Service",
-                    "${grossYearsCtrl.text} Yrs ${grossMonthsCtrl.text} Mos"),
+                    "Gross Service (Years)",
+                    "$grossYearsText Yrs"),
                 _buildPdfRow(
                     "2",
-                    "Less: Extra Ordinary Leave (EOL)",
-                    "${eolYearsCtrl.text} Yrs ${eolMonthsCtrl.text} Mos"),
+                    "Gross Service (Months)",
+                    "$grossMonthsText Mos"),
                 _buildPdfRow(
-                    "3", "Net Qualifying Service", netServiceText,
-                    isBold: true),
+                    "3",
+                    "Less: Extra Ordinary Leave (EOL Years)",
+                    "${eolYearsCtrl.text} Yrs"),
                 _buildPdfRow(
                     "4",
+                    "Less: Extra Ordinary Leave (EOL Months)",
+                    "${eolMonthsCtrl.text} Mos"),
+                _buildPdfRow(
+                    "5", "Net Qualifying Service", netServiceText,
+                    isBold: true),
+                _buildPdfRow(
+                    "6",
                     "Total Six-Monthly Units (Max 66)",
                     "$unitsText Units",
                     isBold: true),
-                _buildPdfRow("5", "Last Basic Pay",
-                    "Rs. ${getVal(basicPayCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("6", "Dearness Pay (DP)",
-                    "Rs. ${getVal(dpCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("7", "Dearness Allowance (DA)",
-                    "Rs. ${getVal(daCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow("7", "Last Basic Pay",
+                    "Rs. ${_getVal(basicPayCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow("8", "Dearness Pay (DP)",
+                    "Rs. ${_getVal(dpCtrl).toStringAsFixed(0)}"),
+                _buildPdfRow("9", "Dearness Allowance (DA @ 12%)",
+                    "Rs. $daAmountText"),
                 _buildPdfRow(
-                    "8",
+                    "10",
                     "Total Emoluments (Basic+DP+DA)",
                     "Rs. $totalEmolumentsText",
                     isBold: true),
-                _buildPdfRow("9", "Applicable Formula", formulaText),
-                _buildPdfRow("10", "Gross Calculated Gratuity",
+                _buildPdfRow("11", "Applicable Formula", formulaText),
+                _buildPdfRow("12", "Gross Calculated Gratuity",
                     "Rs. $calculatedGratuityText",
                     isBold: true),
-                _buildPdfRow("11", "Statutory Upper Ceiling",
+                _buildPdfRow("13", "Statutory Upper Ceiling Limit",
                     "Rs. ${maxCeiling.toStringAsFixed(0)}"),
-                _buildPdfRow("12", "Net Admissible Gratuity Payable",
+                _buildPdfRow("14", "Net Admissible Gratuity Payable",
                     "Rs. $payableGratuityText",
                     isBold: true),
               ],
             ),
 
             pw.SizedBox(height: 6),
-            // সংশোধিত রুলস ফুটার
             pw.Container(
               padding: const pw.EdgeInsets.all(4),
               decoration: pw.BoxDecoration(
@@ -361,7 +408,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
             pw.Spacer(),
 
-            // Signature Row
+            // Signatures
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -432,7 +479,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
           isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
       children: [
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.2, horizontal: 4),
           child: pw.Text(sl,
               textAlign: pw.TextAlign.center,
               style: pw.TextStyle(
@@ -440,14 +487,14 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   fontSize: 7.5)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.2, horizontal: 5),
           child: pw.Text(desc,
               style: pw.TextStyle(
                   fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
                   fontSize: 7.5)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.2, horizontal: 5),
           child: pw.Text(amt,
               textAlign: pw.TextAlign.right,
               style: pw.TextStyle(
@@ -455,60 +502,6 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   fontSize: 7.5)),
         ),
       ],
-    );
-  }
-
-  Widget _buildInputRow(
-      String slNo, String title, TextEditingController controller) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade400),
-          left: BorderSide(color: Colors.grey.shade400),
-          right: BorderSide(color: Colors.grey.shade400),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 35,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: Colors.grey.shade400))),
-            child: Text(slNo,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 11)),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(title, style: const TextStyle(fontSize: 12)),
-            ),
-          ),
-          Container(
-            width: 130,
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              border: Border(left: BorderSide(color: Colors.grey.shade400)),
-            ),
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                isDense: true,
-              ),
-              onChanged: (val) => calculateGratuity(),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -567,7 +560,62 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     );
   }
 
-  Widget _headerTextField(String label, TextEditingController controller) {
+  Widget _buildInputRow(
+      String slNo, String title, TextEditingController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade400),
+          left: BorderSide(color: Colors.grey.shade400),
+          right: BorderSide(color: Colors.grey.shade400),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 35,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+                border: Border(right: BorderSide(color: Colors.grey.shade400))),
+            child: Text(slNo,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 11)),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(title, style: const TextStyle(fontSize: 12)),
+            ),
+          ),
+          Container(
+            width: 130,
+            decoration: BoxDecoration(
+              color: Colors.teal.shade50,
+              border: Border(left: BorderSide(color: Colors.grey.shade400)),
+            ),
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 13),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                isDense: true,
+              ),
+              onChanged: (val) => calculateAll(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerTextField(String label, TextEditingController controller,
+      {bool triggerDateCalc = false}) {
     return Container(
       decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade400, width: 0.5)),
@@ -587,6 +635,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
+              onChanged: triggerDateCalc ? (val) => calculateAll() : null,
             ),
           ),
         ],
@@ -701,11 +750,13 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   ]),
                   Row(children: [
                     Expanded(
-                        child: _headerTextField('JOINING DATE:', dojCtrl)),
+                        child: _headerTextField('JOINING DATE:', dojCtrl,
+                            triggerDateCalc: true)),
                     Expanded(
                         child: _headerTextField(
                             isRetiring ? 'RETIREMENT DATE:' : 'DEATH DATE:',
-                            dorCtrl)),
+                            dorCtrl,
+                            triggerDateCalc: true)),
                   ]),
                 ],
               ),
@@ -760,20 +811,34 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ),
             ),
 
-            // Rows
-            _buildInputRow("1", "Gross Service (Years)", grossYearsCtrl),
-            _buildInputRow("2", "Gross Service (Months)", grossMonthsCtrl),
+            // Serial 1 & 2: স্বয়ংক্রিয়ভাবে তারিখ থেকে গণনা
+            _buildDisplayRow("1", "Gross Service (Years)", grossYearsText),
+            _buildDisplayRow("2", "Gross Service (Months)", grossMonthsText),
+
+            // Serial 3 & 4: ম্যানুয়াল EOL ইনপুট
             _buildInputRow("3", "Less: EOL / LWP (Years)", eolYearsCtrl),
             _buildInputRow("4", "Less: EOL / LWP (Months)", eolMonthsCtrl),
+
+            // Serial 5 & 6: স্বয়ংক্রিয় Net Service & Units
             _buildDisplayRow("5", "Net Qualifying Service", netServiceText),
             _buildDisplayRow("6", "Calculated Units of Service", unitsText),
+
+            // Serial 7 & 8: ম্যানুয়াল Basic ও DP ইনপুট
             _buildInputRow("7", "Last Basic Pay (Rs.)", basicPayCtrl),
             _buildInputRow("8", "Dearness Pay - DP (Rs.)", dpCtrl),
-            _buildInputRow("9", "Dearness Allowance - DA (Rs.)", daCtrl),
+
+            // Serial 9: Basic এর 12% স্বয়ংক্রিয় DA
+            _buildDisplayRow("9", "Dearness Allowance - DA (12%)", daAmountText),
+
+            // Serial 10: 7+8+9 এর স্বয়ংক্রিয় যোগফল
             _buildDisplayRow("10", "Total Emoluments (Basic+DP+DA)",
                 "Rs. $totalEmolumentsText"),
+
+            // Serial 11: সূত্রানুসারে Gratuity
             _buildDisplayRow("11", "Calculated Gratuity (Formula)",
                 "Rs. $calculatedGratuityText"),
+
+            // Serial 12: সর্বোচ্চ ১২ লাখ টাকা সিলিং
             _buildDisplayRow("12", "Payable Gratuity (Max 12 Lakhs)",
                 "Rs. $payableGratuityText",
                 isHighlight: true),
