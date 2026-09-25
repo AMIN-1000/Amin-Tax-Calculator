@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 import 'dart:math';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const TaxCalculatorApp());
 }
 
@@ -109,13 +110,66 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
         calculateTax();
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      calculateTax();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    nameCtrl.dispose();
+    designationCtrl.dispose();
+    institutionCtrl.dispose();
+    empCodeCtrl.dispose();
+    panCtrl.dispose();
+    finYearCtrl.dispose();
+    assessYearCtrl.dispose();
+
+    i7GrossSalary.dispose();
+    i8Arrear.dispose();
+    i10HRA.dispose();
+    i18GrossRent.dispose();
+    i19TaxLocalAuth.dispose();
+    i22HomeLoanInt.dispose();
+    i25BankInt.dispose();
+    i26FDInt.dispose();
+    i27OtherSource.dispose();
+    i32_43Total80C.dispose();
+    i45_56TotalOtherDed.dispose();
+    i68STCG.dispose();
+    i69LTCG.dispose();
+    i71TaxPaidJan.dispose();
+    i72TaxPaidFeb.dispose();
+
+    totalSalCtrl.dispose();
+    stdDedCtrl.dispose();
+    pTaxCtrl.dispose();
+    netSalCtrl.dispose();
+    totalHousePropCtrl.dispose();
+    totalOtherSrcCtrl.dispose();
+    grossTotalCtrl.dispose();
+    serial10Ctrl.dispose();
+    totalDedCtrl.dispose();
+    taxableIncomeCtrl.dispose();
+    taxOnIncomeCtrl.dispose();
+    rebateCtrl.dispose();
+    cessCtrl.dispose();
+    totalTaxCessCtrl.dispose();
+    finalTaxPayableCtrl.dispose();
+    statusCtrl.dispose();
+
+    super.dispose();
   }
 
   double getVal(TextEditingController ctrl) {
-    return double.tryParse(ctrl.text) ?? 0.0;
+    return double.tryParse(ctrl.text.trim()) ?? 0.0;
   }
 
   void calculateTax() {
+    if (!mounted) return;
+
     setState(() {
       bool isOld = _tabController.index == 0;
 
@@ -145,16 +199,17 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
       double pTax = 0;
       if (isOld) {
-        if (grossSal <= 120000)
+        if (grossSal <= 120000) {
           pTax = 0;
-        else if (grossSal <= 180000)
+        } else if (grossSal <= 180000) {
           pTax = 1320;
-        else if (grossSal <= 300000)
+        } else if (grossSal <= 300000) {
           pTax = 1560;
-        else if (grossSal <= 480000)
+        } else if (grossSal <= 480000) {
           pTax = 1800;
-        else
+        } else {
           pTax = 2400;
+        }
       }
       pTaxCtrl.text = pTax.toStringAsFixed(0);
 
@@ -185,25 +240,27 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
       double tax = 0;
       if (isOld) {
-        if (taxable > 1000000)
+        if (taxable > 1000000) {
           tax = (taxable - 1000000) * 0.3 + 112500;
-        else if (taxable > 500000)
+        } else if (taxable > 500000) {
           tax = (taxable - 500000) * 0.2 + 12500;
-        else if (taxable > 250000)
+        } else if (taxable > 250000) {
           tax = (taxable - 250000) * 0.05;
+        }
       } else {
-        if (taxable > 2400000)
+        if (taxable > 2400000) {
           tax = (taxable - 2000000) * 0.3 + 200000;
-        else if (taxable > 2000000)
+        } else if (taxable > 2000000) {
           tax = (taxable - 2000000) * 0.25 + 200000;
-        else if (taxable > 1600000)
+        } else if (taxable > 1600000) {
           tax = (taxable - 1600000) * 0.2 + 120000;
-        else if (taxable > 1200000)
+        } else if (taxable > 1200000) {
           tax = (taxable - 1200000) * 0.15 + 60000;
-        else if (taxable > 800000)
+        } else if (taxable > 800000) {
           tax = (taxable - 800000) * 0.1 + 20000;
-        else if (taxable > 400000)
+        } else if (taxable > 400000) {
           tax = (taxable - 400000) * 0.05;
+        }
       }
       taxOnIncomeCtrl.text = tax.toStringAsFixed(0);
 
@@ -225,21 +282,30 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
       finalTaxPayableCtrl.text = finalTax.toStringAsFixed(0);
 
       double totalPaid = i71 + i72;
-      if (totalPaid > finalTax)
-        statusCtrl.text = "REFUNDABLE: ${totalPaid - finalTax}";
-      else if (totalPaid < finalTax)
-        statusCtrl.text = "PAYABLE: ${finalTax - totalPaid}";
-      else
+      if (totalPaid > finalTax) {
+        statusCtrl.text = "REFUNDABLE: ${(totalPaid - finalTax).toStringAsFixed(0)}";
+      } else if (totalPaid < finalTax) {
+        statusCtrl.text = "PAYABLE: ${(finalTax - totalPaid).toStringAsFixed(0)}";
+      } else {
         statusCtrl.text = "NIL";
+      }
     });
   }
 
   Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-    pdf.addPage(_buildRegimePdfPage(true));
-    pdf.addPage(_buildRegimePdfPage(false));
-    await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+    try {
+      final pdf = pw.Document();
+      pdf.addPage(_buildRegimePdfPage(true));
+      pdf.addPage(_buildRegimePdfPage(false));
+      await Printing.layoutPdf(
+          onLayout: (PdfPageFormat format) async => pdf.save());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("PDF Generation Failed: $e")),
+        );
+      }
+    }
   }
 
   pw.Page _buildRegimePdfPage(bool isOld) {
@@ -267,16 +333,17 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
     double pTax = 0;
     if (isOld) {
-      if (grossSal <= 120000)
+      if (grossSal <= 120000) {
         pTax = 0;
-      else if (grossSal <= 180000)
+      } else if (grossSal <= 180000) {
         pTax = 1320;
-      else if (grossSal <= 300000)
+      } else if (grossSal <= 300000) {
         pTax = 1560;
-      else if (grossSal <= 480000)
+      } else if (grossSal <= 480000) {
         pTax = 1800;
-      else
+      } else {
         pTax = 2400;
+      }
     }
 
     double salIncome = grossSal - stdDed - pTax - i10;
@@ -296,25 +363,27 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
     double tax = 0;
     if (isOld) {
-      if (taxable > 1000000)
+      if (taxable > 1000000) {
         tax = (taxable - 1000000) * 0.3 + 112500;
-      else if (taxable > 500000)
+      } else if (taxable > 500000) {
         tax = (taxable - 500000) * 0.2 + 12500;
-      else if (taxable > 250000)
+      } else if (taxable > 250000) {
         tax = (taxable - 250000) * 0.05;
+      }
     } else {
-      if (taxable > 2400000)
+      if (taxable > 2400000) {
         tax = (taxable - 2000000) * 0.3 + 200000;
-      else if (taxable > 2000000)
+      } else if (taxable > 2000000) {
         tax = (taxable - 2000000) * 0.25 + 200000;
-      else if (taxable > 1600000)
+      } else if (taxable > 1600000) {
         tax = (taxable - 1600000) * 0.2 + 120000;
-      else if (taxable > 1200000)
+      } else if (taxable > 1200000) {
         tax = (taxable - 1200000) * 0.15 + 60000;
-      else if (taxable > 800000)
+      } else if (taxable > 800000) {
         tax = (taxable - 800000) * 0.1 + 20000;
-      else if (taxable > 400000)
+      } else if (taxable > 400000) {
         tax = (taxable - 400000) * 0.05;
+      }
     }
 
     double rebate = isOld
@@ -338,12 +407,13 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
 
     double totalPaid = i71 + i72;
     String status = "";
-    if (totalPaid > finalTax)
-      status = "REFUNDABLE: ${totalPaid - finalTax}";
-    else if (totalPaid < finalTax)
-      status = "PAYABLE: ${finalTax - totalPaid}";
-    else
+    if (totalPaid > finalTax) {
+      status = "REFUNDABLE: ${(totalPaid - finalTax).toStringAsFixed(0)}";
+    } else if (totalPaid < finalTax) {
+      status = "PAYABLE: ${(finalTax - totalPaid).toStringAsFixed(0)}";
+    } else {
       status = "NIL";
+    }
 
     String headerTxt = isOld
         ? ':-: INCOME TAX COMPUTATION SHEET :-: [ UNDER OLD REGIME ]'
@@ -470,7 +540,6 @@ class _TaxHomeScreenState extends State<TaxHomeScreen>
               ],
             ),
 
-            // --- Signature Section with More Space ---
             pw.Spacer(),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
