@@ -246,8 +246,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
-      // School Pad / Letterhead এর জন্য উপরে 130pt ফাঁকা জায়গা রাখা হয়েছে
-      margin: const pw.EdgeInsets.only(left: 36, right: 36, top: 130, bottom: 32),
+      // স্ক্রিনশটের চেয়ে দ্বিগুণ ফাঁকা জায়গা রাখা হয়েছে (top: 240)
+      margin: const pw.EdgeInsets.only(left: 36, right: 36, top: 240, bottom: 25),
       build: (pw.Context context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -255,17 +255,17 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             pw.Center(
               child: pw.Text(
                 ":-: GRATUITY COMPUTATION SHEET :-:",
-                style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 12.5, fontWeight: pw.FontWeight.bold),
               ),
             ),
             pw.SizedBox(height: 2),
             pw.Center(
               child: pw.Text(
                 "[ $gratuityType UNDER DCRB RULES ]",
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold),
               ),
             ),
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 8),
 
             // Employee Information
             pw.Container(
@@ -293,15 +293,15 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 ],
               ),
             ),
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 8),
 
             // Computation Table
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.black, width: 0.6),
               columnWidths: {
-                0: const pw.FixedColumnWidth(28),
+                0: const pw.FixedColumnWidth(26),
                 1: const pw.FlexColumnWidth(),
-                2: const pw.FixedColumnWidth(110),
+                2: const pw.FixedColumnWidth(105),
               },
               children: [
                 _buildPdfRow("Sl", "Particulars & Description", "Amount / Value",
@@ -345,14 +345,15 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ],
             ),
 
-            pw.SizedBox(height: 8),
+            pw.SizedBox(height: 6),
+            // সংশোধিত রুলস ফুটার
             pw.Container(
-              padding: const pw.EdgeInsets.all(5),
+              padding: const pw.EdgeInsets.all(4),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey500, width: 0.5),
               ),
               child: pw.Text(
-                "Verified and found correct according to West Bengal Recognized Non-Government Aided Educational Institution Employees (DCRB) Rules.",
+                "Verified and found correct according to West Bengal Government Aided Educational Institution Employees (DCRB) Rules.",
                 style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey800),
                 textAlign: pw.TextAlign.center,
               ),
@@ -371,13 +372,13 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                     pw.Text(
                       "Signature of Head of the Institution",
                       style: pw.TextStyle(
-                          fontSize: 9, fontWeight: pw.FontWeight.bold),
+                          fontSize: 8.5, fontWeight: pw.FontWeight.bold),
                     ),
-                    pw.SizedBox(height: 4),
+                    pw.SizedBox(height: 3),
                     pw.Text(
                       "With Date & Seal",
                       style: pw.TextStyle(
-                          fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          fontSize: 7.5, fontWeight: pw.FontWeight.bold),
                     ),
                   ],
                 ),
@@ -389,14 +390,14 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                           ? "Signature of the Employee"
                           : "Signature of the Nominee / Claimant",
                       style: pw.TextStyle(
-                          fontSize: 9, fontWeight: pw.FontWeight.bold),
+                          fontSize: 8.5, fontWeight: pw.FontWeight.bold),
                     ),
-                    pw.SizedBox(height: 14),
+                    pw.SizedBox(height: 12),
                   ],
                 ),
               ],
             ),
-            pw.SizedBox(height: 6),
+            pw.SizedBox(height: 5),
           ],
         );
       },
@@ -406,7 +407,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   pw.Widget _pdfHeaderBox(String title, String value) {
     return pw.Expanded(
       child: pw.Container(
-        padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
+        padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 5),
         decoration: pw.BoxDecoration(
             border: pw.Border.all(color: PdfColors.grey400, width: 0.5)),
         child: pw.RichText(
@@ -415,8 +416,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               pw.TextSpan(
                   text: "$title: ",
                   style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold, fontSize: 8)),
-              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 8)),
+                      fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
+              pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 7.5)),
             ],
           ),
         ),
@@ -431,27 +432,27 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
           isHeader ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
       children: [
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 4),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
           child: pw.Text(sl,
               textAlign: pw.TextAlign.center,
               style: pw.TextStyle(
                   fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8)),
+                  fontSize: 7.5)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 6),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
           child: pw.Text(desc,
               style: pw.TextStyle(
                   fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8)),
+                  fontSize: 7.5)),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 4.5, horizontal: 6),
+          padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 5),
           child: pw.Text(amt,
               textAlign: pw.TextAlign.right,
               style: pw.TextStyle(
                   fontWeight: isHeader || isBold ? pw.FontWeight.bold : null,
-                  fontSize: 8)),
+                  fontSize: 7.5)),
         ),
       ],
     );
