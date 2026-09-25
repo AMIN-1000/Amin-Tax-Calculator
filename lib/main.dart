@@ -71,6 +71,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
   String grossMonthsText = "0";
   String netServiceText = "0 Yrs 0 Mos";
   String unitsText = "0";
+  double daPercent = 0.0;
   String daAmountText = "0";
   String totalEmolumentsText = "0";
   String calculatedGratuityText = "0";
@@ -117,7 +118,6 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     return int.tryParse(ctrl.text.trim()) ?? 0;
   }
 
-  // তারিখ পার্স করার হেল্পার মেথড (dd.MM.yyyy অথবা dd/MM/yyyy সাপোর্ট করবে)
   DateTime? _parseDate(String dateStr) {
     try {
       String clean = dateStr.trim().replaceAll('/', '.').replaceAll('-', '.');
@@ -130,6 +130,42 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       }
     } catch (_) {}
     return null;
+  }
+
+  // ROPA 2019 পরবর্তী সঠিক DA স্ল্যাব নির্ধারণ
+  double _getDaPercentage(DateTime? dor) {
+    if (dor == null) return 0.0;
+
+    // ১ অক্টোবর ২০২৬ থেকে: ৩৮%
+    if (!dor.isBefore(DateTime(2026, 10, 1))) {
+      return 38.0;
+    }
+    // ১ এপ্রিল ২০২৫ থেকে ৩০ সেপ্টেম্বর ২০২৬ পর্যন্ত: ১৮%
+    else if (!dor.isBefore(DateTime(2025, 4, 1))) {
+      return 18.0;
+    }
+    // ১ এপ্রিল ২০২৪ থেকে ৩১ মার্চ ২০২৫ পর্যন্ত: ১৪%
+    else if (!dor.isBefore(DateTime(2024, 4, 1))) {
+      return 14.0;
+    }
+    // ১ জানুয়ারি ২০২৪ থেকে ৩১ মার্চ ২০২৪ পর্যন্ত: ১০%
+    else if (!dor.isBefore(DateTime(2024, 1, 1))) {
+      return 10.0;
+    }
+    // ১ মার্চ ২০২৩ থেকে ৩১ ডিসেম্বর ২০২৩ পর্যন্ত: ৬%
+    else if (!dor.isBefore(DateTime(2023, 3, 1))) {
+      return 6.0;
+    }
+    // ১ জানুয়ারি ২০২১ থেকে ২৮ ফেব্রুয়ারি ২০২৩ পর্যন্ত: ৩%
+    else if (!dor.isBefore(DateTime(2021, 1, 1))) {
+      return 3.0;
+    }
+    // ১ জানুয়ারি ২০২০ থেকে ৩১ ডিসেম্বর ২০২০ পর্যন্ত: ০%
+    else if (!dor.isBefore(DateTime(2020, 1, 1))) {
+      return 0.0;
+    }
+
+    return 0.0;
   }
 
   void calculateAll() {
@@ -158,7 +194,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       grossM = mDiff >= 0 ? mDiff : 0;
     }
 
-    // ২. EOL বিয়োগ
+    // ২. EOL বিয়োগ
     int eolY = _getIntVal(eolYearsCtrl);
     int eolM = _getIntVal(eolMonthsCtrl);
 
@@ -178,7 +214,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       cappedMonths = 0;
     }
 
-    // ৪. Units of Service গণনা: ৩-৮ মাস = ১ ইউনিট, ৯-১২ মাস = ২ ইউনিট
+    // ৪. Units of Service গণনা (৩-৮ মাস = ১ ইউনিট, ৯-১২ মাস = ২ ইউনিট)
     int units = cappedYears * 2;
     if (cappedYears < 33) {
       if (cappedMonths >= 3 && cappedMonths <= 8) {
@@ -189,10 +225,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     }
     if (units > 66) units = 66;
 
-    // ৫. Basic Pay, DP এবং স্বয়ংক্রিয় 12% DA
+    // ৫. তারিখ অনুসারে DA হার এবং Emoluments নির্ধারণ
+    double currentDaRate = _getDaPercentage(dEnd);
     double basic = _getVal(basicPayCtrl);
     double dp = _getVal(dpCtrl);
-    double da = (basic * 0.12).roundToDouble(); // Basic এর 12%
+    double da = ((basic * currentDaRate) / 100.0).roundToDouble();
     double emoluments = basic + dp + da;
 
     // ৬. Gratuity ফর্মুলা হিসাব
@@ -234,6 +271,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
       grossMonthsText = grossM.toString();
       netServiceText = "$netYears Yrs $remMonths Mos";
       unitsText = units.toString();
+      daPercent = currentDaRate;
       daAmountText = da.toStringAsFixed(0);
       totalEmolumentsText = emoluments.toStringAsFixed(0);
       calculatedGratuityText = calcGratuity.toStringAsFixed(0);
@@ -284,6 +322,8 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
         formulaText = "(Emoluments / 2) x Units (20 Yrs & Above)";
       }
     }
+
+    String daHeader = "Dearness Allowance (DA @ ${daPercent.toStringAsFixed(0)}%)";
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
@@ -346,36 +386,22 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               children: [
                 _buildPdfRow("Sl", "Particulars & Description", "Amount / Value",
                     isHeader: true),
-                _buildPdfRow(
-                    "1",
-                    "Gross Service (Years)",
-                    "$grossYearsText Yrs"),
-                _buildPdfRow(
-                    "2",
-                    "Gross Service (Months)",
-                    "$grossMonthsText Mos"),
-                _buildPdfRow(
-                    "3",
-                    "Less: Extra Ordinary Leave (EOL Years)",
+                _buildPdfRow("1", "Gross Service (Years)", "$grossYearsText Yrs"),
+                _buildPdfRow("2", "Gross Service (Months)", "$grossMonthsText Mos"),
+                _buildPdfRow("3", "Less: Extra Ordinary Leave (EOL Years)",
                     "${eolYearsCtrl.text} Yrs"),
-                _buildPdfRow(
-                    "4",
-                    "Less: Extra Ordinary Leave (EOL Months)",
+                _buildPdfRow("4", "Less: Extra Ordinary Leave (EOL Months)",
                     "${eolMonthsCtrl.text} Mos"),
-                _buildPdfRow(
-                    "5", "Net Qualifying Service", netServiceText,
+                _buildPdfRow("5", "Net Qualifying Service", netServiceText,
                     isBold: true),
-                _buildPdfRow(
-                    "6",
-                    "Total Six-Monthly Units (Max 66)",
+                _buildPdfRow("6", "Total Six-Monthly Units (Max 66)",
                     "$unitsText Units",
                     isBold: true),
                 _buildPdfRow("7", "Last Basic Pay",
                     "Rs. ${_getVal(basicPayCtrl).toStringAsFixed(0)}"),
                 _buildPdfRow("8", "Dearness Pay (DP)",
                     "Rs. ${_getVal(dpCtrl).toStringAsFixed(0)}"),
-                _buildPdfRow("9", "Dearness Allowance (DA @ 12%)",
-                    "Rs. $daAmountText"),
+                _buildPdfRow("9", daHeader, "Rs. $daAmountText"),
                 _buildPdfRow(
                     "10",
                     "Total Emoluments (Basic+DP+DA)",
@@ -408,7 +434,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
 
             pw.Spacer(),
 
-            // Signatures
+            // Signature Row
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -811,7 +837,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
               ),
             ),
 
-            // Serial 1 & 2: স্বয়ংক্রিয়ভাবে তারিখ থেকে গণনা
+            // Serial 1 & 2: তারিখ থেকে স্বয়ংক্রিয় মোট সার্ভিস
             _buildDisplayRow("1", "Gross Service (Years)", grossYearsText),
             _buildDisplayRow("2", "Gross Service (Months)", grossMonthsText),
 
@@ -827,8 +853,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
             _buildInputRow("7", "Last Basic Pay (Rs.)", basicPayCtrl),
             _buildInputRow("8", "Dearness Pay - DP (Rs.)", dpCtrl),
 
-            // Serial 9: Basic এর 12% স্বয়ংক্রিয় DA
-            _buildDisplayRow("9", "Dearness Allowance - DA (12%)", daAmountText),
+            // Serial 9: তারিখ অনুসারে স্বয়ংক্রিয় DA
+            _buildDisplayRow(
+                "9",
+                "Dearness Allowance - DA (${daPercent.toStringAsFixed(0)}%)",
+                daAmountText),
 
             // Serial 10: 7+8+9 এর স্বয়ংক্রিয় যোগফল
             _buildDisplayRow("10", "Total Emoluments (Basic+DP+DA)",
