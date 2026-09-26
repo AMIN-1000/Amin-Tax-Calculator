@@ -132,6 +132,42 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     return null;
   }
 
+  // ক্যালেন্ডার ওপেন করার ফাংশন
+  Future<void> _selectDate(TextEditingController controller) async {
+    DateTime initial = _parseDate(controller.text) ?? DateTime.now();
+    DateTime first = DateTime(1960);
+    DateTime last = DateTime(2070);
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF004D40), // Header Background Color
+              onPrimary: Colors.white,     // Header Text Color
+              onSurface: Colors.black,     // Body Text Color
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      String d = picked.day.toString().padLeft(2, '0');
+      String m = picked.month.toString().padLeft(2, '0');
+      String y = picked.year.toString();
+      setState(() {
+        controller.text = "$d.$m.$y";
+      });
+      calculateAll();
+    }
+  }
+
   // ROPA 2019 পরবর্তী সঠিক DA স্ল্যাব নির্ধারণ
   double _getDaPercentage(DateTime? dor) {
     if (dor == null) return 0.0;
@@ -640,8 +676,7 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
     );
   }
 
-  Widget _headerTextField(String label, TextEditingController controller,
-      {bool triggerDateCalc = false}) {
+  Widget _headerTextField(String label, TextEditingController controller) {
     return Container(
       decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade400, width: 0.5)),
@@ -661,10 +696,36 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
-              onChanged: triggerDateCalc ? (val) => calculateAll() : null,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ক্যালেন্ডার পিকারসহ ডেট টেক্সটফিল্ড
+  Widget _headerDatePickerField(String label, TextEditingController controller) {
+    return Container(
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400, width: 0.5)),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      child: InkWell(
+        onTap: () => _selectDate(controller),
+        child: Row(
+          children: [
+            Text(label,
+                style:
+                    const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                controller.text,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const Icon(Icons.calendar_month, size: 14, color: Color(0xFF004D40)),
+          ],
+        ),
       ),
     );
   }
@@ -776,13 +837,11 @@ class _GratuityHomeScreenState extends State<GratuityHomeScreen>
                   ]),
                   Row(children: [
                     Expanded(
-                        child: _headerTextField('JOINING DATE:', dojCtrl,
-                            triggerDateCalc: true)),
+                        child: _headerDatePickerField('JOINING DATE:', dojCtrl)),
                     Expanded(
-                        child: _headerTextField(
+                        child: _headerDatePickerField(
                             isRetiring ? 'RETIREMENT DATE:' : 'DEATH DATE:',
-                            dorCtrl,
-                            triggerDateCalc: true)),
+                            dorCtrl)),
                   ]),
                 ],
               ),
