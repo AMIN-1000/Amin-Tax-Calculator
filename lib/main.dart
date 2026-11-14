@@ -560,7 +560,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ১. FIXATION STATEMENT PDF
+  // ১. FIXATION STATEMENT PDF (স্যাম্পল অনুযায়ী ঠিকানা ও স্পেসিং সহ)
   // =========================================================================
   Future<void> _printFixationPdf() async {
     final doc = pw.Document();
@@ -585,7 +585,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 245.0,
+          top: 245.0, // স্কুল প্যাডের জন্য উপরের জায়গা অপরিবর্তিত
           left: 40.0,
           right: 40.0,
           bottom: 25.0,
@@ -594,6 +594,19 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
+              // স্যাম্পল ইমেজের মতো ৩ লাইনের ঠিকানা (To, + ২ লাইন)
+              pw.Text(
+                "To,",
+                style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.Text(
+                toOfficerCtrl.text,
+                style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold, lineSpacing: 1.2),
+              ),
+
+              // ঠিকানার নিচে ২ লাইনের সমান ফাঁকা space
+              pw.SizedBox(height: 24),
+
               pw.Text(
                 "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.5, lineSpacing: 1.5),
@@ -616,7 +629,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 [sl3Label],
                 sl3Value,
               ),
-              // ৪ নং সিরিয়াল: দ্বিতীয় লাইন 'satisfactory service' ঠিক ওপরের 'Date'-এর D এর সমান্তরাল
               _pdfStatementRow(
                 "4.",
                 [
@@ -630,7 +642,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ["Date of Option for coming under 18 years benefit"],
                 optionDateCtrl.text,
               ),
-              // ৬ নং সিরিয়াল: দ্বিতীয় লাইন 'Benefit)' ঠিক ওপরের 'Existing'-এর E এর সমান্তরাল
               _pdfStatementRow(
                 "6.",
                 [
@@ -644,7 +655,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 ["Basic Pay after adding one increment in the same level"],
                 "Rs. $afterIncrBasic/- Level-$curLevel, Cell-$afterIncrCell",
               ),
-              // ৮ নং সিরিয়াল: 'yrs. Service' একই সাথে থাকবে এবং 'Pay'-এর P এর সমান্তরাল থাকবে[span_2](start_span)[span_2](end_span)
               _pdfStatementRow(
                 "8.",
                 [
@@ -676,7 +686,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 textAlign: pw.TextAlign.justify,
               ),
 
-              pw.Spacer(),
+              // Body এবং Signatory-এর মাঝের ফাঁকা জায়গা কমিয়ে দেওয়া হয়েছে
+              pw.SizedBox(height: 42),
 
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -698,7 +709,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                   ),
                 ],
               ),
-              pw.SizedBox(height: 20),
             ],
           );
         },
@@ -751,7 +761,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF (সংশোধিত প্যারাগ্রাফ ইনডেন্টেশন সহ)
+  // ২. FORWARDING LETTER PDF
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
@@ -818,13 +828,11 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.8)),
               pw.SizedBox(height: 6),
 
-              // প্যারাগ্রাফ ১: শুধুমাত্র প্রথম লাইনটি 'Sir,'-এর S-এর সমান্তরালে ইনডেন্ট হবে, বাকি সব বাম মার্জিনে থাকবে[span_3](start_span)[span_3](end_span)
               pw.RichText(
                 textAlign: pw.TextAlign.justify,
                 text: pw.TextSpan(
                   style: const pw.TextStyle(fontSize: 9.5, lineSpacing: 2.2),
                   children: [
-                    // ঠিক 'Sir,'-এর সমান্তরালে নিয়ে যাওয়ার জন্য সঠিক স্পেসিং[span_4](start_span)[span_4](end_span)
                     const pw.TextSpan(
                       text: "                 ", 
                     ),
@@ -836,7 +844,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 8),
 
-              // প্যারাগ্রাফ ২: শুধুমাত্র প্রথম লাইনটি 'Sir,'-এর S-এর সমান্তরালে ইনডেন্ট হবে, বাকি সব বাম মার্জিনে থাকবে[span_5](start_span)[span_5](end_span)
               pw.RichText(
                 textAlign: pw.TextAlign.justify,
                 text: pw.TextSpan(
@@ -853,7 +860,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 12),
 
-              // Thanking you
               pw.Align(
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Padding(
@@ -863,7 +869,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 12),
 
-              // Dated & Yours faithfully
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -877,7 +882,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               ),
               pw.SizedBox(height: 12),
 
-              // Enclosures
               pw.Text("Enclosures:", style: pw.TextStyle(fontSize: 9.2, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 4),
               _pdfEnclosureItem("01. Forwarding Letter"),
