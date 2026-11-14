@@ -560,7 +560,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ১. FIXATION STATEMENT PDF (স্যাম্পল অনুযায়ী ঠিকানা ও স্পেসিং সহ)
+  // ১. FIXATION STATEMENT PDF
   // =========================================================================
   Future<void> _printFixationPdf() async {
     final doc = pw.Document();
@@ -585,7 +585,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 245.0, // স্কুল প্যাডের জন্য উপরের জায়গা অপরিবর্তিত
+          top: 275.0, // স্কুল প্যাডের জন্য উপরের জায়গা আরও ২ লাইন (30pt) বাড়ানো হয়েছে
           left: 40.0,
           right: 40.0,
           bottom: 25.0,
@@ -594,7 +594,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // স্যাম্পল ইমেজের মতো ৩ লাইনের ঠিকানা (To, + ২ লাইন)
               pw.Text(
                 "To,",
                 style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold),
@@ -604,7 +603,6 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold, lineSpacing: 1.2),
               ),
 
-              // ঠিকানার নিচে ২ লাইনের সমান ফাঁকা space
               pw.SizedBox(height: 24),
 
               pw.Text(
@@ -686,8 +684,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 textAlign: pw.TextAlign.justify,
               ),
 
-              // Body এবং Signatory-এর মাঝের ফাঁকা জায়গা কমিয়ে দেওয়া হয়েছে
-              pw.SizedBox(height: 42),
+              // Body এবং Signatory-এর মাঝে পর্যাপ্ত ফাঁকা জায়গা রাখা হয়েছে
+              pw.SizedBox(height: 75),
 
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
