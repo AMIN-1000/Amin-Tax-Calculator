@@ -560,7 +560,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ১. FIXATION STATEMENT PDF
+  // ১. FIXATION STATEMENT PDF (উপরে ৩.৫ ইঞ্চি / 252.0 pt ফাঁকা জায়গা)
   // =========================================================================
   Future<void> _printFixationPdf() async {
     final doc = pw.Document();
@@ -585,7 +585,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 275.0, // স্কুল প্যাডের জন্য উপরের জায়গা আরও ২ লাইন (30pt) বাড়ানো হয়েছে
+          top: 252.0, // ঠিক ৩.৫ ইঞ্চি (3.5 * 72 = 252.0)
           left: 40.0,
           right: 40.0,
           bottom: 25.0,
@@ -684,8 +684,8 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                 textAlign: pw.TextAlign.justify,
               ),
 
-              // Body এবং Signatory-এর মাঝে পর্যাপ্ত ফাঁকা জায়গা রাখা হয়েছে
-              pw.SizedBox(height: 75),
+              // Body এবং Signatory-এর মাঝে পর্যাপ্ত ফাঁকা জায়গা
+              pw.SizedBox(height: 80),
 
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -759,7 +759,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   }
 
   // =========================================================================
-  // ২. FORWARDING LETTER PDF
+  // ২. FORWARDING LETTER PDF (উপরে সমানভাবে ৩.৫ ইঞ্চি / 252.0 pt ফাঁকা জায়গা)
   // =========================================================================
   Future<void> _printForwardingPdf() async {
     final doc = pw.Document();
@@ -785,7 +785,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
         pageFormat: PdfPageFormat.a4,
         theme: theme,
         margin: const pw.EdgeInsets.only(
-          top: 245.0,
+          top: 252.0, // ঠিক ৩.৫ ইঞ্চি (Fixation PDF-এর সাথে একদম সমান)
           left: 45.0,
           right: 45.0,
           bottom: 20.0,
