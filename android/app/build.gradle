@@ -23,8 +23,8 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.amin_18Years_Fixation"
-    compileSdk 34
+    namespace "com.example.amin_18years_fixation"
+    compileSdk 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -41,9 +41,9 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.amin_18Years_Fixation"
-        minSdkVersion 21
-        targetSdkVersion 34
+        applicationId "com.example.amin_18years_fixation"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
