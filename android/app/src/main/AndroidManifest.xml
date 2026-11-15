@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="18Years Fixation"
+        android:label="18 Years Fixation"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
