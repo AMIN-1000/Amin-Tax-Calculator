@@ -25,7 +25,7 @@ class EighteenYearsBenefitApp extends StatelessWidget {
   }
 }
 
-// ---------------- ROPA-19 PAY MATRIX DATABASE ----------------
+// ---------------- ROPA'19 PAY MATRIX DATABASE ----------------
 class Ropa19Data {
   static final List<int> gradePays = [
     1700, 1800, 1900, 2100, 2300, 2600, 2900, 3200, 3600, 3900, 4100, 4400, 4600, 4700, 4800, 5400
@@ -124,20 +124,20 @@ class EighteenYearsHomePage extends StatefulWidget {
 
 class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final instAddressCtrl = TextEditingController(text: "P.O.: MAKHALGACHHA, P.S.: HASNABAD,\nDIST. NORTH 24 PARGANAS, PIN.743422");
+  final instAddressCtrl = TextEditingController(text: "PO: MAKHALGACHHA, PS: HASNABAD,\nDIST: NORTH 24 PARGANAS, PIN:743422");
 
   final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
-  String selectedDesignation = "A.T";
+  String selectedDesignation = "AT";
   final List<String> designationList = [
-    "H.M",
-    "T.I.C",
-    "A.H.M",
-    "A.T",
+    "HM",
+    "TIC",
+    "AHM",
+    "AT",
     "CLERK",
-    "Gr-D (Peon)",
-    "Gr-D (Matron)",
-    "Gr-D"
+    "Group D (Peon)",
+    "Group D (Matron)",
+    "Group D"
   ];
 
   String selectedSignatory = "Teacher in Charge";
@@ -181,12 +181,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   String selectedCategory = "Pass";
   final List<String> categoryList = [
-    "P.G",
+    "PG",
     "Hons.",
     "Pass",
-    "H.S",
-    "M.P",
-    "S.F"
+    "HS",
+    "MP",
+    "SF"
   ];
 
   String selectedJoiningType = "1st Joining Date";
@@ -773,7 +773,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
     String desigSubjectText = "$selectedDesignation. of the school in $selectedSubject ($selectedCategory)";
     if (currentApprovalMemoCtrl.text.trim().isNotEmpty) {
-      desigSubjectText += ", Vide A.D.I of Schools (S.E), Basirhat, Approval Memo No. ${currentApprovalMemoCtrl.text.trim().replaceAll('\n', ', ')}";
+      desigSubjectText += ", Vide ADI of Schools (SE), Basirhat, Approval Memo No. ${currentApprovalMemoCtrl.text.trim().replaceAll('\n', ', ')}";
     }
 
     final String joiningPhrase = isMultiple
