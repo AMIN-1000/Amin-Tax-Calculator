@@ -182,7 +182,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   String selectedCategory = "Pass";
   final List<String> categoryList = [
     "PG",
-    "Hons.",
+    "Hons",
     "Pass",
     "HS",
     "MP",
@@ -455,7 +455,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _buildInput("Forwarding To Address", toOfficerCtrl, maxLines: 2),
             ]),
             const SizedBox(height: 10),
-            _buildCard("Fixation Calculator (ROPA-19)", [
+            _buildCard("Fixation Calculator (ROPA'19)", [
               Row(
                 children: [
                   const Text("Existing Basic Pay: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
@@ -606,7 +606,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 24),
 
               pw.Text(
-                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No. 437-SE (P&B)/SL/5S-408/19, dated. 13.12.2019",
+                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No. 437-SE (P&B)/SL/5S-408/19, dated: 13.12.2019",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.5, lineSpacing: 1.5),
                 textAlign: pw.TextAlign.justify,
               ),
@@ -768,18 +768,18 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
       bold: pw.Font.helveticaBold(),
     );
 
-    final bool isMultiple = (selectedJoiningType == "1st Joining Date");
-    final fullEmpName = empNameCtrl.text;
+      final bool isMultiple = (selectedJoiningType == "1st Joining Date");
+  final String fullEmpName = empNameCtrl.text.trim().replaceAll(RegExp(r'[,.]'), '');
+  final String cleanDesignation = selectedDesignation.replaceAll(RegExp(r'[,.]'), '');
 
-    String desigSubjectText = "$selectedDesignation. of the school in $selectedSubject ($selectedCategory)";
-    if (currentApprovalMemoCtrl.text.trim().isNotEmpty) {
-      desigSubjectText += ", Vide ADI of Schools (SE), Basirhat's Approval Memo No. ${currentApprovalMemoCtrl.text.trim().replaceAll('\n', ', ')}";
-    }
+  String desigSubjectText = "$cleanDesignation of the school in $selectedSubject ($selectedCategory)";
+  if (currentApprovalMemoCtrl.text.trim().isNotEmpty) {
+    desigSubjectText += " Vide ADI of Schools (SE), Basirhat's Approval Memo No. ${currentApprovalMemoCtrl.text.trim()}";
+  }
 
-    final String joiningPhrase = isMultiple
-        ? "since his date of first joining ${joinDateCtrl.text}"
-        : "since his date of joining ${joinDateCtrl.text}";
-
+  final String joiningPhrase = isMultiple
+      ? "since his date of first joining ${joinDateCtrl.text}"
+      : "since his date of joining ${joinDateCtrl.text}";
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -807,12 +807,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          "Submission of papers regarding 18 years continuous and satisfactory service benefit asper",
+                          "Submission of papers regarding 18 years continuous and satisfactory service benefit, as per",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
                         pw.Text(
-                          "G.O. No. 437-SE(P&B)/SL/5S-408/19, Dated. 13.12.2019",
+                          "G.O. No. 437-SE(P&B)/SL/5S-408/19, Dated: 13.12.2019",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
@@ -835,7 +835,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       text: "                 ", 
                     ),
                     pw.TextSpan(
-                      text: "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years service benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
+                      text: "I, the $selectedSignatory of the Institution, hereby submit the relevant papers regarding 18 years service benefit of $fullEmpName $desigSubjectText, who has already completed 18 years continuous and satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
                     ),
                   ],
                 ),
@@ -851,7 +851,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       text: "                 ", 
                     ),
                     const pw.TextSpan(
-                      text: "So, please be kind and take necessary action so that he may get the said benefit at an earliest. His all relevant papers are enclosed herewith.",
+                      text: "So, please be kind and take necessary action so that he may get the said benefit at an earliest. All his relevant papers are enclosed herewith.",
                     ),
                   ],
                 ),
@@ -892,7 +892,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _pdfEnclosureItem("08. Copy of Approvals"),
               pw.Padding(
                 padding: const pw.EdgeInsets.only(left: 22, bottom: 2.0),
-                child: pw.Text("(For Multiple Schools if any)", style: const pw.TextStyle(fontSize: 7.8)),
+                child: pw.Text("(For Multiple Schools, if any)", style: const pw.TextStyle(fontSize: 7.8)),
               ),
               _pdfEnclosureItem("09. Copy of SSC Recommendation"),
               _pdfEnclosureItem("10. Copy of Service Book"),
