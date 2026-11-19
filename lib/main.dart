@@ -124,7 +124,7 @@ class EighteenYearsHomePage extends StatefulWidget {
 
 class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   final instNameCtrl = TextEditingController(text: "KUMARPUKUR HIGH SCHOOL (H.S.)");
-  final instAddressCtrl = TextEditingController(text: "PO: MAKHALGACHHA, PS: HASNABAD,\nDIST: NORTH 24 PARGANAS, PIN:743422");
+  final instAddressCtrl = TextEditingController(text: "PO: MAKHALGACHHA, PS: HASNABAD,\nDIST: NORTH 24 PARGANAS, PIN: 743422");
 
   final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
@@ -193,7 +193,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   final List<String> joiningTypeList = ["1st Joining Date", "Current Joining Date"];
 
   final joinDateCtrl = TextEditingController(text: "19.05.2005");
-  final firstJoiningApprovalCtrl = TextEditingController(text: "Vide D.I. of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
+  final firstJoiningApprovalCtrl = TextEditingController(text: "Vide DI of Nadia's Approval\nMemo No. 608/Gen/SE, Date: 22.07.2005");
   final currentApprovalMemoCtrl = TextEditingController(text: "BHT/152/1(1)/G, Date: 13.09.2021");
 
   final completionDateCtrl = TextEditingController(text: "18.05.2023");
@@ -202,7 +202,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   final nextIncrDateCtrl = TextEditingController(text: "01.07.2024");
 
   final diOfficeNameCtrl = TextEditingController(text: "North 24 Parganas");
-  final toOfficerCtrl = TextEditingController(text: "The A.D.I of Schools (S.E.), Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
+  final toOfficerCtrl = TextEditingController(text: "The ADI of Schools (SE), Basirhat Sub-division,\nBasirhat, North 24 Parganas.");
 
   final basicPayCtrl = TextEditingController(text: "58600");
 
@@ -578,7 +578,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
     final String sl3Value = isMultiple
         ? "${joinDateCtrl.text}, ${firstJoiningApprovalCtrl.text}"
-        : "${joinDateCtrl.text}, Vide A.D.I of Schools (S.E), Basirhat, Approval Memo No. ${currentApprovalMemoCtrl.text}";
+        : "${joinDateCtrl.text}, Vide ADI of Schools (SE), Basirhat's Approval Memo No. ${currentApprovalMemoCtrl.text}";
 
     doc.addPage(
       pw.Page(
@@ -606,7 +606,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 24),
 
               pw.Text(
-                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
+                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No. 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.5, lineSpacing: 1.5),
                 textAlign: pw.TextAlign.justify,
               ),
@@ -773,7 +773,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
     String desigSubjectText = "$selectedDesignation. of the school in $selectedSubject ($selectedCategory)";
     if (currentApprovalMemoCtrl.text.trim().isNotEmpty) {
-      desigSubjectText += ", Vide ADI of Schools (SE), Basirhat, Approval Memo No. ${currentApprovalMemoCtrl.text.trim().replaceAll('\n', ', ')}";
+      desigSubjectText += ", Vide ADI of Schools (SE), Basirhat's Approval Memo No. ${currentApprovalMemoCtrl.text.trim().replaceAll('\n', ', ')}";
     }
 
     final String joiningPhrase = isMultiple
@@ -807,7 +807,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          "Submission of papers regarding 18 years benefit asper G.O.No.437-SE(P&B)/SL/5S-408/1,",
+                          "Submission of papers regarding 18 years continuous service benefit asper G.O. No. 437-SE(P&B)/SL/5S-408/1,",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
@@ -835,7 +835,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       text: "                 ", 
                     ),
                     pw.TextSpan(
-                      text: "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
+                      text: "I, the $selectedSignatory of the Institution hereby submit the relevant papers regarding 18 years service benefit of $fullEmpName, $desigSubjectText who has already completed 18 years continuous satisfactory service on ${completionDateCtrl.text} $joiningPhrase without any break.",
                     ),
                   ],
                 ),
