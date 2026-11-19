@@ -679,7 +679,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
               pw.SizedBox(height: 14),
               pw.Text(
-                "Submitted to the District Inspector of Schools (S.E.), ${diOfficeNameCtrl.text} (Name of District)",
+                "Submitted to the District Inspector of Schools (SE), ${diOfficeNameCtrl.text} (Name of District)",
                 style: const pw.TextStyle(fontSize: 9.8),
                 textAlign: pw.TextAlign.justify,
               ),
@@ -695,14 +695,14 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Signature of the President of", style: const pw.TextStyle(fontSize: 9.2)),
-                      pw.Text("the Institution with seal", style: const pw.TextStyle(fontSize: 9.2)),
+                      pw.Text("the Institution with seal.", style: const pw.TextStyle(fontSize: 9.2)),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text("Signature of the Secretary of", style: const pw.TextStyle(fontSize: 9.2)),
-                      pw.Text("the Institution with date & seal", style: const pw.TextStyle(fontSize: 9.2)),
+                      pw.Text("the Institution with date & seal.", style: const pw.TextStyle(fontSize: 9.2)),
                     ],
                   ),
                 ],
@@ -807,12 +807,12 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          "Submission of papers regarding 18 years continuous service benefit asper G.O. No. 437-SE(P&B)/SL/5S-408/1,",
+                          "Submission of papers regarding 18 years continuous and satisfactory service benefit asper G.O. No. 437-SE(P&B)/SL/5S-408/1,",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
                         pw.Text(
-                          "Dated- 13/12/2019.",
+                          "Dated. 13/12/2019.",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
