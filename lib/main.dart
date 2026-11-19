@@ -899,6 +899,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _pdfEnclosureItem("11. Copy of Aquitance Roll"),
               _pdfEnclosureItem("12. Copy of ROPA-09 & 19"),
               _pdfEnclosureItem("13. EOL/Non EOL Certificate"),
+              _pdfEnclosureItem("14. H.R.A.Declaration of last 3 Years"),
             ],
           );
         },
