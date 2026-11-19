@@ -884,10 +884,10 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 4),
               _pdfEnclosureItem("01. Forwarding Letter"),
               _pdfEnclosureItem("02. Application of Incumbent"),
-              _pdfEnclosureItem("03. M.C/D.D.O Resolution"),
+              _pdfEnclosureItem("03. MC/DDO Resolution"),
               _pdfEnclosureItem("04. Fixation Formula"),
               _pdfEnclosureItem("05. Option Form"),
-              _pdfEnclosureItem("06. Validity of M.C/D.D.O"),
+              _pdfEnclosureItem("06. Validity of MC/DDO"),
               _pdfEnclosureItem("07. Non Litigation Certificate"),
               _pdfEnclosureItem("08. Copy of Approvals"),
               pw.Padding(
@@ -899,7 +899,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               _pdfEnclosureItem("11. Copy of Aquitance Roll"),
               _pdfEnclosureItem("12. Copy of ROPA-09 & 19"),
               _pdfEnclosureItem("13. EOL/Non EOL Certificate"),
-              _pdfEnclosureItem("14. H.R.A.Declaration of last 3 Years"),
+              _pdfEnclosureItem("14. HRA Declaration of last 3 years"),
             ],
           );
         },
