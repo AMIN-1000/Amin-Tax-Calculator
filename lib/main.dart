@@ -128,7 +128,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
-  String selectedDesignation = "AT",
+  String selectedDesignation = "AT";
   final List<String> designationList = [
     "HM",
     "TIC",
