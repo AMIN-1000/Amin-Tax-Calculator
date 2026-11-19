@@ -570,7 +570,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
     );
 
     final bool isMultiple = (selectedJoiningType == "1st Joining Date");
-    final fullEmpNameDesig = "${empNameCtrl.text}, ($selectedDesignation.)";
+    final fullEmpNameDesig = "${empNameCtrl.text} ($selectedDesignation)";
 
     final String sl3Label = isMultiple
         ? "Date of First Joining with Approval No. & Date"
