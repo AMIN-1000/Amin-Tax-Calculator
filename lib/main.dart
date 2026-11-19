@@ -128,7 +128,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
 
   final empNameCtrl = TextEditingController(text: "MD RUHUL AMIN MONDAL");
 
-  String selectedDesignation = "AT";
+  String selectedDesignation = "AT",
   final List<String> designationList = [
     "HM",
     "TIC",
@@ -606,7 +606,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 24),
 
               pw.Text(
-                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No. 437-SE (P&B)/SL/5S-408/19 dated 13.12.2019",
+                "Statement Showing Fixation of Pay due to completion of 18 years continuous and satisfactory service in terms of G.O. No. 437-SE (P&B)/SL/5S-408/19, dated. 13.12.2019",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10.5, lineSpacing: 1.5),
                 textAlign: pw.TextAlign.justify,
               ),
@@ -812,7 +812,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
                           textAlign: pw.TextAlign.left,
                         ),
                         pw.Text(
-                          "G.O. No. 437-SE(P&B)/SL/5S-408/1, Dated. 13/12/2019",
+                          "G.O. No. 437-SE(P&B)/SL/5S-408/19, Dated. 13.12.2019",
                           style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
                           textAlign: pw.TextAlign.left,
                         ),
