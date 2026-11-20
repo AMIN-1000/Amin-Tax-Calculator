@@ -799,7 +799,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.SizedBox(height: 12),
 
               pw.Padding(
-  padding: const pw.EdgeInsets.only(left: 26.0), // পুরো Sub: ব্লকটিকে ডানদিকে সরাবে
+  padding: const pw.EdgeInsets.only(left: 45.0), // পুরো Sub: ব্লকটিকে ডানদিকে সরাবে
   child: pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
@@ -865,7 +865,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Align(
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: 152),
+                  padding: const pw.EdgeInsets.only(left: 135),
                   child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.8)),
                 ),
               ),
