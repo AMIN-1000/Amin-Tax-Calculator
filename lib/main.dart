@@ -865,7 +865,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Align(
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: 30),
+                  padding: const pw.EdgeInsets.only(left: 152),
                   child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.8)),
                 ),
               ),
