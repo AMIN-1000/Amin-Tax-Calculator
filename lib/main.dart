@@ -772,7 +772,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
   final String fullEmpName = empNameCtrl.text.trim().replaceAll(RegExp(r'[,.]'), '');
   final String cleanDesignation = selectedDesignation.replaceAll(RegExp(r'[,.]'), '');
 
-  String desigSubjectText = "$cleanDesignation of the school in $selectedSubject ($selectedCategory)";
+  String desigSubjectText = "($cleanDesignation) of the school in $selectedSubject ($selectedCategory)";
   if (currentApprovalMemoCtrl.text.trim().isNotEmpty) {
     desigSubjectText += " Vide ADI of Schools (SE), Basirhat's Approval Memo No. ${currentApprovalMemoCtrl.text.trim()}";
   }
@@ -798,29 +798,33 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Text(toOfficerCtrl.text, style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold, lineSpacing: 1.2)),
               pw.SizedBox(height: 12),
 
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text("Sub: ", style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold)),
-                  pw.Expanded(
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          "Submission of papers regarding 18 years continuous and satisfactory service benefit, as per",
-                          style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
-                          textAlign: pw.TextAlign.left,
-                        ),
-                        pw.Text(
-                          "G.O. No. 437-SE(P&B)/SL/5S-408/19, Dated: 13.12.2019",
-                          style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
-                          textAlign: pw.TextAlign.left,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              pw.Padding(
+  padding: const pw.EdgeInsets.only(left: 26.0), // পুরো Sub: ব্লকটিকে ডানদিকে সরাবে
+  child: pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text("Sub: ", style: pw.TextStyle(fontSize: 12.0, fontWeight: pw.FontWeight.bold)),
+      pw.Expanded(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              "Submission of papers regarding 18 years service benefit, as per",
+              style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
+              textAlign: pw.TextAlign.left,
+            ),
+            pw.Text(
+              "G.O. No. 437-SE(P&B)/SL/5S-408/19, Dated: 13.12.2019",
+              style: pw.TextStyle(fontSize: 10.8, fontWeight: pw.FontWeight.bold),
+              textAlign: pw.TextAlign.left,
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
+
               pw.SizedBox(height: 12),
 
               pw.Text("Respected Sir,", style: const pw.TextStyle(fontSize: 9.8)),
@@ -861,7 +865,7 @@ class _EighteenYearsHomePageState extends State<EighteenYearsHomePage> {
               pw.Align(
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: 100),
+                  padding: const pw.EdgeInsets.only(left: 30),
                   child: pw.Text("Thanking you,", style: const pw.TextStyle(fontSize: 9.8)),
                 ),
               ),
